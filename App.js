@@ -4,6 +4,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import LoginPage from "./Screens/LoginPage";
 import StudentPage from "./Screens/StudentPage";
+import TeacherPage from "./Screens/TeacherPage";
 
 const Stack = createStackNavigator();
 
@@ -16,6 +17,7 @@ export default function App() {
       >
         <Stack.Screen name="Login" component={LoginPage} />
         <Stack.Screen name="Student" component={StudentPage} />
+        <Stack.Screen name="Teacher" component={TeacherPage} />
       </Stack.Navigator>
     </NavigationContainer>
   );
