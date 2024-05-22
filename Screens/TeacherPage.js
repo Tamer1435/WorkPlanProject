@@ -10,7 +10,7 @@ import {
   Button,
 } from "react-native";
 
-const StudentPage = ({ navigation }) => {
+const TeacherPage = ({ navigation }) => {
   const currentDate = new Date();
   const day = currentDate.getDate();
   const month = currentDate.getMonth();
@@ -23,7 +23,7 @@ const StudentPage = ({ navigation }) => {
     timeZone: "UTC",
   });
 
-  let name = "[שם סטודנטית]";
+  let name = "[שם מורה]";
 
   const todayActivities = [];
 
@@ -87,14 +87,17 @@ const StudentPage = ({ navigation }) => {
       <View style={styles.lowerContainer}>
         <View style={styles.row}>
           <TouchableOpacity style={styles.button}>
-            <Image source={require("../Images/calendar icon.png")} />
+            <Image
+              style={{ marginTop: 10 }}
+              source={require("../Images/calendar icon.png")}
+            />
             <View style={styles.divider} />
             <Text style={styles.buttonText}>לוח השנה</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.button}>
-            <Image source={require("../Images/report icon.png")} />
+            <Image source={require("../Images/availabity icon.png")} />
             <View style={styles.divider} />
-            <Text style={styles.buttonText}>דו”ח עבודה </Text>
+            <Text style={styles.buttonText}>להגדיר זמינות</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.row}>
@@ -106,7 +109,11 @@ const StudentPage = ({ navigation }) => {
             <View style={styles.divider} />
             <Text style={styles.buttonText}>דף קשר</Text>
           </TouchableOpacity>
-          <View style={styles.buttonNull}></View>
+          <TouchableOpacity style={styles.button}>
+            <Image source={require("../Images/attendance icon.png")} />
+            <View style={styles.divider} />
+            <Text style={styles.buttonText}>נוכחות</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -190,4 +197,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default StudentPage;
+export default TeacherPage;

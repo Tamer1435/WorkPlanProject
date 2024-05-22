@@ -38,6 +38,7 @@ const LoginPage = ({ navigation }) => {
           navigation.navigate("Student");
         } else if (userData.role === "teacher") {
           console.log(userData.role);
+          navigation.navigate("Teacher");
         } else if (userData.role === "manger") {
           console.log(userData.role);
         } else {
