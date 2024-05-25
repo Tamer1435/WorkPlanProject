@@ -13,14 +13,18 @@ import {
   Alert,
   Platform,
   ScrollView,
+  ActivityIndicator,
+  Modal,
 } from "react-native";
 
 const LoginPage = ({ navigation }) => {
+  const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
     // Implement the login here
+    setLoading(true);
     try {
       const user = await signInWithEmailAndPassword(auth, username, password);
 
@@ -41,6 +45,7 @@ const LoginPage = ({ navigation }) => {
           navigation.navigate("Teacher");
         } else if (userData.role === "manger") {
           console.log(userData.role);
+          navigation.navigate("Manger");
         } else {
           console.log("User has no role.");
         }
@@ -68,6 +73,8 @@ const LoginPage = ({ navigation }) => {
           Alert.alert("שגוי", "טעות בתקשורת", [{ text: "בסדר" }]);
           break;
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -104,9 +111,22 @@ const LoginPage = ({ navigation }) => {
             autoCapitalize="none"
             secureTextEntry={true}
           />
-          <TouchableOpacity style={styles.Button} onPress={handleLogin}>
+          <TouchableOpacity
+            disabled={loading}
+            style={[styles.Button, loading && styles.buttonDisable]}
+            onPress={handleLogin}
+          >
             <Text style={styles.buttonText}>כניסה</Text>
           </TouchableOpacity>
+          {/* Loading popup */}
+          <Modal visible={loading} transparent animationType="fade">
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <ActivityIndicator size="large" color="#0000ff" />
+                <Text style={styles.loadingText}>מתחבר...</Text>
+              </View>
+            </View>
+          </Modal>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -154,6 +174,24 @@ const styles = StyleSheet.create({
     color: "white",
     textAlign: "center",
     fontSize: 18,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 10,
+  },
+  buttonDisabled: {
+    backgroundColor: "#ccc",
   },
 });
 
