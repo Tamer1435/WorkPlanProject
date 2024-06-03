@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#85E1D7',
     padding: 20,
-    paddingTop: 60, // Increased padding to move the content down
+    paddingTop: 60,
   },
   header: {
     flexDirection: 'row',
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   dateRowWrapper: {
-    backgroundColor: '#E8E8E8', // Light grey background for each row
+    backgroundColor: '#E8E8E8', 
     borderRadius: 10,
     marginVertical: 5,
     padding: 10,

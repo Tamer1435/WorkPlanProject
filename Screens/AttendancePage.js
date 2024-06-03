@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#85E1D7',
     padding: 20,
-    paddingTop: 60, // Move content down
+    paddingTop: 60, 
   },
   header: {
     flexDirection: 'row',
@@ -146,13 +146,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   studentRowWrapper: {
-    backgroundColor: '#E8E8E8', // Light grey background for each row
+    backgroundColor: '#E8E8E8',
     borderRadius: 10,
     marginVertical: 5,
     padding: 10,
   },
   studentRow: {
-    flexDirection: 'row-reverse', // Align right-to-left
+    flexDirection: 'row-reverse',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     flex: 2,
     fontSize: 16,
     color: '#000',
-    textAlign: 'right', // Align text to the right
+    textAlign: 'right',
   },
   neutral: {
     flex: 1,
