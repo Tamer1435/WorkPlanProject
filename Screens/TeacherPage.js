@@ -94,7 +94,11 @@ const TeacherPage = ({ navigation }) => {
             <View style={styles.divider} />
             <Text style={styles.buttonText}>לוח השנה</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity style={styles.button}
+
+          onPress={() => navigation.navigate('Availability')}
+
+          >
             <Image source={require("../Images/availabity icon.png")} />
             <View style={styles.divider} />
             <Text style={styles.buttonText}>להגדיר זמינות</Text>
@@ -109,7 +113,9 @@ const TeacherPage = ({ navigation }) => {
             <View style={styles.divider} />
             <Text style={styles.buttonText}>דף קשר</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button}>
+          
+          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Attendance')}>
+
             <Image source={require("../Images/attendance icon.png")} />
             <View style={styles.divider} />
             <Text style={styles.buttonText}>נוכחות</Text>
