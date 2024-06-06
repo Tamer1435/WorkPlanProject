@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, firestore } from "../firebase-config";
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
+import { AuthContext } from "../AuthProvider";
 import {
   View,
   Text,
@@ -21,30 +22,24 @@ const LoginPage = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const { user, login, logout } = useContext(AuthContext);
 
   const handleLogin = async () => {
     // Implement the login here
     setLoading(true);
     try {
-      const user = await signInWithEmailAndPassword(auth, username, password);
+      const userInfo = await login(username, password);
 
       //Navigate after authentication of the user data....
-      console.log(user.user.uid);
-      const userUID = user.user.uid;
-      const userDocRef = doc(firestore, "/users", userUID);
-      const userDoc = await getDoc(userDocRef);
-
-      if (userDoc.exists) {
-        const userData = userDoc.data();
-
-        if (userData.role === "student") {
-          console.log(userData.role);
+      if (userInfo) {
+        if (userInfo.role === "student") {
+          console.log(userInfo.role);
           navigation.navigate("Student");
-        } else if (userData.role === "teacher") {
-          console.log(userData.role);
+        } else if (userInfo.role === "teacher") {
+          console.log(userInfo.role);
           navigation.navigate("Teacher");
-        } else if (userData.role === "manger") {
-          console.log(userData.role);
+        } else if (userInfo.role === "manger") {
+          console.log(userInfo.role);
           navigation.navigate("Manger");
         } else {
           console.log("User has no role.");
@@ -78,6 +73,23 @@ const LoginPage = ({ navigation }) => {
     }
   };
 
+  // if (user) {
+  //   //Navigate after authentication of the user data....
+
+  //   if (user.role === "student") {
+  //     console.log(user.role);
+  //     navigation.navigate("Student");
+  //   } else if (user.role === "teacher") {
+  //     console.log(user.role);
+  //     navigation.navigate("Teacher");
+  //   } else if (user.role === "manger") {
+  //     console.log(user.role);
+  //     navigation.navigate("Manger");
+  //   } else {
+  //     console.log("User has no role.");
+  //   }
+  // }
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -99,9 +111,10 @@ const LoginPage = ({ navigation }) => {
           <TextInput
             style={styles.input}
             placeholder="מייל:"
-            onChangeText={(text) => setUsername(text)}
+            onChangeText={(text) => setUsername(text.trim())}
             value={username}
             autoCapitalize="none"
+            keyboardType="email-address"
           />
           <TextInput
             style={styles.input}
@@ -113,7 +126,7 @@ const LoginPage = ({ navigation }) => {
           />
           <TouchableOpacity
             disabled={loading}
-            style={[styles.Button, loading && styles.buttonDisable]}
+            style={[styles.Button, loading && styles.buttonDisabled]}
             onPress={handleLogin}
           >
             <Text style={styles.buttonText}>כניסה</Text>
