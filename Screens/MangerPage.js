@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
@@ -9,8 +9,13 @@ import {
   FlatList,
   Button,
 } from "react-native";
+import { getAuth, signOut } from "firebase/auth";
+import { AuthContext } from "../AuthProvider";
 
 const MangerPage = ({ navigation }) => {
+  const { user, userData, calendar } = useContext(AuthContext);
+  const auth = getAuth();
+
   const currentDate = new Date();
   const day = currentDate.getDate();
   const month = currentDate.getMonth();
@@ -23,11 +28,18 @@ const MangerPage = ({ navigation }) => {
     timeZone: "UTC",
   });
 
-  let name = "[שם אדמין]";
-
-  const todayActivities = [];
+  let name = userData.name;
 
   const goToCalendar = () => navigation.navigate("Calendar");
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigation.navigate("LoginPage");
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
 
   return (
     <View style={styles.container} behavior="padding">
