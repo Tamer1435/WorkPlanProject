@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   View,
   TextInput,
@@ -6,8 +6,13 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
+import { AuthContext } from "../AuthProvider";
+import { format } from "date-fns";
+import { collection, setDoc, doc, Timestamp } from "firebase/firestore";
 
 const getDaysInMonth = (month, year) => {
   return new Date(year, month + 1, 0).getDate();
@@ -26,8 +31,10 @@ const SetJobsPage = ({ navigation }) => {
   const [time, setTime] = useState("");
   const [attendant, setAttendant] = useState("");
   const [students, setStudents] = useState("");
+  const [job, setJob] = useState("");
   const [vehicle, setVehicle] = useState("");
   const [isFocus, setIsFocus] = useState(false);
+  const { user, userData, calendar, db } = useContext(AuthContext);
 
   const currentDate = new Date();
   const currentDay = new Date().getDate();
@@ -36,10 +43,6 @@ const SetJobsPage = ({ navigation }) => {
     month: "long",
     timeZone: "UTC",
   });
-  // const dayName = currentDate.toLocaleString("he-IL", {
-  //   weekday: "long",
-  //   timeZone: "UTC",
-  // });
   const currentYear = new Date().getFullYear();
   const preDaysInMonth = getDaysInMonth(currentMonth, currentYear);
   const daysInMonth = Array.from(
@@ -58,7 +61,7 @@ const SetJobsPage = ({ navigation }) => {
     };
   });
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Handle form submission here
     console.log("Form submitted with the following data:");
     console.log("Date:", date);
@@ -67,11 +70,58 @@ const SetJobsPage = ({ navigation }) => {
     console.log("Time:", time);
     console.log("Attendant:", attendant);
     console.log("Students:", students);
+    console.log("Job:", job);
     console.log("Vehicle:", vehicle);
+
+    const events = calendar;
+    const eventsForTheDay = [];
+    events.map((event) => {
+      if (event.day == date) {
+        index = events.indexOf(event);
+        eventsForTheDay.push(events[index]);
+      }
+    });
+
+    const i = eventsForTheDay.length + 1;
+
+    const specificTime = new Date(
+      `${currentYear}-${currentMonth + 1}-${date}T${time}:00`
+    );
+    const firestoreTime = Timestamp.fromDate(specificTime);
+
+    const studentsArray = students.split(",");
+    try {
+      const eventRef = doc(
+        db,
+        "calendar",
+        `${currentYear}-${currentMonth + 1}`,
+        "days",
+        `${date}`,
+        "events",
+        `event ${i}`
+      );
+      await setDoc(eventRef, {
+        eventName,
+        location,
+        meetingPlace,
+        attendant,
+        students: studentsArray,
+        vehicle,
+        timeOfMoving: firestoreTime,
+        job,
+      });
+      alert("Successfully added the event");
+    } catch (error) {
+      console.error("Error adding event: ", error);
+      alert("Failed to save event");
+    }
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
       <Text style={styles.headerText}>לקבוע עבודה</Text>
       <Dropdown
         style={styles.input}
@@ -107,7 +157,7 @@ const SetJobsPage = ({ navigation }) => {
       <TextInput
         style={styles.input}
         placeholder="מקום התכנסות:"
-        value={location}
+        value={meetingPlace}
         onChangeText={setMeetingPlace}
       />
       <TextInput
@@ -130,14 +180,20 @@ const SetJobsPage = ({ navigation }) => {
       />
       <TextInput
         style={styles.input}
+        placeholder="עבודה:"
+        value={job}
+        onChangeText={setJob}
+      />
+      <TextInput
+        style={styles.input}
         placeholder="רכב:"
         value={vehicle}
         onChangeText={setVehicle}
       />
       <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>בוצע</Text>
+        <Text style={styles.buttonText}>בוצע אירוע</Text>
       </TouchableOpacity>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 

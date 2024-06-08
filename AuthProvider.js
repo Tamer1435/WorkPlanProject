@@ -120,9 +120,9 @@ const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, userData, calendar, loading, login, logout }}
+      value={{ user, userData, calendar, loading, login, logout, db }}
     >
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 };

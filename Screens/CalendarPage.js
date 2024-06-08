@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { AuthContext } from "../AuthProvider";
 import { format } from "date-fns";
+import Modal from "react-native-modal";
 
 const daysOfWeek = [
   "יום ראשון",
@@ -43,6 +44,8 @@ const CalendarPage = ({ navigation }) => {
   const [ontoHeaderDay, setHeaderDay] = useState(null);
   const [indexOfSelectedDay, setIndexOfSelectedDay] = useState(null);
   const [daysEvents, setDaysEvents] = useState(null);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   // Getting date info
   const currentDate = new Date();
@@ -54,14 +57,11 @@ const CalendarPage = ({ navigation }) => {
   });
   const currentYear = new Date().getFullYear();
   const preDaysInMonth = getDaysInMonth(currentMonth, currentYear);
-  const daysInMonth = Array.from(
-    { length: preDaysInMonth - currentDay + 1 },
-    (_, i) => currentDay + i
-  );
-  const daysStartingFromCurrent = [
-    ...daysInMonth.slice(0, currentDay - 1),
-    ...daysInMonth.slice(currentDay - 1),
-  ].map((day) => {
+  const daysInMonth = Array.from({ length: preDaysInMonth }, (_, i) => 1 + i);
+  //
+  // ...daysInMonth.slice(0, currentDay - 1),
+  // ...daysInMonth.slice(currentDay - 1),
+  const daysStartingFromCurrent = daysInMonth.map((day) => {
     const date = new Date(currentYear, currentMonth, day);
     const dayName = getDayName(date);
     return { day, dayName };
@@ -94,7 +94,6 @@ const CalendarPage = ({ navigation }) => {
         } else {
           setDaysEvents(null);
         }
-        console.log(eventsForTheDay);
         setHeaderDay(
           " " +
             daysOfWeek[daysOfWeek.indexOf(item.dayName)] +
@@ -114,7 +113,10 @@ const CalendarPage = ({ navigation }) => {
   );
 
   const renderEvent = ({ item }) => (
-    <TouchableOpacity style={styles.eventContainer}>
+    <TouchableOpacity
+      onPress={() => handleEventPress(item)}
+      style={styles.eventContainer}
+    >
       <View>
         <Text style={styles.eventText}>{item.eventName}</Text>
         <Text style={styles.eventSubText}>עבודה:{item.job}</Text>
@@ -127,6 +129,15 @@ const CalendarPage = ({ navigation }) => {
       </View>
     </TouchableOpacity>
   );
+
+  const toggleModal = () => {
+    setIsModalVisible(!isModalVisible);
+  };
+
+  const handleEventPress = (event) => {
+    setSelectedEvent(event);
+    toggleModal();
+  };
 
   return (
     <View style={styles.container}>
@@ -146,6 +157,14 @@ const CalendarPage = ({ navigation }) => {
         <FlatList
           data={daysStartingFromCurrent}
           renderItem={renderDay}
+          initialScrollIndex={currentDay - 1}
+          getItemLayout={
+            (data, index) => ({
+              length: 105,
+              offset: 99 * index,
+              index,
+            }) // Assuming each item has a height of 50
+          }
           keyExtractor={(item) => {
             item.day;
           }}
@@ -169,6 +188,49 @@ const CalendarPage = ({ navigation }) => {
           <Text style={styles.noEventsText}>בחר יום לראות אירועים</Text>
         )}
       </View>
+      <Modal
+        isVisible={isModalVisible}
+        style={{
+          height: "100%",
+          width: "100%",
+          justifyContent: "flex-end",
+          alignSelf: "center",
+        }}
+        onBackdropPress={toggleModal}
+      >
+        <View style={styles.modalContent}>
+          {selectedEvent && (
+            <>
+              <Text style={styles.modalTitle}>{selectedEvent.name}</Text>
+              <Text style={styles.modalDate}>
+                {format(selectedEvent.timeOfMoving.toDate(), "hh:mm a")}
+              </Text>
+              <Text style={styles.modalTime}></Text>
+              <Text style={styles.modalLocation}>
+                שם אירוע: {selectedEvent.eventName}
+              </Text>
+              <Text style={styles.modalLocation}>
+                עבודה: {selectedEvent.job}
+              </Text>
+              <Text style={styles.modalLocation}>
+                מקום: {selectedEvent.location}
+              </Text>
+              <Text style={styles.modalMeetingPlace}>
+                מקום התכנסות: {selectedEvent.meetingPlace}
+              </Text>
+              <Text style={styles.modalAttendant}>
+                מורה: {selectedEvent.attendant}
+              </Text>
+              <Text style={styles.modalStudents}>
+                סטודנטים: {selectedEvent.students + " "}
+              </Text>
+              <Text style={styles.modalVehicle}>
+                רכב: {selectedEvent.vehicle}
+              </Text>
+            </>
+          )}
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -183,10 +245,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   backButton: {
-    height: 20,
-    width: 30,
+    height: 45,
+    width: 45,
+    borderRadius: 30,
     paddingRight: 40,
     alignSelf: "flex-end",
+    justifyContent: "center",
   },
   bottomContainer: {
     flex: 3,
@@ -278,6 +342,56 @@ const styles = StyleSheet.create({
     marginTop: 20,
     fontSize: 16,
     color: "#888",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "flex-end",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  modalDate: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  modalTime: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  modalLocation: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  modalMeetingPlace: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  modalAttendant: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  modalStudents: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  modalVehicle: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  closeButton: {
+    backgroundColor: "#007bff",
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
+    alignItems: "center",
+  },
+  closeButtonText: {
+    color: "white",
+    fontSize: 16,
   },
 });
 
