@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,10 +7,14 @@ import {
   StyleSheet,
   ScrollView,
   Image,
+  ActivityIndicator,
+  Platform,
 } from "react-native";
 import { AuthContext } from "../AuthProvider";
+import { collection, getDocs, getDoc, doc } from "firebase/firestore";
 import { format } from "date-fns";
 import Modal from "react-native-modal";
+import { LinearGradient } from "expo-linear-gradient";
 
 const daysOfWeek = [
   "יום ראשון",
@@ -40,12 +44,18 @@ const getDayName = (date) => {
 
 const CalendarPage = ({ navigation }) => {
   const [selectedDay, setSelectedDay] = useState(null);
-  const { user, userData, calendar } = useContext(AuthContext);
+  const { user, userData, calendar, db, refreshData, loading } =
+    useContext(AuthContext);
   const [ontoHeaderDay, setHeaderDay] = useState(null);
   const [indexOfSelectedDay, setIndexOfSelectedDay] = useState(null);
   const [daysEvents, setDaysEvents] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+
+  // Refresh the data when mounted
+  useEffect(() => {
+    refreshData();
+  }, []);
 
   // Getting date info
   const currentDate = new Date();
@@ -58,9 +68,6 @@ const CalendarPage = ({ navigation }) => {
   const currentYear = new Date().getFullYear();
   const preDaysInMonth = getDaysInMonth(currentMonth, currentYear);
   const daysInMonth = Array.from({ length: preDaysInMonth }, (_, i) => 1 + i);
-  //
-  // ...daysInMonth.slice(0, currentDay - 1),
-  // ...daysInMonth.slice(currentDay - 1),
   const daysStartingFromCurrent = daysInMonth.map((day) => {
     const date = new Date(currentYear, currentMonth, day);
     const dayName = getDayName(date);
@@ -69,8 +76,6 @@ const CalendarPage = ({ navigation }) => {
 
   // Getting the calendar from database
   const events = calendar;
-  // console.log(events[0]);
-  // console.log(events[1]);
 
   const renderDay = ({ item }) => (
     <TouchableOpacity
@@ -140,7 +145,12 @@ const CalendarPage = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={["#8d82ff", "#4036b3"]} // Darker to lighter gradient
+      start={[0, 0]} // Start from top-left corner
+      end={[0.25, 0.25]} // End at bottom-right corner
+      style={styles.container}
+    >
       <View style={styles.topContainer}>
         <TouchableOpacity
           style={styles.backButton}
@@ -201,48 +211,57 @@ const CalendarPage = ({ navigation }) => {
         <View style={styles.modalContent}>
           {selectedEvent && (
             <>
-              <Text style={styles.modalTitle}>{selectedEvent.name}</Text>
+              <Text style={styles.modalTitle}>{selectedEvent.eventName}</Text>
               <Text style={styles.modalDate}>
                 {format(selectedEvent.timeOfMoving.toDate(), "hh:mm a")}
               </Text>
-              <Text style={styles.modalTime}></Text>
-              <Text style={styles.modalLocation}>
-                שם אירוע: {selectedEvent.eventName}
-              </Text>
-              <Text style={styles.modalLocation}>
-                עבודה: {selectedEvent.job}
-              </Text>
-              <Text style={styles.modalLocation}>
-                מקום: {selectedEvent.location}
-              </Text>
-              <Text style={styles.modalMeetingPlace}>
-                מקום התכנסות: {selectedEvent.meetingPlace}
-              </Text>
-              <Text style={styles.modalAttendant}>
-                מורה: {selectedEvent.attendant}
-              </Text>
-              <Text style={styles.modalStudents}>
-                סטודנטים: {selectedEvent.students + " "}
-              </Text>
-              <Text style={styles.modalVehicle}>
-                רכב: {selectedEvent.vehicle}
-              </Text>
+              <View style={{ alignSelf: "flex-end" }}>
+                <Text style={styles.modalTime}></Text>
+                <Text style={styles.modalLocation}>
+                  עבודה: {selectedEvent.job}
+                </Text>
+                <Text style={styles.modalLocation}>
+                  מקום: {selectedEvent.location}
+                </Text>
+                <Text style={styles.modalMeetingPlace}>
+                  מקום התכנסות: {selectedEvent.meetingPlace}
+                </Text>
+                <Text style={styles.modalAttendant}>
+                  מורה: {selectedEvent.attendant}
+                </Text>
+                <Text style={styles.modalVehicle}>
+                  רכב: {selectedEvent.vehicle}
+                </Text>
+                <Text style={styles.modalStudentsTitle}>סטודנטים:</Text>
+                <Text style={styles.modalStudents}>
+                  {selectedEvent.students.join("\n")}
+                </Text>
+              </View>
             </>
           )}
         </View>
       </Modal>
-    </View>
+      {/* Loading popup */}
+      <Modal visible={loading} transparent animationType="fade">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <ActivityIndicator size="large" color="#0000ff" />
+            <Text style={styles.loadingText}>טוען...</Text>
+          </View>
+        </View>
+      </Modal>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 50,
-    backgroundColor: "#5C4DFF",
+    paddingTop: 35,
   },
   topContainer: {
     flex: 1,
+    justifyContent: "space-evenly",
   },
   backButton: {
     height: 45,
@@ -253,7 +272,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   bottomContainer: {
-    flex: 3,
+    flex: 2.5,
     backgroundColor: "#ffffff",
     borderTopLeftRadius: 35,
     borderTopRightRadius: 35,
@@ -262,9 +281,9 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 26,
     color: "#ffffff",
-    fontWeight: "700",
+    fontWeight: "bold",
     paddingLeft: 20,
-    paddingTop: 20,
+    top: 25,
     textAlign: "left",
   },
   daysList: {
@@ -363,22 +382,34 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   modalLocation: {
+    textAlign: "right",
     fontSize: 16,
     marginBottom: 5,
   },
   modalMeetingPlace: {
+    textAlign: "right",
     fontSize: 16,
     marginBottom: 5,
   },
   modalAttendant: {
+    textAlign: "right",
     fontSize: 16,
     marginBottom: 5,
   },
+  modalStudentsTitle: {
+    textAlign: "right",
+    fontSize: 16,
+    fontWeight: "600",
+    textDecorationLine: "underline",
+    marginBottom: 5,
+  },
   modalStudents: {
+    textAlign: "right",
     fontSize: 16,
     marginBottom: 5,
   },
   modalVehicle: {
+    textAlign: "right",
     fontSize: 16,
     marginBottom: 5,
   },
@@ -392,6 +423,24 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: "white",
     fontSize: 16,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#5C4DFF",
+    shadowRadius: 20,
+    shadowOpacity: 0.25,
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    borderWidth: 0.5,
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 10,
   },
 });
 
