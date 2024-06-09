@@ -38,7 +38,7 @@ const LoginPage = ({ navigation }) => {
         } else if (userInfo.role === "teacher") {
           console.log(userInfo.role);
           navigation.navigate("Teacher");
-        } else if (userInfo.role === "manger") {
+        } else if (userInfo.role === "manager") {
           console.log(userInfo.role);
           navigation.navigate("Manger");
         } else {
@@ -72,23 +72,6 @@ const LoginPage = ({ navigation }) => {
       setLoading(false);
     }
   };
-
-  // if (user) {
-  //   //Navigate after authentication of the user data....
-
-  //   if (user.role === "student") {
-  //     console.log(user.role);
-  //     navigation.navigate("Student");
-  //   } else if (user.role === "teacher") {
-  //     console.log(user.role);
-  //     navigation.navigate("Teacher");
-  //   } else if (user.role === "manger") {
-  //     console.log(user.role);
-  //     navigation.navigate("Manger");
-  //   } else {
-  //     console.log("User has no role.");
-  //   }
-  // }
 
   return (
     <KeyboardAvoidingView

@@ -14,77 +14,71 @@ import {
 } from "firebase/firestore";
 import { app } from "./firebase-config"; // Make sure to initialize your Firebase app here
 
-const AuthContext = createContext({
-  user: null,
-  login: async () => {},
-  logout: async () => {},
-  loading: true,
-});
+const AuthContext = createContext();
 
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState(null);
-  const [calendar, setCalendar] = useState(null);
-  const [days, setDays] = useState([]);
+  const [calendar, setCalendar] = useState([]);
   const [loading, setLoading] = useState(true);
   const auth = getAuth(app);
   const db = getFirestore(app);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
-      const currentMonth = new Date().getMonth();
-      const currentYear = new Date().getFullYear();
-      const calendarId =
-        currentYear.toString() + "-" + (currentMonth + 1).toString();
-
       if (authUser) {
         const userDoc = await getDoc(doc(db, "users", authUser.uid));
         setUserData(userDoc.data());
-
-        setUser({
-          uid: authUser.uid,
-          email: authUser.email,
-          ...userDoc.data(),
-        });
-
-        const daysCollectionRef = collection(db, `calendar/${calendarId}/days`);
-        const daysQuerySnapshot = await getDocs(daysCollectionRef);
-
-        const daysList = daysQuerySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
-        setDays(daysList);
-
-        const eventsList = [];
-        for (const dayDoc of daysQuerySnapshot.docs) {
-          const eventsSubCollectionRef = collection(
-            db,
-            `calendar/${calendarId}/days/${dayDoc.id}/events`
-          );
-          const eventsQuerySnapshot = await getDocs(eventsSubCollectionRef);
-
-          eventsQuerySnapshot.forEach((eventDoc) => {
-            eventsList.push({
-              key: eventDoc.id,
-              day: dayDoc.id,
-              ...eventDoc.data(),
-            });
-          });
-        }
-
-        setCalendar(eventsList);
+        setUser(authUser);
+        await fetchCalendarInfo();
       } else {
         setUserData(null);
         setCalendar(null);
       }
-      setUser(user);
       setLoading(false);
     });
 
     return unsubscribe; // Cleanup subscription on unmount
   }, []);
+
+  // Get the calendar info
+  const fetchCalendarInfo = async () => {
+    try {
+      const currentMonth = new Date().getMonth() + 1; // Adjusting month for 1-based index
+      const currentYear = new Date().getFullYear();
+      const calendarId = `${currentYear}-${currentMonth}`;
+      const daysCollectionRef = collection(db, `calendar/${calendarId}/days`);
+      const daysQuerySnapshot = await getDocs(daysCollectionRef);
+
+      const events = [];
+
+      for (const dayDoc of daysQuerySnapshot.docs) {
+        const eventsSubCollectionRef = collection(
+          db,
+          `calendar/${calendarId}/days/${dayDoc.id}/events`
+        );
+        const eventsQuerySnapshot = await getDocs(eventsSubCollectionRef);
+
+        eventsQuerySnapshot.forEach((eventDoc) => {
+          events.push({
+            key: eventDoc.id,
+            day: dayDoc.id,
+            ...eventDoc.data(),
+          });
+        });
+      }
+      setCalendar(events);
+    } catch (error) {
+      console.error("Error fetching calendar info: ", error);
+    }
+  };
+
+  // Refresh the information when needed
+  const refreshData = async () => {
+    setLoading(true);
+    await fetchCalendarInfo();
+    setLoading(false);
+  };
 
   // Login function
   const login = async (email, password) => {
@@ -120,9 +114,18 @@ const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, userData, calendar, loading, login, logout, db }}
+      value={{
+        user,
+        userData,
+        calendar,
+        loading,
+        login,
+        logout,
+        db,
+        refreshData,
+      }}
     >
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

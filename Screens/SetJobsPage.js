@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   View,
   TextInput,
@@ -8,11 +8,16 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ActivityIndicator,
+  Modal,
+  Image,
+  ScrollView,
 } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import { AuthContext } from "../AuthProvider";
 import { format } from "date-fns";
-import { collection, setDoc, doc, Timestamp } from "firebase/firestore";
+import { collection, setDoc, getDoc, doc, Timestamp } from "firebase/firestore";
 
 const getDaysInMonth = (month, year) => {
   return new Date(year, month + 1, 0).getDate();
@@ -34,7 +39,24 @@ const SetJobsPage = ({ navigation }) => {
   const [job, setJob] = useState("");
   const [vehicle, setVehicle] = useState("");
   const [isFocus, setIsFocus] = useState(false);
-  const { user, userData, calendar, db } = useContext(AuthContext);
+  const { user, userData, calendar, db, refreshData, loading } =
+    useContext(AuthContext);
+  const [isManager, setIsManager] = useState(false);
+
+  useEffect(() => {
+    const checkUserRole = async () => {
+      if (user) {
+        const userRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userRef);
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setIsManager(userData.role === "manager");
+        }
+      }
+    };
+
+    checkUserRole();
+  }, [user]);
 
   const currentDate = new Date();
   const currentDay = new Date().getDate();
@@ -62,6 +84,10 @@ const SetJobsPage = ({ navigation }) => {
   });
 
   const handleSubmit = async () => {
+    if (!user || !isManager) {
+      Alert.alert("Error", "You do not have permission to add events.");
+      return;
+    }
     // Handle form submission here
     console.log("Form submitted with the following data:");
     console.log("Date:", date);
@@ -89,8 +115,16 @@ const SetJobsPage = ({ navigation }) => {
     );
     const firestoreTime = Timestamp.fromDate(specificTime);
 
-    const studentsArray = students.split(",");
+    const studentsArray = students.split(",").map((s) => s.trim());
     try {
+      const eventRefFirst = doc(
+        db,
+        "calendar",
+        `${currentYear}-${currentMonth + 1}`,
+        "days",
+        `${date}`
+      );
+      await setDoc(eventRefFirst, { initialized: true });
       const eventRef = doc(
         db,
         "calendar",
@@ -111,6 +145,7 @@ const SetJobsPage = ({ navigation }) => {
         job,
       });
       alert("Successfully added the event");
+      await refreshData();
     } catch (error) {
       console.error("Error adding event: ", error);
       alert("Failed to save event");
@@ -122,77 +157,106 @@ const SetJobsPage = ({ navigation }) => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
-      <Text style={styles.headerText}>לקבוע עבודה</Text>
-      <Dropdown
-        style={styles.input}
-        placeholderStyle={styles.Drop}
-        itemTextStyle={styles.DropList}
-        inputSearchStyle={styles.Drop}
-        data={daysStartingFromCurrent}
-        labelField={"label"}
-        valueField={"value"}
-        placeholder={!isFocus ? "לבחור יום" : "..."}
-        search
-        searchPlaceholder="לחפש..."
-        onFocus={() => setIsFocus(true)}
-        onBlur={() => setIsFocus(false)}
-        value={date}
-        onChange={(item) => {
-          setDate(item.value);
-          setIsFocus(false);
-        }}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="שם אירוע:"
-        value={eventName}
-        onChangeText={setEventName}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="מקום:"
-        value={location}
-        onChangeText={setLocation}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="מקום התכנסות:"
-        value={meetingPlace}
-        onChangeText={setMeetingPlace}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="זמן תנועה:"
-        value={time}
-        onChangeText={setTime}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="מורה:"
-        value={attendant}
-        onChangeText={setAttendant}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="סטודנטים:"
-        value={students}
-        onChangeText={setStudents}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="עבודה:"
-        value={job}
-        onChangeText={setJob}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="רכב:"
-        value={vehicle}
-        onChangeText={setVehicle}
-      />
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>בוצע אירוע</Text>
-      </TouchableOpacity>
+      <View>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Image
+            style={{ height: 20, width: 30 }}
+            source={require("../Images/back button.png")}
+          />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView>
+        <View style={styles.containerInput}>
+          <Text style={styles.headerText}>לקבוע עבודה</Text>
+          <Dropdown
+            style={styles.input}
+            placeholderStyle={styles.Drop}
+            itemTextStyle={styles.DropList}
+            inputSearchStyle={styles.Drop}
+            data={daysStartingFromCurrent}
+            labelField={"label"}
+            valueField={"value"}
+            placeholder={!isFocus ? "לבחור יום" : "..."}
+            search
+            searchPlaceholder="לחפש..."
+            onFocus={() => setIsFocus(true)}
+            onBlur={() => setIsFocus(false)}
+            value={date}
+            onChange={(item) => {
+              setDate(item.value);
+              setIsFocus(false);
+            }}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="שם אירוע:"
+            value={eventName}
+            onChangeText={setEventName}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="מקום:"
+            value={location}
+            onChangeText={setLocation}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="מקום התכנסות:"
+            value={meetingPlace}
+            onChangeText={setMeetingPlace}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="זמן תנועה:"
+            value={time}
+            onChangeText={setTime}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="מורה:"
+            value={attendant}
+            onChangeText={setAttendant}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="סטודנטים:"
+            value={students}
+            onChangeText={setStudents}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="עבודה:"
+            value={job}
+            onChangeText={setJob}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="רכב:"
+            value={vehicle}
+            onChangeText={setVehicle}
+          />
+          <TouchableOpacity
+            style={styles.button}
+            disabled={loading}
+            onPress={handleSubmit}
+          >
+            <Text style={styles.buttonText}>בוצע אירוע</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+      {/* Loading popup */}
+      <Modal visible={loading} transparent animationType="fade">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <ActivityIndicator size="large" color="#0000ff" />
+            <Text style={styles.loadingText}>טוען...</Text>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 };
@@ -200,14 +264,24 @@ const SetJobsPage = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: 35,
+    backgroundColor: "#85E1D7",
+  },
+  containerInput: {
+    padding: 10,
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
-    backgroundColor: "#85E1D7",
+  },
+  backButton: {
+    height: 45,
+    width: 45,
+    borderRadius: 30,
+    alignSelf: "flex-end",
+    justifyContent: "center",
   },
   input: {
     height: 50,
-    width: "100%",
+    width: "90%",
     borderColor: "gray",
     borderWidth: 1,
     borderRadius: 10,
@@ -238,6 +312,24 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 20,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 10,
+  },
+  buttonDisabled: {
+    backgroundColor: "#ccc",
   },
 });
 
