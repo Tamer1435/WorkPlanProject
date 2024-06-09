@@ -1,4 +1,7 @@
 import React, { useState } from "react";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth, firestore } from "../firebase-config";
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import {
   View,
   Text,
@@ -7,49 +10,125 @@ import {
   StyleSheet,
   Image,
   KeyboardAvoidingView,
+  Alert,
+  Platform,
+  ScrollView,
+  ActivityIndicator,
+  Modal,
 } from "react-native";
 
 const LoginPage = ({ navigation }) => {
+  const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     // Implement the login here
-    console.log("Username:", username);
-    console.log("Password:", password);
+    setLoading(true);
+    try {
+      const user = await signInWithEmailAndPassword(auth, username, password);
 
-    //Navigate after authentication of the user data....
-    navigation.navigate("Student");
+      //Navigate after authentication of the user data....
+      console.log(user.user.uid);
+      const userUID = user.user.uid;
+      const userDocRef = doc(firestore, "/users", userUID);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists) {
+        const userData = userDoc.data();
+
+        if (userData.role === "student") {
+          console.log(userData.role);
+          navigation.navigate("Student");
+        } else if (userData.role === "teacher") {
+          console.log(userData.role);
+          navigation.navigate("Teacher");
+        } else if (userData.role === "manger") {
+          console.log(userData.role);
+          navigation.navigate("Manger");
+        } else {
+          console.log("User has no role.");
+        }
+      } else {
+        console.log("User document not found");
+      }
+    } catch (error) {
+      console.log(error.message);
+      switch (error.code) {
+        case "auth/invalid-credential":
+          Alert.alert("שגוי", "מייל או סיסמה לא נכונים", [{ text: "בסדר" }]);
+          break;
+        case "auth/invalid-email":
+          Alert.alert("שגוי", "חשבון לא קיים", [{ text: "בסדר" }]);
+          break;
+        case "auth/too-many-requests":
+          Alert.alert(
+            "שגוי",
+            "הגישה לחשבון זה הושבתה זמנית עקב ניסיונות התחברות רבים כושלים. אתה יכול לשחזר אותו מיד על ידי איפוס הסיסמה שלך או שאתה יכול לנסות שוב מאוחר יותר",
+            [{ text: "בסדר" }]
+          );
+          break;
+        default:
+          console.log(error);
+          Alert.alert("שגוי", "טעות בתקשורת", [{ text: "בסדר" }]);
+          break;
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior="padding">
-      <View style={styles.upperContainer}>
-        {/* You can place your image or any content here */}
-        <Image
-          source={require("../Images/LoginWelcome.jpg")}
-          style={styles.Image}
-        />
-      </View>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.upperContainer}>
+          {/* You can place your image or any content here */}
+          <Image
+            source={require("../Images/LoginWelcome.jpg")}
+            style={styles.Image}
+          />
+        </View>
 
-      <View style={styles.lowerContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="מייל:"
-          onChangeText={(text) => setUsername(text)}
-          value={username}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="סיסמה:"
-          onChangeText={(text) => setPassword(text)}
-          value={password}
-          secureTextEntry={true}
-        />
-        <TouchableOpacity style={styles.Button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>כניסה</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.lowerContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="מייל:"
+            onChangeText={(text) => setUsername(text)}
+            value={username}
+            autoCapitalize="none"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="סיסמה:"
+            onChangeText={(text) => setPassword(text)}
+            value={password}
+            autoCapitalize="none"
+            secureTextEntry={true}
+          />
+          <TouchableOpacity
+            disabled={loading}
+            style={[styles.Button, loading && styles.buttonDisable]}
+            onPress={handleLogin}
+          >
+            <Text style={styles.buttonText}>כניסה</Text>
+          </TouchableOpacity>
+          {/* Loading popup */}
+          <Modal visible={loading} transparent animationType="fade">
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <ActivityIndicator size="large" color="#0000ff" />
+                <Text style={styles.loadingText}>מתחבר...</Text>
+              </View>
+            </View>
+          </Modal>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
@@ -95,6 +174,24 @@ const styles = StyleSheet.create({
     color: "white",
     textAlign: "center",
     fontSize: 18,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 10,
+  },
+  buttonDisabled: {
+    backgroundColor: "#ccc",
   },
 });
 

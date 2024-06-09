@@ -10,7 +10,7 @@ import {
   Button,
 } from "react-native";
 
-const StudentPage = ({ navigation }) => {
+const MangerPage = ({ navigation }) => {
   const currentDate = new Date();
   const day = currentDate.getDate();
   const month = currentDate.getMonth();
@@ -23,9 +23,11 @@ const StudentPage = ({ navigation }) => {
     timeZone: "UTC",
   });
 
-  let name = "[שם סטודנטית]";
+  let name = "[שם אדמין]";
 
   const todayActivities = [];
+
+  const goToCalendar = () => navigation.navigate("Calendar");
 
   return (
     <View style={styles.container} behavior="padding">
@@ -53,48 +55,51 @@ const StudentPage = ({ navigation }) => {
           </View>
         </View>
       </View>
-      <View style={styles.middleContainer}>
-        <Text
-          style={{
-            fontSize: 15,
-            fontWeight: "600",
-            textAlign: "right",
-            paddingBottom: 10,
-            paddingRight: 20,
-          }}
-        >
-          {" "}
-          מה יש לנו היום
-        </Text>
-        <View style={styles.todaysSection}>
-          {todayActivities.length === 0 ? (
-            <View style={{ alignItems: "center" }}>
-              <Image source={require("../Images/cal icon.png")} />
-              <Text style={{ fontWeight: "600", marginTop: 5 }}>
-                אין לך אירועי עבודה היום
-              </Text>
-            </View>
-          ) : (
-            <FlatList
-              data={todayActivities}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => <Text>{item.name}</Text>}
-            />
-          )}
-        </View>
-      </View>
 
       <View style={styles.lowerContainer}>
         <View style={styles.row}>
-          <TouchableOpacity style={styles.button}>
-            <Image source={require("../Images/calendar icon.png")} />
+          <TouchableOpacity onPress={goToCalendar} style={styles.button}>
+            <Image
+              style={{ marginTop: 10 }}
+              source={require("../Images/calendar icon.png")}
+            />
             <View style={styles.divider} />
             <Text style={styles.buttonText}>לוח השנה</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Feedback')}> 
-            <Image source={require("../Images/report icon.png")} />
+          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('SetAvailability')}>
+            <Image source={require("../Images/availabity icon.png")} />
             <View style={styles.divider} />
-            <Text style={styles.buttonText}>דו”ח עבודה </Text>
+            <Text style={styles.buttonText}>להגדיר זמינות</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.row}>
+          <TouchableOpacity style={styles.button}>
+            <Image
+              style={{ marginTop: 15 }}
+              source={require("../Images/transport icon.png")}
+            />
+            <View style={styles.divider} />
+            <Text style={styles.buttonText}>לנהל רכבים</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button}>
+            <Image source={require("../Images/users icon.png")} />
+            <View style={styles.divider} />
+            <Text style={styles.buttonText}>לנהל משתמשים</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.row}>
+          <TouchableOpacity style={styles.button}>
+            <Image
+              style={{ marginTop: 10 }}
+              source={require("../Images/edit jobs icon.png")}
+            />
+            <View style={styles.divider} />
+            <Text style={styles.buttonText}>לערוך עבודות</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button}>
+            <Image source={require("../Images/farm icon.png")} />
+            <View style={styles.divider} />
+            <Text style={styles.buttonText}>לנהל חוות</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.row}>
@@ -106,7 +111,11 @@ const StudentPage = ({ navigation }) => {
             <View style={styles.divider} />
             <Text style={styles.buttonText}>דף קשר</Text>
           </TouchableOpacity>
-          <View style={styles.buttonNull}></View>
+          <TouchableOpacity style={styles.button}>
+            <Image source={require("../Images/set role icon.png")} />
+            <View style={styles.divider} />
+            <Text style={styles.buttonText}>לקבוע עבודה</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -122,11 +131,8 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 30,
   },
-  middleContainer: {
-    flex: 1,
-  },
   lowerContainer: {
-    flex: 2,
+    flex: 3,
     justifyContent: "flex-start",
   },
   title: {
@@ -190,4 +196,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default StudentPage;
+export default MangerPage;
