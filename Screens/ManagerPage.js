@@ -13,7 +13,7 @@ import { getAuth, signOut } from "firebase/auth";
 import { AuthContext } from "../AuthProvider";
 import OptionsModal from "./OptionsModal";
 
-const MangerPage = ({ navigation }) => {
+const ManagerPage = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const { user, userData, calendar } = useContext(AuthContext);
   const auth = getAuth();
@@ -140,7 +140,10 @@ const MangerPage = ({ navigation }) => {
             <View style={styles.divider} />
             <Text style={styles.buttonText}>לערוך עבודות</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("ManageFarms")}
+            style={styles.button}
+          >
             <Image source={require("../Images/farm icon.png")} />
             <View style={styles.divider} />
             <Text style={styles.buttonText}>לנהל חוות</Text>
@@ -264,4 +267,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MangerPage;
+export default ManagerPage;

@@ -40,7 +40,7 @@ const LoginPage = ({ navigation }) => {
           navigation.navigate("Teacher");
         } else if (userInfo.role === "manager") {
           console.log(userInfo.role);
-          navigation.navigate("Manger");
+          navigation.navigate("Manager");
         } else {
           console.log("User has no role.");
         }
