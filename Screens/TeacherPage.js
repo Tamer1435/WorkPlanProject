@@ -108,7 +108,7 @@ const TeacherPage = ({ navigation }) => {
             />
             <View style={styles.divider} />
             <Text style={styles.buttonText}>דף קשר</Text>
-          </TouchableOpacity>          
+          </TouchableOpacity>
           <TouchableOpacity style={styles.button}>
             <Image source={require("../Images/attendance icon.png")} />
             <View style={styles.divider} />
