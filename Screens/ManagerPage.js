@@ -110,10 +110,10 @@ const ManagerPage = ({ navigation }) => {
             <View style={styles.divider} />
             <Text style={styles.buttonText}>לוח השנה</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("ViewAvailability")}>
             <Image source={require("../Images/availabity icon.png")} />
             <View style={styles.divider} />
-            <Text style={styles.buttonText}>להגדיר זמינות</Text>
+            <Text style={styles.buttonText}>להציג זמינות</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.row}>
