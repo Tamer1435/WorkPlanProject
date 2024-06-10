@@ -66,7 +66,7 @@ const MangerPage = ({ navigation }) => {
             <View style={styles.divider} />
             <Text style={styles.buttonText}>לוח השנה</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('SetAvailability')}>
+          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('ViewAvailabilityPage')}>
             <Image source={require("../Images/availabity icon.png")} />
             <View style={styles.divider} />
             <Text style={styles.buttonText}>להגדיר זמינות</Text>

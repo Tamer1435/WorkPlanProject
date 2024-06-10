@@ -1,21 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 
-const SetAvailability = () => {
-  const [weekDays, setWeekDays] = useState(['יום א', 'יום ב', 'יום ג', 'יום ד', 'יום ה', 'יום ו']);
-  const navigation = useNavigation();
+const ViewAvailabilityPage = () => {
+  //const [weekDays, setWeekDays] = useState(['יום א', 'יום ב', 'יום ג', 'יום ד', 'יום ה', 'יום ו']);
+  const [availability, ViewAvailability] = useState({});
+
+  useEffect(() => {
+    // Mocked data for available teachers
+    ViewAvailability({
+      'יום א': ['מורה 1', 'מורה 2'],
+      'יום ב': ['מורה 3'],
+      'יום ג': ['מורה 1', 'מורה 4'],
+      'יום ד': ['מורה 2'],
+      'יום ה': ['מורה 1', 'מורה 3'],
+      'יום ו': ['מורה 4'],
+    });
+  }, []);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>הגדר זמינות</Text>
+      <Text style={styles.title}>זמינות</Text>
       <FlatList
         data={weekDays}
         keyExtractor={(item) => item}
         renderItem={({ item: day }) => (
-          <TouchableOpacity style={styles.dayRow} onPress={() => navigation.navigate('DayDetails', { day })}>
+          <View style={styles.dayRow}>
             <Text style={styles.dayText}>{day}</Text>
-          </TouchableOpacity>
+            <View style={styles.teacherList}>
+              {availability[day]?.map((teacher, index) => (
+                <Text key={index} style={styles.teacherText}>{teacher}</Text>
+              ))}
+            </View>
+          </View>
         )}
       />
       <View style={styles.buttonContainer}>
@@ -53,6 +69,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'right',
   },
+  teacherList: {
+    marginTop: 10,
+  },
+  teacherText: {
+    fontSize: 16,
+    textAlign: 'right',
+  },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -71,4 +94,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SetAvailability;
+export default ViewAvailabilityPage;
