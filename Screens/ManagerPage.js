@@ -117,7 +117,10 @@ const ManagerPage = ({ navigation }) => {
           </TouchableOpacity>
         </View>
         <View style={styles.row}>
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("ManageVehicles")}
+            style={styles.button}
+          >
             <Image
               style={{ marginTop: 15 }}
               source={require("../Images/transport icon.png")}
@@ -132,7 +135,10 @@ const ManagerPage = ({ navigation }) => {
           </TouchableOpacity>
         </View>
         <View style={styles.row}>
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("EditJobs")}
+            style={styles.button}
+          >
             <Image
               style={{ marginTop: 5 }}
               source={require("../Images/edit jobs icon.png")}

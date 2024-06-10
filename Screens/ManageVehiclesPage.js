@@ -21,61 +21,50 @@ import {
 } from "firebase/firestore";
 import { firestore } from "../firebase-config";
 
-const ManageFarmsPage = ({ navigation }) => {
-  const [farms, setFarms] = useState([]);
+const ManageVehiclesPage = ({ navigation }) => {
+  const [vehicles, setVehicles] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [newFarmName, setNewFarmName] = useState("");
-  const [newFarmType, setNewFarmType] = useState("");
-  const [newLocation, setNewLocation] = useState("");
-  const [newPhoneNumber, setNewPhoneNumber] = useState("");
+  const [newCarName, setNewCarName] = useState("");
+  const [newCapacity, setNewCapacity] = useState(null);
   const { user, userData, db } = useContext(AuthContext);
 
   useEffect(() => {
-    const fetchFarms = async () => {
-      const farmsCollectionRef = collection(db, "farms");
-      const farmsCollection = await getDocs(farmsCollectionRef);
-      setFarms(
-        farmsCollection.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+    const fetchVehicles = async () => {
+      const vehiclesCollectionRef = collection(db, "vehicles");
+      const vehiclesCollection = await getDocs(vehiclesCollectionRef);
+      setVehicles(
+        vehiclesCollection.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
       );
     };
 
-    fetchFarms();
+    fetchVehicles();
   }, []);
 
   const addFarm = async () => {
-    if (
-      newFarmName.trim() === "" ||
-      newFarmType.trim() === "" ||
-      newLocation.trim() === "" ||
-      newPhoneNumber.trim() === ""
-    ) {
+    if (newCarName.trim() === "" || newCapacity.trim() === "") {
       Alert.alert("שגיאה", "כל השדות דרושים");
       return;
     }
     try {
-      await addDoc(collection(db, "farms"), {
-        name: newFarmName,
-        farmType: newFarmType,
-        location: newLocation,
-        phoneNumber: newPhoneNumber,
+      await addDoc(collection(db, "vehicles"), {
+        name: newCarName,
+        capacity: newCapacity,
       });
-      setNewFarmName("");
-      setNewFarmType("");
-      setNewLocation("");
-      setNewPhoneNumber("");
-      fetchFarms();
-      alert("החווה הוספה בהצלחה");
+      setNewCarName("");
+      setNewCapacity(null);
+      fetchVehicles();
+      alert("הרכב הוספה בהצלחה");
       setModalVisible(false);
     } catch (error) {
-      console.error("Error adding farm: ", error);
-      Alert.alert("שגיאה", "לא ניתן להוסיף חווה");
+      console.error("Error adding vehicle: ", error);
+      Alert.alert("שגיאה", "לא ניתן להוסיף רכב");
     }
   };
 
-  const handleDeleteFarm = (farmId) => {
+  const handleDeleteFarm = (vehicleId) => {
     Alert.alert(
       "אשר את המחיקה",
-      "האם אתה בטוח שברצונך למחוק את החווה הזו?",
+      "האם אתה בטוח שברצונך למחוק את הרכב הזו?",
       [
         {
           text: "לבטל",
@@ -83,7 +72,7 @@ const ManageFarmsPage = ({ navigation }) => {
         },
         {
           text: "למחוק",
-          onPress: () => removeFarm(farmId),
+          onPress: () => removeVehicle(vehicleId),
           style: "destructive",
         },
       ],
@@ -91,22 +80,22 @@ const ManageFarmsPage = ({ navigation }) => {
     );
   };
 
-  const removeFarm = async (id) => {
+  const removeVehicle = async (id) => {
     try {
-      await deleteDoc(doc(db, "farms", id));
-      fetchFarms();
-      alert("החווה נמחקה בהצלחה");
+      await deleteDoc(doc(db, "vehicles", id));
+      fetchVehicles();
+      alert("הרכב נמחקה בהצלחה");
     } catch (error) {
-      console.error("Error removing farm: ", error);
-      Alert.alert("שגיאה", "לא ניתן להסיר את החווה");
+      console.error("Error removing vehicle: ", error);
+      Alert.alert("שגיאה", "לא ניתן להסיר את הרכב");
     }
   };
 
-  const fetchFarms = async () => {
-    const farmsCollectionRef = collection(db, "farms");
-    const farmsCollection = await getDocs(farmsCollectionRef);
-    setFarms(
-      farmsCollection.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+  const fetchVehicles = async () => {
+    const vehiclesCollectionRef = collection(db, "vehicles");
+    const vehiclesCollection = await getDocs(vehiclesCollectionRef);
+    setVehicles(
+      vehiclesCollection.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
     );
   };
 
@@ -122,14 +111,14 @@ const ManageFarmsPage = ({ navigation }) => {
             source={require("../Images/back button.png")}
           />
         </TouchableOpacity>
-        <Text style={styles.header}>ניהול חוות</Text>
+        <Text style={styles.header}>ניהול רכבים</Text>
       </View>
       <View style={styles.container}>
         <FlatList
-          data={farms}
+          data={vehicles}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <View style={styles.farmItem}>
+            <View style={styles.vehicleItem}>
               <View
                 style={{
                   flexDirection: "row-reverse",
@@ -140,9 +129,7 @@ const ManageFarmsPage = ({ navigation }) => {
                 <View style={{ alignItems: "flex-end" }}>
                   <Text>שם: {item.name}</Text>
                   <Text>ID: {item.id}</Text>
-                  <Text>סוג חקלאות: {item.farmType}</Text>
-                  <Text>מקום: {item.location}</Text>
-                  <Text>טלפון: {item.phoneNumber}</Text>
+                  <Text>מקומות: {item.capacity}</Text>
                 </View>
                 <TouchableOpacity
                   style={styles.buttonDelete}
@@ -153,14 +140,14 @@ const ManageFarmsPage = ({ navigation }) => {
               </View>
             </View>
           )}
-          ListEmptyComponent={<Text>אין חוות זמינות.</Text>}
+          ListEmptyComponent={<Text>אין רכבים זמינות.</Text>}
         />
         <View style={styles.inputContainer}>
           <TouchableOpacity
             style={styles.button}
             onPress={() => setModalVisible(true)}
           >
-            <Text>הוסף חווה</Text>
+            <Text>הוסף רכב</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -175,34 +162,22 @@ const ManageFarmsPage = ({ navigation }) => {
             <TextInput
               style={styles.input}
               placeholder="שם:"
-              value={newFarmName}
-              onChangeText={setNewFarmName}
+              value={newCarName}
+              onChangeText={setNewCarName}
               placeholderTextColor={"#767676"}
             />
             <TextInput
               style={styles.input}
-              placeholder="סוג חקלאות:"
-              value={newFarmType}
-              onChangeText={setNewFarmType}
+              placeholder="מקומות:"
+              value={newCapacity}
+              onChangeText={setNewCapacity}
               placeholderTextColor={"#767676"}
+              keyboardType="numeric"
             />
-            <TextInput
-              style={styles.input}
-              placeholder="מקום:"
-              value={newLocation}
-              onChangeText={setNewLocation}
-              placeholderTextColor={"#767676"}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="טלפון:"
-              value={newPhoneNumber}
-              onChangeText={setNewPhoneNumber}
-              placeholderTextColor={"#767676"}
-            />
+
             <View style={styles.inputContainer}>
               <TouchableOpacity style={styles.button} onPress={addFarm}>
-                <Text>הוסף חווה</Text>
+                <Text>הוסף רכב</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.closeButton}
@@ -240,7 +215,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
     justifyContent: "center",
   },
-  farmItem: {
+  vehicleItem: {
     padding: 10,
     margin: 10,
     backgroundColor: "#fff",
@@ -308,4 +283,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ManageFarmsPage;
+export default ManageVehiclesPage;
