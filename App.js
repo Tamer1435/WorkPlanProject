@@ -12,6 +12,9 @@ import AvailabilityPage from "./Screens/AvailabilityPage";
 import FeedbackPage from "./Screens/FeedbackPage";
 import ReportPage from "./Screens/ReportPage";
 import SetAvailability from "./Screens/SetAvailability";
+import DayDetails from "./Screens/DayDetails";
+import ViewAvailabilityPage from "./Screens/ViewAvailabilityPage";
+
 
 
 const Stack = createStackNavigator();
@@ -33,7 +36,8 @@ export default function App() {
         <Stack.Screen name="Feedback" component={FeedbackPage} /> 
         <Stack.Screen name="ReportPage" component={ReportPage} />
         <Stack.Screen name="SetAvailability" component={SetAvailability} />
-
+        <Stack.Screen name="DayDetails" component={DayDetails} />
+        <Stack.Screen name="ViewAvailability" component={ViewAvailabilityPage} />
 
 
       </Stack.Navigator>
