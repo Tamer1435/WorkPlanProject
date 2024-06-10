@@ -5,9 +5,10 @@ import { AuthProvider } from "./AuthProvider";
 import LoginPage from "./Screens/LoginPage";
 import StudentPage from "./Screens/StudentPage";
 import TeacherPage from "./Screens/TeacherPage";
-import MangerPage from "./Screens/MangerPage";
+import ManagerPage from "./Screens/ManagerPage";
 import CalendarPage from "./Screens/CalendarPage";
 import SetJobsPage from "./Screens/SetJobsPage";
+import ManageFarmsPage from "./Screens/ManageFarmsPage";
 
 const Stack = createStackNavigator();
 
@@ -23,9 +24,10 @@ export default function App() {
           <Stack.Screen name="Login" component={LoginPage} />
           <Stack.Screen name="Student" component={StudentPage} />
           <Stack.Screen name="Teacher" component={TeacherPage} />
-          <Stack.Screen name="Manger" component={MangerPage} />
+          <Stack.Screen name="Manager" component={ManagerPage} />
           <Stack.Screen name="Calendar" component={CalendarPage} />
           <Stack.Screen name="SetJobs" component={SetJobsPage} />
+          <Stack.Screen name="ManageFarms" component={ManageFarmsPage} />
         </Stack.Navigator>
       </NavigationContainer>
     </AuthProvider>

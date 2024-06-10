@@ -79,7 +79,6 @@ const CalendarPage = ({ navigation }) => {
 
   const renderDay = ({ item }) => (
     <TouchableOpacity
-      key={`day-${item.day}`}
       style={[
         styles.dayButton,
         selectedDay === item.day && styles.selectedDayButton,
@@ -175,9 +174,7 @@ const CalendarPage = ({ navigation }) => {
               index,
             }) // Assuming each item has a height of 50
           }
-          keyExtractor={(item) => {
-            item.day;
-          }}
+          keyExtractor={(item) => item.day}
           horizontal
           showsHorizontalScrollIndicator={false}
           style={styles.daysList}
