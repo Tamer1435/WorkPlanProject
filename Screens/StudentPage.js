@@ -91,7 +91,7 @@ const StudentPage = ({ navigation }) => {
             <View style={styles.divider} />
             <Text style={styles.buttonText}>לוח השנה</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button}> 
+          <TouchableOpacity style={styles.button}>
             <Image source={require("../Images/report icon.png")} />
             <View style={styles.divider} />
             <Text style={styles.buttonText}>דו”ח עבודה </Text>
