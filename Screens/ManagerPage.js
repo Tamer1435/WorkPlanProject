@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
@@ -9,8 +9,15 @@ import {
   FlatList,
   Button,
 } from "react-native";
+import { getAuth, signOut } from "firebase/auth";
+import { AuthContext } from "../AuthProvider";
+import OptionsModal from "./OptionsModal";
 
-const MangerPage = ({ navigation }) => {
+const ManagerPage = ({ navigation }) => {
+  const [modalVisible, setModalVisible] = useState(false);
+  const { user, userData, calendar } = useContext(AuthContext);
+  const auth = getAuth();
+
   const currentDate = new Date();
   const day = currentDate.getDate();
   const month = currentDate.getMonth();
@@ -23,16 +30,53 @@ const MangerPage = ({ navigation }) => {
     timeZone: "UTC",
   });
 
-  let name = "[שם אדמין]";
+  let name = "";
 
-  const todayActivities = [];
+  if (userData) {
+    name = userData.name;
+  } else {
+    name = "no name";
+  }
 
   const goToCalendar = () => navigation.navigate("Calendar");
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigation.navigate("Login");
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
+  const openModal = () => {
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+  };
 
   return (
     <View style={styles.container} behavior="padding">
       <View style={styles.upperContainer}>
-        <Text style={styles.title}>WorkPlan</Text>
+        <View style={styles.headerContainer}>
+          <View
+            style={{
+              flex: 1,
+              alignItems: "center",
+            }}
+          >
+            <Text style={styles.title}>WorkPlan</Text>
+          </View>
+          <TouchableOpacity style={styles.optionButton} onPress={openModal}>
+            <Image
+              style={{ height: 22, width: 30 }}
+              source={require("../Images/option button.png")}
+            />
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.personalSection}>
           <View style={{ flex: 1, paddingLeft: 30 }}>
             <Image source={require("../Images/icon clock.png")} />
@@ -73,7 +117,10 @@ const MangerPage = ({ navigation }) => {
           </TouchableOpacity>
         </View>
         <View style={styles.row}>
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("ManageVehicles")}
+            style={styles.button}
+          >
             <Image
               style={{ marginTop: 15 }}
               source={require("../Images/transport icon.png")}
@@ -88,15 +135,21 @@ const MangerPage = ({ navigation }) => {
           </TouchableOpacity>
         </View>
         <View style={styles.row}>
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("EditJobs")}
+            style={styles.button}
+          >
             <Image
-              style={{ marginTop: 10 }}
+              style={{ marginTop: 5 }}
               source={require("../Images/edit jobs icon.png")}
             />
             <View style={styles.divider} />
             <Text style={styles.buttonText}>לערוך עבודות</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("ManageFarms")}
+            style={styles.button}
+          >
             <Image source={require("../Images/farm icon.png")} />
             <View style={styles.divider} />
             <Text style={styles.buttonText}>לנהל חוות</Text>
@@ -105,19 +158,27 @@ const MangerPage = ({ navigation }) => {
         <View style={styles.row}>
           <TouchableOpacity style={styles.button}>
             <Image
-              style={{ marginTop: 10 }}
+              style={{ marginTop: 0 }}
               source={require("../Images/contact icon.png")}
             />
             <View style={styles.divider} />
             <Text style={styles.buttonText}>דף קשר</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("SetJobs")}
+            style={styles.button}
+          >
             <Image source={require("../Images/set role icon.png")} />
             <View style={styles.divider} />
             <Text style={styles.buttonText}>לקבוע עבודה</Text>
           </TouchableOpacity>
         </View>
       </View>
+      <OptionsModal
+        visible={modalVisible}
+        onLogout={handleLogout}
+        onClose={closeModal}
+      />
     </View>
   );
 };
@@ -126,6 +187,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#85E1D7",
+    justifyContent: "space-between",
   },
   upperContainer: {
     flex: 1,
@@ -134,12 +196,27 @@ const styles = StyleSheet.create({
   lowerContainer: {
     flex: 3,
     justifyContent: "flex-start",
+    top: 10,
+  },
+  headerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 20,
+  },
+  optionButton: {
+    height: 45,
+    width: 45,
+    borderRadius: 30,
+    right: 10,
+    top: 20,
+    padding: 10,
+    alignSelf: "flex-end",
+    position: "absolute",
   },
   title: {
     fontSize: 25,
-    fontWeight: "600",
-    textAlign: "center",
-    paddingTop: 30,
+    fontWeight: "bold",
   },
 
   personalSection: {
@@ -196,4 +273,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MangerPage;
+export default ManagerPage;

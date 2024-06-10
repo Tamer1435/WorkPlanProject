@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,8 +6,15 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Image,
+  ActivityIndicator,
+  Platform,
 } from "react-native";
-import Icon from "react-native-vector-icons/Ionicons";
+import { AuthContext } from "../AuthProvider";
+import { collection, getDocs, getDoc, doc } from "firebase/firestore";
+import { format } from "date-fns";
+import Modal from "react-native-modal";
+import { LinearGradient } from "expo-linear-gradient";
 
 const daysOfWeek = [
   "יום ראשון",
@@ -35,15 +42,22 @@ const getDayName = (date) => {
   return new Intl.DateTimeFormat("he-IL", options).format(date);
 };
 
-const CalendarPage = () => {
+const CalendarPage = ({ navigation }) => {
   const [selectedDay, setSelectedDay] = useState(null);
-  const [events, setEvents] = useState({
-    1: ["Event 1", "Event 2"],
-    2: ["Event 3"],
-    3: ["Event 4", "Event 5", "Event 6"],
-    // Add more events for other days
-  });
+  const { user, userData, calendar, db, refreshData, loading } =
+    useContext(AuthContext);
+  const [ontoHeaderDay, setHeaderDay] = useState(null);
+  const [indexOfSelectedDay, setIndexOfSelectedDay] = useState(null);
+  const [daysEvents, setDaysEvents] = useState(null);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
+  // Refresh the data when mounted
+  useEffect(() => {
+    refreshData();
+  }, []);
+
+  // Getting date info
   const currentDate = new Date();
   const currentDay = new Date().getDate();
   const currentMonth = new Date().getMonth();
@@ -51,33 +65,49 @@ const CalendarPage = () => {
     month: "long",
     timeZone: "UTC",
   });
-  const dayName = currentDate.toLocaleString("he-IL", {
-    weekday: "long",
-    timeZone: "UTC",
-  });
   const currentYear = new Date().getFullYear();
   const preDaysInMonth = getDaysInMonth(currentMonth, currentYear);
-  const daysInMonth = Array.from(
-    { length: preDaysInMonth - currentDay + 1 },
-    (_, i) => currentDay + i
-  );
-  const daysStartingFromCurrent = [
-    ...daysInMonth.slice(currentDay - 1),
-    ...daysInMonth.slice(0, currentDay - 1),
-  ].map((day) => {
+  const daysInMonth = Array.from({ length: preDaysInMonth }, (_, i) => 1 + i);
+  const daysStartingFromCurrent = daysInMonth.map((day) => {
     const date = new Date(currentYear, currentMonth, day);
     const dayName = getDayName(date);
     return { day, dayName };
   });
 
+  // Getting the calendar from database
+  const events = calendar;
+
   const renderDay = ({ item }) => (
     <TouchableOpacity
-      key={`day-${item.day}`}
       style={[
         styles.dayButton,
         selectedDay === item.day && styles.selectedDayButton,
       ]}
-      onPress={() => setSelectedDay(item.day)}
+      onPress={() => {
+        setSelectedDay(item.day);
+        let index = -1;
+        const eventsForTheDay = [];
+        events.map((event) => {
+          if (event.day == item.day) {
+            index = events.indexOf(event);
+            eventsForTheDay.push(events[index]);
+          }
+        });
+        if (index != -1) {
+          setDaysEvents(eventsForTheDay);
+        } else {
+          setDaysEvents(null);
+        }
+        setHeaderDay(
+          " " +
+            daysOfWeek[daysOfWeek.indexOf(item.dayName)] +
+            "," +
+            " " +
+            item.day +
+            " " +
+            monthName
+        );
+      }}
     >
       <Text style={styles.dayText}>{item.day}</Text>
       <Text style={styles.dayText}>
@@ -87,62 +117,171 @@ const CalendarPage = () => {
   );
 
   const renderEvent = ({ item }) => (
-    <View style={styles.eventContainer}>
-      <Text style={styles.eventText}>{item}</Text>
-    </View>
+    <TouchableOpacity
+      onPress={() => handleEventPress(item)}
+      style={styles.eventContainer}
+    >
+      <View>
+        <Text style={styles.eventText}>{item.eventName}</Text>
+        <Text style={styles.eventSubText}>עבודה:{item.job}</Text>
+        <Text style={styles.eventSubText}>מקום:{item.location}</Text>
+      </View>
+      <View>
+        <Text style={styles.eventSubText}>
+          {format(item.timeOfMoving.toDate(), "hh:mm a")}
+        </Text>
+      </View>
+    </TouchableOpacity>
   );
 
+  const toggleModal = () => {
+    setIsModalVisible(!isModalVisible);
+  };
+
+  const handleEventPress = (event) => {
+    setSelectedEvent(event);
+    toggleModal();
+  };
+
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={["#8d82ff", "#4036b3"]} // Darker to lighter gradient
+      start={[0, 0]} // Start from top-left corner
+      end={[0.25, 0.25]} // End at bottom-right corner
+      style={styles.container}
+    >
       <View style={styles.topContainer}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Image
+            style={{ height: 20, width: 30 }}
+            source={require("../Images/back button.png")}
+          />
+        </TouchableOpacity>
         <Text style={styles.headerText}>
           {monthName} {currentYear}
         </Text>
         <FlatList
           data={daysStartingFromCurrent}
           renderItem={renderDay}
-          keyExtractor={(item) => {
-            `day-${item.day}`;
-          }}
+          initialScrollIndex={currentDay - 1}
+          getItemLayout={
+            (data, index) => ({
+              length: 105,
+              offset: 99 * index,
+              index,
+            }) // Assuming each item has a height of 50
+          }
+          keyExtractor={(item) => item.day}
           horizontal
           showsHorizontalScrollIndicator={false}
           style={styles.daysList}
         />
       </View>
       <View style={styles.bottomContainer}>
+        <View style={styles.eventHeader}>
+          <Text style={styles.eventText}>אירועי עבודה</Text>
+          <Text style={styles.dateText}>{ontoHeaderDay}</Text>
+        </View>
         {selectedDay ? (
           <FlatList
-            data={events[selectedDay] || []}
+            data={daysEvents}
             renderItem={renderEvent}
-            keyExtractor={(item, index) => index.toString()}
+            keyExtractor={(item) => item.key}
           />
         ) : (
           <Text style={styles.noEventsText}>בחר יום לראות אירועים</Text>
         )}
       </View>
-    </View>
+      <Modal
+        isVisible={isModalVisible}
+        style={{
+          height: "100%",
+          width: "100%",
+          justifyContent: "flex-end",
+          alignSelf: "center",
+        }}
+        onBackdropPress={toggleModal}
+      >
+        <View style={styles.modalContent}>
+          {selectedEvent && (
+            <>
+              <Text style={styles.modalTitle}>{selectedEvent.eventName}</Text>
+              <Text style={styles.modalDate}>
+                {format(selectedEvent.timeOfMoving.toDate(), "hh:mm a")}
+              </Text>
+              <View style={{ alignSelf: "flex-end" }}>
+                <Text style={styles.modalTime}></Text>
+                <Text style={styles.modalLocation}>
+                  עבודה: {selectedEvent.job}
+                </Text>
+                <Text style={styles.modalLocation}>
+                  מקום: {selectedEvent.location}
+                </Text>
+                <Text style={styles.modalMeetingPlace}>
+                  מקום התכנסות: {selectedEvent.meetingPlace}
+                </Text>
+                <Text style={styles.modalAttendant}>
+                  מורה: {selectedEvent.attendant}
+                </Text>
+                <Text style={styles.modalVehicle}>
+                  רכב: {selectedEvent.vehicle}
+                </Text>
+                <Text style={styles.modalStudentsTitle}>סטודנטים:</Text>
+                <Text style={styles.modalStudents}>
+                  {selectedEvent.students.join("\n")}
+                </Text>
+              </View>
+            </>
+          )}
+        </View>
+      </Modal>
+      {/* Loading popup */}
+      <Modal visible={loading} transparent animationType="fade">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <ActivityIndicator size="large" color="#0000ff" />
+            <Text style={styles.loadingText}>טוען...</Text>
+          </View>
+        </View>
+      </Modal>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 100,
-    backgroundColor: "#5C4DFF",
+    paddingTop: 35,
   },
   topContainer: {
     flex: 1,
+    justifyContent: "space-evenly",
+  },
+  backButton: {
+    height: 45,
+    width: 45,
+    borderRadius: 30,
+    paddingRight: 40,
+    alignSelf: "flex-end",
+    justifyContent: "center",
   },
   bottomContainer: {
-    flex: 3,
+    flex: 2.5,
     backgroundColor: "#ffffff",
-    borderRadius: "35, 35, 0, 0",
+    borderTopLeftRadius: 35,
+    borderTopRightRadius: 35,
+    overflow: "hidden",
   },
   headerText: {
     fontSize: 26,
     color: "#ffffff",
-    fontWeight: "700",
+    fontWeight: "bold",
     paddingLeft: 20,
+    top: 25,
+    textAlign: "left",
   },
   daysList: {
     borderColor: "#ddd",
@@ -151,8 +290,8 @@ const styles = StyleSheet.create({
     padding: 20,
     margin: 10,
     backgroundColor: "#7E8BFF",
-    width: 85,
-    height: 95,
+    width: 80,
+    height: 85,
     borderRadius: 15,
     alignSelf: "flex-end",
     alignItems: "center",
@@ -162,7 +301,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   dayText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700",
     color: "#000",
   },
@@ -170,21 +309,135 @@ const styles = StyleSheet.create({
     flex: 2,
     padding: 20,
   },
+  eventHeader: {
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    marginTop: 35,
+    padding: 10,
+    borderBottomWidth: 0.5,
+    borderColor: "#000",
+  },
   eventContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
-    marginBottom: 10,
+    padding: 20,
+    width: "90%",
+    justifyContent: "space-between",
+    alignSelf: "center",
+    margin: 10,
+    backgroundColor: "#7E8BFF",
+    opacity: 0.75,
+    borderColor: "#000000",
+    borderRadius: 20,
+    borderWidth: 0.5,
   },
   eventText: {
-    marginLeft: 10,
-    fontSize: 16,
+    marginRight: 20,
+    fontSize: 18,
+    fontWeight: "700",
     color: "#000",
+    textAlign: "right",
+  },
+  eventSubText: {
+    marginRight: 20,
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#000",
+    textAlign: "right",
+  },
+  dateText: {
+    marginLeft: 20,
+    justifyContent: "flex-end",
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#000",
+    opacity: 0.5,
   },
   noEventsText: {
     textAlign: "center",
     marginTop: 20,
     fontSize: 16,
     color: "#888",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "flex-end",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  modalDate: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  modalTime: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  modalLocation: {
+    textAlign: "right",
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  modalMeetingPlace: {
+    textAlign: "right",
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  modalAttendant: {
+    textAlign: "right",
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  modalStudentsTitle: {
+    textAlign: "right",
+    fontSize: 16,
+    fontWeight: "600",
+    textDecorationLine: "underline",
+    marginBottom: 5,
+  },
+  modalStudents: {
+    textAlign: "right",
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  modalVehicle: {
+    textAlign: "right",
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  closeButton: {
+    backgroundColor: "#007bff",
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
+    alignItems: "center",
+  },
+  closeButtonText: {
+    color: "white",
+    fontSize: 16,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#5C4DFF",
+    shadowRadius: 20,
+    shadowOpacity: 0.25,
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    borderWidth: 0.5,
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 10,
   },
 });
 
