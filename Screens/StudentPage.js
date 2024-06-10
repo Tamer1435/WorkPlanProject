@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
@@ -9,8 +9,15 @@ import {
   FlatList,
   Button,
 } from "react-native";
+import { getAuth, signOut } from "firebase/auth";
+import { AuthContext } from "../AuthProvider";
+import OptionsModal from "./OptionsModal";
 
 const StudentPage = ({ navigation }) => {
+  const [modalVisible, setModalVisible] = useState(false);
+  const { user, userData, calendar } = useContext(AuthContext);
+  const auth = getAuth();
+
   const currentDate = new Date();
   const day = currentDate.getDate();
   const month = currentDate.getMonth();
@@ -23,14 +30,52 @@ const StudentPage = ({ navigation }) => {
     timeZone: "UTC",
   });
 
-  let name = "[שם סטודנטית]";
+  let name = "";
+
+  if (userData) {
+    name = userData.name;
+  } else {
+    name = "no name";
+  }
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigation.navigate("Login");
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
 
   const todayActivities = [];
+
+  const openModal = () => {
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+  };
 
   return (
     <View style={styles.container} behavior="padding">
       <View style={styles.upperContainer}>
-        <Text style={styles.title}>WorkPlan</Text>
+        <View style={styles.headerContainer}>
+          <View
+            style={{
+              flex: 1,
+              alignItems: "center",
+            }}
+          >
+            <Text style={styles.title}>WorkPlan</Text>
+          </View>
+          <TouchableOpacity style={styles.optionButton} onPress={openModal}>
+            <Image
+              style={{ height: 22, width: 30 }}
+              source={require("../Images/option button.png")}
+            />
+          </TouchableOpacity>
+        </View>
         <View style={styles.personalSection}>
           <View style={{ flex: 1, paddingLeft: 30 }}>
             <Image source={require("../Images/icon clock.png")} />
@@ -91,7 +136,7 @@ const StudentPage = ({ navigation }) => {
             <View style={styles.divider} />
             <Text style={styles.buttonText}>לוח השנה</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Feedback')}> 
+          <TouchableOpacity style={styles.button} onPress={() =>navigation.navigate("ReportPage")}>
             <Image source={require("../Images/report icon.png")} />
             <View style={styles.divider} />
             <Text style={styles.buttonText}>דו”ח עבודה </Text>
@@ -109,6 +154,7 @@ const StudentPage = ({ navigation }) => {
           <View style={styles.buttonNull}></View>
         </View>
       </View>
+      <OptionsModal visible={modalVisible} onClose={closeModal} />
     </View>
   );
 };
@@ -117,6 +163,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#85E1D7",
+    justifyContent: "space-between",
   },
   upperContainer: {
     flex: 1,
@@ -129,11 +176,25 @@ const styles = StyleSheet.create({
     flex: 2,
     justifyContent: "flex-start",
   },
+  headerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 20,
+  },
+  optionButton: {
+    height: 45,
+    width: 45,
+    borderRadius: 30,
+    right: 10,
+    top: 20,
+    padding: 10,
+    alignSelf: "flex-end",
+    position: "absolute",
+  },
   title: {
     fontSize: 25,
-    fontWeight: "600",
-    textAlign: "center",
-    paddingTop: 30,
+    fontWeight: "bold",
   },
 
   personalSection: {

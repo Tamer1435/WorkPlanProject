@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
@@ -9,8 +9,15 @@ import {
   FlatList,
   Button,
 } from "react-native";
+import { getAuth, signOut } from "firebase/auth";
+import { AuthContext } from "../AuthProvider";
+import OptionsModal from "./OptionsModal";
 
 const TeacherPage = ({ navigation }) => {
+  const [modalVisible, setModalVisible] = useState(false);
+  const { user, userData, calendar } = useContext(AuthContext);
+  const auth = getAuth();
+
   const currentDate = new Date();
   const day = currentDate.getDate();
   const month = currentDate.getMonth();
@@ -23,14 +30,52 @@ const TeacherPage = ({ navigation }) => {
     timeZone: "UTC",
   });
 
-  let name = "[שם מורה]";
+  let name = "";
+
+  if (userData) {
+    name = userData.name;
+  } else {
+    name = "no name";
+  }
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigation.navigate("Login");
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
 
   const todayActivities = [];
+
+  const openModal = () => {
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+  };
 
   return (
     <View style={styles.container} behavior="padding">
       <View style={styles.upperContainer}>
-        <Text style={styles.title}>WorkPlan</Text>
+        <View style={styles.headerContainer}>
+          <View
+            style={{
+              flex: 1,
+              alignItems: "center",
+            }}
+          >
+            <Text style={styles.title}>WorkPlan</Text>
+          </View>
+          <TouchableOpacity style={styles.optionButton} onPress={openModal}>
+            <Image
+              style={{ height: 22, width: 30 }}
+              source={require("../Images/option button.png")}
+            />
+          </TouchableOpacity>
+        </View>
         <View style={styles.personalSection}>
           <View style={{ flex: 1, paddingLeft: 30 }}>
             <Image source={require("../Images/icon clock.png")} />
@@ -94,11 +139,7 @@ const TeacherPage = ({ navigation }) => {
             <View style={styles.divider} />
             <Text style={styles.buttonText}>לוח השנה</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button}
-
-          onPress={() => navigation.navigate('Availability')}
-
-          >
+          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Availability")}>
             <Image source={require("../Images/availabity icon.png")} />
             <View style={styles.divider} />
             <Text style={styles.buttonText}>להגדיר זמינות</Text>
@@ -113,15 +154,18 @@ const TeacherPage = ({ navigation }) => {
             <View style={styles.divider} />
             <Text style={styles.buttonText}>דף קשר</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Attendance')}>
-
+          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Attendance")}>
             <Image source={require("../Images/attendance icon.png")} />
             <View style={styles.divider} />
             <Text style={styles.buttonText}>נוכחות</Text>
           </TouchableOpacity>
         </View>
       </View>
+      <OptionsModal
+        visible={modalVisible}
+        onLogout={handleLogout}
+        onClose={closeModal}
+      />
     </View>
   );
 };
@@ -142,11 +186,25 @@ const styles = StyleSheet.create({
     flex: 2,
     justifyContent: "flex-start",
   },
+  headerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 20,
+  },
+  optionButton: {
+    height: 45,
+    width: 45,
+    borderRadius: 30,
+    right: 10,
+    top: 20,
+    padding: 10,
+    alignSelf: "flex-end",
+    position: "absolute",
+  },
   title: {
     fontSize: 25,
-    fontWeight: "600",
-    textAlign: "center",
-    paddingTop: 30,
+    fontWeight: "bold",
   },
 
   personalSection: {
