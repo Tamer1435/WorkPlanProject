@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
 
 const ViewAvailabilityPage = () => {
-  //const [weekDays, setWeekDays] = useState(['יום א', 'יום ב', 'יום ג', 'יום ד', 'יום ה', 'יום ו']);
-  const [availability, ViewAvailability] = useState({});
+  const [weekDays, setWeekDays] = useState(['יום א', 'יום ב', 'יום ג', 'יום ד', 'יום ה', 'יום ו']);
+  const [availability, setAvailability] = useState({});
 
   useEffect(() => {
     // Mocked data for available teachers
-    ViewAvailability({
+    setAvailability({
       'יום א': ['מורה 1', 'מורה 2'],
       'יום ב': ['מורה 3'],
       'יום ג': ['מורה 1', 'מורה 4'],
@@ -34,11 +34,6 @@ const ViewAvailabilityPage = () => {
           </View>
         )}
       />
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.publishButton} onPress={() => alert('השינויים פורסמו בהצלחה')}>
-          <Text style={styles.publishButtonText}>פרסם</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 };
@@ -75,22 +70,6 @@ const styles = StyleSheet.create({
   teacherText: {
     fontSize: 16,
     textAlign: 'right',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  publishButton: {
-    backgroundColor: '#00008B',
-    padding: 20, // Increased padding to make the button bigger
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  publishButtonText: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '600',
   },
 });
 
