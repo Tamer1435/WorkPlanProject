@@ -27,6 +27,7 @@ const ViewAvailabilityPage = () => {
       "יום ד": ["מורה 2"],
       "יום ה": ["מורה 1", "מורה 3"],
       "יום ו": ["מורה 4"],
+
     });
   }, []);
 
@@ -49,6 +50,7 @@ const ViewAvailabilityPage = () => {
           </View>
         )}
       />
+
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={styles.publishButton}
@@ -57,6 +59,7 @@ const ViewAvailabilityPage = () => {
           <Text style={styles.publishButtonText}>פרסם</Text>
         </TouchableOpacity>
       </View>
+
     </View>
   );
 };
@@ -110,6 +113,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "600",
   },
+
 });
 
 export default ViewAvailabilityPage;
