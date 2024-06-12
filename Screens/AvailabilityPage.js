@@ -1,17 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useContext } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { AuthContext } from "../AuthProvider";
+import { collection, addDoc } from "firebase/firestore";
 
 const AvailabilityPage = () => {
   const [weekDates, setWeekDates] = useState([]);
   const [availability, setAvailability] = useState({});
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const { userData, db } = useContext(AuthContext);
 
   useEffect(() => {
     const getWeekDates = (offset = 0) => {
       const today = new Date();
       today.setDate(today.getDate() + offset * 7);
-      const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
+      const startOfWeek = new Date(
+        today.setDate(today.getDate() - today.getDay())
+      );
       let dates = [];
       for (let i = 0; i < 7; i++) {
         const nextDate = new Date(startOfWeek);
@@ -33,7 +38,7 @@ const AvailabilityPage = () => {
 
   const getStatusStyle = (date, status) => {
     if (availability[date] === status) {
-      return status === 'available' ? styles.available : styles.unavailable;
+      return status === "available" ? styles.available : styles.unavailable;
     }
     return styles.neutral;
   };
@@ -42,11 +47,34 @@ const AvailabilityPage = () => {
     setCurrentWeekOffset((prev) => prev + direction);
   };
 
-  const saveAvailability = () => {
-    setShowSuccessMessage(true);
-    setTimeout(() => {
-      setShowSuccessMessage(false);
-    }, 3000);
+  const saveAvailability = async () => {
+    // setShowSuccessMessage(true);
+    // console.log(availability);
+    // setTimeout(() => {
+    //   setShowSuccessMessage(false);
+    // }, 3000);
+
+    try {
+      await addDoc(
+        collection(
+          db,
+          "availability",
+          `${weekDates[0]?.toLocaleDateString(
+            "he-IL"
+          )}-${weekDates[6]?.toLocaleDateString("he-IL")}`,
+          "staff"
+        ),
+        {
+          id: userData.name,
+          dayJob: availability,
+        }
+      );
+      Alert.alert("שמר הזמינות לשבוע");
+      setAvailability({});
+    } catch (error) {
+      console.error("Error saving avaliability: ", error);
+      Alert.alert("שגיאה", "לא שמר הזמינות");
+    }
   };
 
   return (
@@ -55,7 +83,9 @@ const AvailabilityPage = () => {
         <TouchableOpacity onPress={() => changeWeek(-1)}>
           <Text style={styles.navButton}>◀</Text>
         </TouchableOpacity>
-        <Text style={styles.weekText}>{`${weekDates[0]?.toLocaleDateString('he-IL')} - ${weekDates[6]?.toLocaleDateString('he-IL')}`}</Text>
+        <Text style={styles.weekText}>{`${weekDates[0]?.toLocaleDateString(
+          "he-IL"
+        )} - ${weekDates[6]?.toLocaleDateString("he-IL")}`}</Text>
         <TouchableOpacity onPress={() => changeWeek(1)}>
           <Text style={styles.navButton}>▶</Text>
         </TouchableOpacity>
@@ -63,8 +93,8 @@ const AvailabilityPage = () => {
       <Text style={styles.title}>הזמניות:</Text>
       <View style={styles.datesContainer}>
         {weekDates.map((date) => {
-          const dateString = date.toLocaleDateString('he-IL');
-          const dayName = date.toLocaleString('he-IL', { weekday: 'long' });
+          const dateString = date.toLocaleDateString("he-IL");
+          const dayName = date.toLocaleString("he-IL", { weekday: "long" });
           return (
             <View key={dateString} style={styles.dateRowWrapper}>
               <View style={styles.dateRow}>
@@ -73,14 +103,18 @@ const AvailabilityPage = () => {
                   <Text>{dayName}</Text>
                 </View>
                 <TouchableOpacity
-                  style={getStatusStyle(dateString, 'available')}
-                  onPress={() => handleAvailabilityChange(dateString, 'available')}
+                  style={getStatusStyle(dateString, "available")}
+                  onPress={() =>
+                    handleAvailabilityChange(dateString, "available")
+                  }
                 >
                   <Text style={styles.buttonText}>יכול</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={getStatusStyle(dateString, 'unavailable')}
-                  onPress={() => handleAvailabilityChange(dateString, 'unavailable')}
+                  style={getStatusStyle(dateString, "unavailable")}
+                  onPress={() =>
+                    handleAvailabilityChange(dateString, "unavailable")
+                  }
                 >
                   <Text style={styles.buttonText}>לא יכול</Text>
                 </TouchableOpacity>
@@ -104,100 +138,100 @@ const AvailabilityPage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#85E1D7',
+    backgroundColor: "#85E1D7",
     padding: 20,
     paddingTop: 60,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 10,
   },
   navButton: {
     fontSize: 18,
-    color: '#000',
+    color: "#000",
   },
   weekText: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   title: {
     fontSize: 25,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
     marginBottom: 20,
   },
   datesContainer: {
     flex: 1,
   },
   dateRowWrapper: {
-    backgroundColor: '#E8E8E8', 
+    backgroundColor: "#E8E8E8",
     borderRadius: 10,
     marginVertical: 5,
     padding: 10,
   },
   dateRow: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   dateInfo: {
     flex: 1,
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   neutral: {
     flex: 1,
     margin: 5,
     padding: 10,
-    backgroundColor: '#D3D3D3',
-    alignItems: 'center',
+    backgroundColor: "#D3D3D3",
+    alignItems: "center",
     borderRadius: 10,
   },
   available: {
     flex: 1,
     margin: 5,
     padding: 10,
-    backgroundColor: '#4CAF50',
-    alignItems: 'center',
+    backgroundColor: "#4CAF50",
+    alignItems: "center",
     borderRadius: 10,
   },
   unavailable: {
     flex: 1,
     margin: 5,
     padding: 10,
-    backgroundColor: '#F44336',
-    alignItems: 'center',
+    backgroundColor: "#F44336",
+    alignItems: "center",
     borderRadius: 10,
   },
   buttonText: {
-    color: '#fff',
-    fontWeight: '600',
+    color: "#fff",
+    fontWeight: "600",
   },
   saveButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: "#4CAF50",
     padding: 15,
     borderRadius: 10,
-    alignItems: 'center',
+    alignItems: "center",
     marginVertical: 20,
   },
   saveButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   successMessage: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 20,
-    left: '50%',
+    left: "50%",
     transform: [{ translateX: -50 }],
-    backgroundColor: '#4CAF50',
+    backgroundColor: "#4CAF50",
     padding: 10,
     borderRadius: 5,
   },
   successMessageText: {
-    color: '#fff',
-    fontWeight: '600',
+    color: "#fff",
+    fontWeight: "600",
   },
 });
 

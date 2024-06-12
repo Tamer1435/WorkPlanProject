@@ -40,7 +40,7 @@ const ManageVehiclesPage = ({ navigation }) => {
     fetchVehicles();
   }, []);
 
-  const addFarm = async () => {
+  const addVehicle = async () => {
     if (newCarName.trim() === "" || newCapacity.trim() === "") {
       Alert.alert("שגיאה", "כל השדות דרושים");
       return;
@@ -61,7 +61,7 @@ const ManageVehiclesPage = ({ navigation }) => {
     }
   };
 
-  const handleDeleteFarm = (vehicleId) => {
+  const handleDeleteVehicle = (vehicleId) => {
     Alert.alert(
       "אשר את המחיקה",
       "האם אתה בטוח שברצונך למחוק את הרכב הזו?",
@@ -133,7 +133,7 @@ const ManageVehiclesPage = ({ navigation }) => {
                 </View>
                 <TouchableOpacity
                   style={styles.buttonDelete}
-                  onPress={() => handleDeleteFarm(item.id)}
+                  onPress={() => handleDeleteVehicle(item.id)}
                 >
                   <Text style={{ color: "#fff" }}>מחק</Text>
                 </TouchableOpacity>
@@ -176,7 +176,7 @@ const ManageVehiclesPage = ({ navigation }) => {
             />
 
             <View style={styles.inputContainer}>
-              <TouchableOpacity style={styles.button} onPress={addFarm}>
+              <TouchableOpacity style={styles.button} onPress={addVehicle}>
                 <Text>הוסף רכב</Text>
               </TouchableOpacity>
               <TouchableOpacity
