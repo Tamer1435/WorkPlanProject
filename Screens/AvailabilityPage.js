@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { AuthContext } from "../AuthProvider";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, doc, setDoc } from "firebase/firestore";
 
 const AvailabilityPage = () => {
   const [weekDates, setWeekDates] = useState([]);
@@ -48,27 +48,18 @@ const AvailabilityPage = () => {
   };
 
   const saveAvailability = async () => {
-    // setShowSuccessMessage(true);
-    // console.log(availability);
-    // setTimeout(() => {
-    //   setShowSuccessMessage(false);
-    // }, 3000);
-
     try {
-      await addDoc(
-        collection(
-          db,
-          "availability",
-          `${weekDates[0]?.toLocaleDateString(
-            "he-IL"
-          )}-${weekDates[6]?.toLocaleDateString("he-IL")}`,
-          "staff"
-        ),
-        {
-          id: userData.name,
-          dayJob: availability,
-        }
+      const availabilityRef = doc(
+        db,
+        `availability/${weekDates[0]?.toLocaleDateString(
+          "he-IL"
+        )}-${weekDates[6]?.toLocaleDateString("he-IL")}/staff`,
+        userData.name
       );
+      await setDoc(availabilityRef, {
+        id: userData.name,
+        dayJob: availability,
+      });
       Alert.alert("שמר הזמינות לשבוע");
       setAvailability({});
     } catch (error) {
