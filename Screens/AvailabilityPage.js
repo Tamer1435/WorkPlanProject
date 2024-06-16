@@ -1,27 +1,29 @@
 import React, { useState, useEffect, useContext } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Image } from "react-native";
 import { AuthContext } from "../AuthProvider";
-import { collection, addDoc, doc, setDoc } from "firebase/firestore";
+import { collection, getDoc, doc, setDoc } from "firebase/firestore";
 
-const AvailabilityPage = () => {
+const AvailabilityPage = ({ navigation }) => {
   const [weekDates, setWeekDates] = useState([]);
   const [availability, setAvailability] = useState({});
-  const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
+  const [savedAvailability, setSavedAvailability] = useState({});
+  const [currentWeekOffset, setCurrentWeekOffset] = useState(1); // Start with next week
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [isPastDeadline, setIsPastDeadline] = useState(false);
   const { userData, db } = useContext(AuthContext);
 
   useEffect(() => {
     const getWeekDates = (offset = 0) => {
       const today = new Date();
       today.setDate(today.getDate() + offset * 7);
-      const startOfWeek = new Date(
-        today.setDate(today.getDate() - today.getDay())
-      );
+      const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
       let dates = [];
       for (let i = 0; i < 7; i++) {
         const nextDate = new Date(startOfWeek);
         nextDate.setDate(startOfWeek.getDate() + i);
-        dates.push(nextDate);
+        if (i !== 6) {
+          dates.push(nextDate);
+        }
       }
       return dates;
     };
@@ -29,15 +31,71 @@ const AvailabilityPage = () => {
     setWeekDates(getWeekDates(currentWeekOffset));
   }, [currentWeekOffset]);
 
+  useEffect(() => {
+    const checkDeadline = () => {
+      const now = new Date();
+      const currentDay = now.getDay();
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      const currentSecond = now.getSeconds();
+
+      // Check if it is past Wednesday 23:59
+      if (
+        currentDay > 3 ||
+        (currentDay === 3 && (currentHour > 23 || (currentHour === 23 && (currentMinute > 59 || (currentMinute === 59 && currentSecond > 0)))))
+      ) {
+        setIsPastDeadline(true);
+      } else {
+        setIsPastDeadline(false);
+      }
+    };
+
+    checkDeadline();
+    const intervalId = setInterval(checkDeadline, 60000); // Check every minute
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    const fetchSavedAvailability = async () => {
+      try {
+        const availabilityRef = doc(
+          db,
+          `availability/${weekDates[0]?.toLocaleDateString(
+            "he-IL"
+          )}-${weekDates[5]?.toLocaleDateString("he-IL")}/staff`,
+          userData.name
+        );
+        const availabilitySnap = await getDoc(availabilityRef);
+
+        if (availabilitySnap.exists()) {
+          setSavedAvailability(availabilitySnap.data().dayJob);
+        } else {
+          setSavedAvailability({});
+        }
+      } catch (error) {
+        Alert.alert("שגיאה", "לא ניתן לטעון את הזמינות שנשמרה");
+      }
+    };
+
+    if (weekDates.length > 0) {
+      fetchSavedAvailability();
+    }
+  }, [weekDates]);
+
   const handleAvailabilityChange = (date, status) => {
-    setAvailability((prev) => ({
-      ...prev,
-      [date]: status,
-    }));
+    if (!isPastDeadline || currentWeekOffset !== 0) {
+      setAvailability((prev) => ({
+        ...prev,
+        [date]: status,
+      }));
+    }
   };
 
   const getStatusStyle = (date, status) => {
-    if (availability[date] === status) {
+    if (savedAvailability[date] === status) {
+      return status === "available" ? styles.savedAvailable : styles.savedUnavailable;
+    } else if (availability[date] === status) {
       return status === "available" ? styles.available : styles.unavailable;
     }
     return styles.neutral;
@@ -48,104 +106,141 @@ const AvailabilityPage = () => {
   };
 
   const saveAvailability = async () => {
-    try {
-      const availabilityRef = doc(
-        db,
-        `availability/${weekDates[0]?.toLocaleDateString(
-          "he-IL"
-        )}-${weekDates[6]?.toLocaleDateString("he-IL")}/staff`,
-        userData.name
-      );
-      await setDoc(availabilityRef, {
-        id: userData.name,
-        dayJob: availability,
-      });
-      Alert.alert("שמר הזמינות לשבוע");
-      setAvailability({});
-    } catch (error) {
-      console.error("Error saving avaliability: ", error);
-      Alert.alert("שגיאה", "לא שמר הזמינות");
+    if (!isPastDeadline || currentWeekOffset !== 0) {
+      try {
+        const availabilityRef = doc(
+          db,
+          `availability/${weekDates[0]?.toLocaleDateString(
+            "he-IL"
+          )}-${weekDates[5]?.toLocaleDateString("he-IL")}/staff`,
+          userData.name
+        );
+        await setDoc(availabilityRef, {
+          id: userData.name,
+          dayJob: availability,
+        });
+        setSavedAvailability(availability);
+        setShowSuccessMessage(true);
+        setTimeout(() => setShowSuccessMessage(false), 3000);
+        Alert.alert("שמר הזמינות לשבוע");
+      } catch (error) {
+        Alert.alert("שגיאה", "לא שמר הזמינות");
+      }
     }
   };
 
+  const isPastWeek = new Date(weekDates[0]) < new Date();
+
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => changeWeek(-1)}>
-          <Text style={styles.navButton}>◀</Text>
+    <View style={styles.pageContainer}>
+      <View>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Image
+            style={{ height: 20, width: 30 }}
+            source={require("../Images/back button.png")}
+          />
         </TouchableOpacity>
-        <Text style={styles.weekText}>{`${weekDates[0]?.toLocaleDateString(
-          "he-IL"
-        )} - ${weekDates[6]?.toLocaleDateString("he-IL")}`}</Text>
-        <TouchableOpacity onPress={() => changeWeek(1)}>
-          <Text style={styles.navButton}>▶</Text>
-        </TouchableOpacity>
-      </View>
-      <Text style={styles.title}>הזמניות:</Text>
-      <View style={styles.datesContainer}>
-        {weekDates.map((date) => {
-          const dateString = date.toLocaleDateString("he-IL");
-          const dayName = date.toLocaleString("he-IL", { weekday: "long" });
-          return (
-            <View key={dateString} style={styles.dateRowWrapper}>
-              <View style={styles.dateRow}>
-                <View style={styles.dateInfo}>
-                  <Text>{dateString}</Text>
-                  <Text>{dayName}</Text>
-                </View>
-                <TouchableOpacity
-                  style={getStatusStyle(dateString, "available")}
-                  onPress={() =>
-                    handleAvailabilityChange(dateString, "available")
-                  }
-                >
-                  <Text style={styles.buttonText}>יכול</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={getStatusStyle(dateString, "unavailable")}
-                  onPress={() =>
-                    handleAvailabilityChange(dateString, "unavailable")
-                  }
-                >
-                  <Text style={styles.buttonText}>לא יכול</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          );
-        })}
-      </View>
-      <TouchableOpacity style={styles.saveButton} onPress={saveAvailability}>
-        <Text style={styles.saveButtonText}>שמור</Text>
-      </TouchableOpacity>
-      {showSuccessMessage && (
-        <View style={styles.successMessage}>
-          <Text style={styles.successMessageText}>נשמר בהצלחה</Text>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => changeWeek(-1)} style={styles.navButton}>
+            <Text style={styles.navButtonText}>◀</Text>
+          </TouchableOpacity>
+          <Text style={styles.weekText}>{`${weekDates[0]?.toLocaleDateString(
+            "he-IL"
+          )} - ${weekDates[5]?.toLocaleDateString("he-IL")}`}</Text>
+          <TouchableOpacity onPress={() => changeWeek(1)} style={styles.navButton}>
+            <Text style={styles.navButtonText}>▶</Text>
+          </TouchableOpacity>
         </View>
-      )}
+      </View>
+      <View style={styles.container}>
+        <Text style={styles.title}>הזמניות:</Text>
+        <View style={styles.datesContainer}>
+          {weekDates.map((date) => {
+            const dateString = date.toLocaleDateString("he-IL");
+            const dayName = date.toLocaleString("he-IL", { weekday: "long" });
+            return (
+              <View key={dateString} style={styles.dateRowWrapper}>
+                <View style={styles.dateRow}>
+                  <View style={styles.dateInfo}>
+                    <Text style={styles.dateText}>{dateString}</Text>
+                    <Text style={styles.dayText}>{dayName}</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={getStatusStyle(dateString, "available")}
+                    onPress={() =>
+                      handleAvailabilityChange(dateString, "available")
+                    }
+                  >
+                    <Text style={styles.buttonText}>יכול</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={getStatusStyle(dateString, "unavailable")}
+                    onPress={() =>
+                      handleAvailabilityChange(dateString, "unavailable")
+                    }
+                  >
+                    <Text style={styles.buttonText}>לא יכול</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+        <TouchableOpacity
+          style={[styles.saveButton, (isPastDeadline && currentWeekOffset === 0) || isPastWeek ? styles.disabledButton : null]}
+          onPress={saveAvailability}
+          disabled={(isPastDeadline && currentWeekOffset === 0) || isPastWeek}
+        >
+          <Text style={styles.saveButtonText}>שמור</Text>
+        </TouchableOpacity>
+        {showSuccessMessage && (
+          <View style={styles.successMessage}>
+            <Text style={styles.successMessageText}>נשמר בהצלחה</Text>
+          </View>
+        )}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  pageContainer: {
+    flex: 1,
+    paddingTop: 50,
+    backgroundColor: "#85E1D7",
+  },
   container: {
     flex: 1,
-    backgroundColor: "#85E1D7",
     padding: 20,
-    paddingTop: 60,
+    paddingTop: 20,
+  },
+  backButton: {
+    height: 45,
+    width: 45,
+    borderRadius: 30,
+    alignSelf: "flex-end",
+    justifyContent: "center",
   },
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 20,
   },
   navButton: {
+    paddingHorizontal: 10,
+  },
+  navButtonText: {
     fontSize: 18,
     color: "#000",
   },
   weekText: {
     fontSize: 18,
     fontWeight: "600",
+    marginHorizontal: 10,
   },
   title: {
     fontSize: 25,
@@ -171,6 +266,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "flex-end",
   },
+  dateText: {
+    fontSize: 20,
+  },
+  dayText: {
+    fontSize: 20,
+  },
   neutral: {
     flex: 1,
     margin: 5,
@@ -187,11 +288,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 10,
   },
+  savedAvailable: {
+    flex: 1,
+    margin: 5,
+    padding: 10,
+    backgroundColor: "#A5D6A7", // Faded green
+    alignItems: "center",
+    borderRadius: 10,
+  },
   unavailable: {
     flex: 1,
     margin: 5,
     padding: 10,
     backgroundColor: "#F44336",
+    alignItems: "center",
+    borderRadius: 10,
+  },
+  savedUnavailable: {
+    flex: 1,
+    margin: 5,
+    padding: 10,
+    backgroundColor: "#EF9A9A", // Faded red
     alignItems: "center",
     borderRadius: 10,
   },
@@ -205,6 +322,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     marginVertical: 20,
+  },
+  disabledButton: {
+    backgroundColor: "#A9A9A9",
   },
   saveButtonText: {
     color: "#fff",
