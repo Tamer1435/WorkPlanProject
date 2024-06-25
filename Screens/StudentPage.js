@@ -131,12 +131,18 @@ const StudentPage = ({ navigation }) => {
 
       <View style={styles.lowerContainer}>
         <View style={styles.row}>
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate("RoleCalendar")}
+          >
             <Image source={require("../Images/calendar icon.png")} />
             <View style={styles.divider} />
             <Text style={styles.buttonText}>לוח השנה</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={() =>navigation.navigate("ReportPage")}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate("ReportPage")}
+          >
             <Image source={require("../Images/report icon.png")} />
             <View style={styles.divider} />
             <Text style={styles.buttonText}>דו”ח עבודה </Text>
@@ -154,7 +160,11 @@ const StudentPage = ({ navigation }) => {
           <View style={styles.buttonNull}></View>
         </View>
       </View>
-      <OptionsModal visible={modalVisible} onClose={closeModal} />
+      <OptionsModal
+        visible={modalVisible}
+        onClose={closeModal}
+        onLogout={handleLogout}
+      />
     </View>
   );
 };
