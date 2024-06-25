@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Modal } from 'react-native';
+import React, { useState, useContext } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, Modal, Alert, Image } from 'react-native';
+import { AuthContext } from '../AuthProvider'; // Assuming you have AuthProvider that provides Firestore instance
+import { doc, setDoc } from 'firebase/firestore';
 
 const AttendancePage = ({ navigation }) => {
   const [selectedClass, setSelectedClass] = useState('צוות 1');
   const [attendance, setAttendance] = useState({});
   const [showClassPicker, setShowClassPicker] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const { userData, db } = useContext(AuthContext); // Get Firestore instance and user data from context
 
   const students = [
     'תלמיד 1',
@@ -18,12 +21,7 @@ const AttendancePage = ({ navigation }) => {
     'תלמיד 8',
   ];
 
-  const classes = [
-    'צוות 1',
-    'צוות 2',
-    'צוות 3',
-    'צוות 4',
-  ];
+  const classes = ['צוות 1', 'צוות 2', 'צוות 3', 'צוות 4'];
 
   const handleAttendanceChange = (student, status) => {
     setAttendance((prev) => ({
@@ -39,47 +37,64 @@ const AttendancePage = ({ navigation }) => {
     return styles.neutral;
   };
 
-  const saveAttendance = () => {
-    setShowSuccessMessage(true);
-    setTimeout(() => {
-      setShowSuccessMessage(false);
-    }, 3000);
+  const saveAttendance = async () => {
+    try {
+      const date = new Date().toLocaleDateString("he-IL");
+      const attendanceRef = doc(
+        db,
+        `attendance/${selectedClass}/records/${date}`
+      );
+      await setDoc(attendanceRef, {
+        class: selectedClass,
+        date: date,
+        attendance,
+        savedBy: userData.name,
+      });
+      setShowSuccessMessage(true);
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 3000);
+    } catch (error) {
+      console.error("Error saving attendance: ", error);
+      Alert.alert("שגיאה", "לא נשמר הנוכחות");
+    }
   };
+
+  const renderStudentRow = ({ item }) => (
+    <View style={styles.studentRowWrapper}>
+      <View style={styles.studentRow}>
+        <Text style={styles.studentName}>{item}</Text>
+        <TouchableOpacity style={getStatusStyle(item, 'נוכח')} onPress={() => handleAttendanceChange(item, 'נוכח')}>
+          <Text style={styles.buttonText}>נוכח</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={getStatusStyle(item, 'לא נוכח')} onPress={() => handleAttendanceChange(item, 'לא נוכח')}>
+          <Text style={styles.buttonText}>לא נוכח</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
+      <View>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Image
+            style={{ height: 20, width: 30 }}
+            source={require("../Images/back button.png")}
+          />
+        </TouchableOpacity>
+        <Text style={styles.header}>קבוצת נוכחות</Text>
+      </View>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => setShowClassPicker(true)}>
           <Text style={styles.title}>קבוצה: {selectedClass}</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => alert('Class selector logic')}>
-          <Text style={styles.classSelector}>שנה</Text>
-        </TouchableOpacity>
       </View>
       <Text style={styles.subTitle}>התלמידים:</Text>
-      <FlatList
-        data={students}
-        keyExtractor={(item) => item}
-        renderItem={({ item }) => (
-          <View style={styles.studentRowWrapper}>
-            <View style={styles.studentRow}>
-              <Text style={styles.studentName}>{item}</Text>
-              <TouchableOpacity
-                style={getStatusStyle(item, 'נוכח')}
-                onPress={() => handleAttendanceChange(item, 'נוכח')}
-              >
-                <Text style={styles.buttonText}>נוכח</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={getStatusStyle(item, 'לא נוכח')}
-                onPress={() => handleAttendanceChange(item, 'לא נוכח')}
-              >
-                <Text style={styles.buttonText}>לא נוכח</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-      />
+      <FlatList data={students} keyExtractor={(item) => item} renderItem={renderStudentRow} />
       <TouchableOpacity style={styles.saveButton} onPress={saveAttendance}>
         <Text style={styles.saveButtonText}>שמור</Text>
       </TouchableOpacity>
@@ -96,7 +111,7 @@ const AttendancePage = ({ navigation }) => {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>בחר קבוצה</Text>
+            <Text style={styles.modalTitle}>בחר כיתה</Text>
             {classes.map((className) => (
               <TouchableOpacity
                 key={className}
@@ -121,7 +136,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#85E1D7',
     padding: 20,
-    paddingTop: 60, 
+    paddingTop: 60,
   },
   header: {
     flexDirection: 'row',
@@ -129,15 +144,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
+  backButton: {
+    height: 45,
+    width: 45,
+    borderRadius: 30,
+    alignSelf: "flex-end",
+    justifyContent: "center",
+  },
   title: {
     fontSize: 25,
     fontWeight: '600',
     textAlign: 'center',
-  },
-  classSelector: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000',
   },
   subTitle: {
     fontSize: 20,
