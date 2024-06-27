@@ -1,6 +1,6 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Modal, Alert, Image } from 'react-native';
-import { AuthContext } from '../AuthProvider'; // Assuming you have AuthProvider that provides Firestore instance
+import { AuthContext } from '../AuthProvider';
 import { doc, setDoc } from 'firebase/firestore';
 
 const AttendancePage = ({ navigation }) => {
@@ -8,7 +8,24 @@ const AttendancePage = ({ navigation }) => {
   const [attendance, setAttendance] = useState({});
   const [showClassPicker, setShowClassPicker] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const { userData, db } = useContext(AuthContext); // Get Firestore instance and user data from context
+  const [isAfter8PM, setIsAfter8PM] = useState(false);
+  const { userData, db } = useContext(AuthContext);
+
+  const hebrewDays = ['יום ראשון', 'יום שני', 'יום שלישי', 'יום רביעי', 'יום חמישי', 'יום שישי', 'שבת'];
+  const currentDay = new Date().getDay();
+
+  useEffect(() => {
+    const checkTime = () => {
+      const now = new Date();
+      const currentHour = now.getHours();
+      setIsAfter8PM(currentHour >= 20);
+    };
+
+    checkTime();
+    const intervalId = setInterval(checkTime, 60000); // Check every minute
+
+    return () => clearInterval(intervalId);
+  }, []);
 
   const students = [
     'תלמיד 1',
@@ -38,6 +55,8 @@ const AttendancePage = ({ navigation }) => {
   };
 
   const saveAttendance = async () => {
+    if (isAfter8PM) return;
+
     try {
       const date = new Date().toLocaleDateString("he-IL");
       const attendanceRef = doc(
@@ -86,16 +105,25 @@ const AttendancePage = ({ navigation }) => {
             source={require("../Images/back button.png")}
           />
         </TouchableOpacity>
-        <Text style={styles.header}>קבוצת נוכחות</Text>
+        <Text style={styles.currentDay}>{hebrewDays[currentDay]}</Text>
       </View>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => setShowClassPicker(true)}>
-          <Text style={styles.title}>קבוצה: {selectedClass}</Text>
+          <View style={styles.classContainer}>
+            <Text style={styles.title}>קבוצה</Text>
+            <View style={styles.classBackground}>
+              <Text style={styles.selectedClass}>{selectedClass}</Text>
+            </View>
+          </View>
         </TouchableOpacity>
       </View>
       <Text style={styles.subTitle}>התלמידים:</Text>
       <FlatList data={students} keyExtractor={(item) => item} renderItem={renderStudentRow} />
-      <TouchableOpacity style={styles.saveButton} onPress={saveAttendance}>
+      <TouchableOpacity
+        style={[styles.saveButton, isAfter8PM && styles.disabledButton]}
+        onPress={saveAttendance}
+        disabled={isAfter8PM}
+      >
         <Text style={styles.saveButtonText}>שמור</Text>
       </TouchableOpacity>
       {showSuccessMessage && (
@@ -139,8 +167,8 @@ const styles = StyleSheet.create({
     paddingTop: 60,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
+    justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
   },
@@ -151,10 +179,30 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
     justifyContent: "center",
   },
+  currentDay: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginVertical: 20,
+  },
   title: {
     fontSize: 25,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  classContainer: {
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  classBackground: {
+    backgroundColor: 'white',
+    paddingHorizontal: 5,
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  selectedClass: {
+    fontSize: 30, // Increase font size
+    color: 'darkblue',
   },
   subTitle: {
     fontSize: 20,
@@ -213,6 +261,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     marginVertical: 20,
+  },
+  disabledButton: {
+    backgroundColor: '#A5D6A7',
   },
   saveButtonText: {
     color: '#fff',
