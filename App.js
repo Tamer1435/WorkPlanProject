@@ -2,6 +2,8 @@ import { StyleSheet, Text, View, StatusBar, Platform } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { AuthProvider } from "./AuthProvider";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
 import LoginPage from "./Screens/LoginPage";
 import StudentPage from "./Screens/StudentPage";
 import TeacherPage from "./Screens/TeacherPage";
@@ -25,6 +27,7 @@ const Stack = createStackNavigator();
 
 export default function App() {
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
     <AuthProvider>
       {Platform.OS === "ios" && <StatusBar barStyle="dark-content" />}
       <NavigationContainer>
@@ -55,5 +58,6 @@ export default function App() {
         </Stack.Navigator>
       </NavigationContainer>
     </AuthProvider>
+    </GestureHandlerRootView>
   );
 }
