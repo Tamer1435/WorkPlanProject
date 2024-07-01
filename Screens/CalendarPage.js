@@ -44,17 +44,51 @@ const getDayName = (date) => {
 
 const CalendarPage = ({ navigation }) => {
   const [selectedDay, setSelectedDay] = useState(null);
-  const { user, userData, calendar, db, refreshData, loading } =
-    useContext(AuthContext);
+  const [events, setEvents] = useState([]);
+  const { user, userData, db } = useContext(AuthContext);
   const [ontoHeaderDay, setHeaderDay] = useState(null);
   const [indexOfSelectedDay, setIndexOfSelectedDay] = useState(null);
   const [daysEvents, setDaysEvents] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Refresh the data when mounted
   useEffect(() => {
-    refreshData();
+    const fetchCalendarInfo = async () => {
+      try {
+        setLoading(true);
+        const currentMonth = new Date().getMonth() + 1; // Adjusting month for 1-based index
+        const currentYear = new Date().getFullYear();
+        const calendarId = `${currentYear}-${currentMonth}`;
+        const daysCollectionRef = collection(db, `calendar/${calendarId}/days`);
+        const daysQuerySnapshot = await getDocs(daysCollectionRef);
+
+        const eventsList = [];
+
+        for (const dayDoc of daysQuerySnapshot.docs) {
+          const eventsSubCollectionRef = collection(
+            db,
+            `calendar/${calendarId}/days/${dayDoc.id}/events`
+          );
+          const eventsQuerySnapshot = await getDocs(eventsSubCollectionRef);
+
+          eventsQuerySnapshot.forEach((eventDoc) => {
+            eventsList.push({
+              key: eventDoc.id,
+              day: dayDoc.id,
+              ...eventDoc.data(),
+            });
+          });
+        }
+        setEvents(eventsList);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching calendar info: ", error);
+      }
+    };
+
+    fetchCalendarInfo();
   }, []);
 
   // Getting date info
@@ -75,7 +109,6 @@ const CalendarPage = ({ navigation }) => {
   });
 
   // Getting the calendar from database
-  const events = calendar;
 
   const renderDay = ({ item }) => (
     <TouchableOpacity

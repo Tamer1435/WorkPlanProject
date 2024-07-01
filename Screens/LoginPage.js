@@ -204,7 +204,8 @@ const styles = StyleSheet.create({
     borderColor: "#fff",
   },
   registerText: {
-    color: "blue",
+    color: "#fff",
+    fontSize: 16,
   },
 });
 
