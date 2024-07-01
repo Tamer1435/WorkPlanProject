@@ -123,6 +123,7 @@ const AuthProvider = ({ children }) => {
         logout,
         db,
         refreshData,
+        auth,
       }}
     >
       {children}

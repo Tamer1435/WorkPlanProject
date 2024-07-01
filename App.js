@@ -7,7 +7,6 @@ import StudentPage from "./Screens/StudentPage";
 import TeacherPage from "./Screens/TeacherPage";
 import ManagerPage from "./Screens/ManagerPage";
 import CalendarPage from "./Screens/CalendarPage";
-
 import AttendancePage from "./Screens/AttendancePage";
 import AvailabilityPage from "./Screens/AvailabilityPage";
 import FeedbackPage from "./Screens/FeedbackPage";
@@ -20,6 +19,8 @@ import ManageFarmsPage from "./Screens/ManageFarmsPage";
 import ManageVehiclesPage from "./Screens/ManageVehiclesPage";
 import EditJobsPage from "./Screens/EditJobsPage";
 import RoleCalendarPage from "./Screens/RoleCalendarPage";
+import ManageUsersPage from "./Screens/ManageUsersPage";
+import SignupPage from "./Screens/SignupPage";
 
 const Stack = createStackNavigator();
 
@@ -33,6 +34,7 @@ export default function App() {
           screenOptions={{ headerShown: false }}
         >
           <Stack.Screen name="Login" component={LoginPage} />
+          <Stack.Screen name="Signup" component={SignupPage} />
           <Stack.Screen name="Student" component={StudentPage} />
           <Stack.Screen name="Teacher" component={TeacherPage} />
           <Stack.Screen name="Manager" component={ManagerPage} />
@@ -52,6 +54,7 @@ export default function App() {
           <Stack.Screen name="EditJobs" component={EditJobsPage} />
           <Stack.Screen name="SetJobs" component={SetJobsPage} />
           <Stack.Screen name="RoleCalendar" component={RoleCalendarPage} />
+          <Stack.Screen name="ManageUsers" component={ManageUsersPage} />
         </Stack.Navigator>
       </NavigationContainer>
     </AuthProvider>

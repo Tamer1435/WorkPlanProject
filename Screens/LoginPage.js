@@ -43,6 +43,7 @@ const LoginPage = ({ navigation }) => {
           navigation.navigate("Manager");
         } else {
           console.log("User has no role.");
+          Alert.alert("אין לך תפקיד", "צור קשר עם ההנהלה כדי לפתור את הבעיה");
         }
       } else {
         console.log("User document not found");
@@ -113,6 +114,12 @@ const LoginPage = ({ navigation }) => {
             onPress={handleLogin}
           >
             <Text style={styles.buttonText}>כניסה</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Signup")}
+            style={styles.register}
+          >
+            <Text style={styles.registerText}>רישום למערכת</Text>
           </TouchableOpacity>
           {/* Loading popup */}
           <Modal visible={loading} transparent animationType="fade">
@@ -188,6 +195,16 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     backgroundColor: "#ccc",
+  },
+  register: {
+    borderWidth: 1,
+    borderRadius: 10,
+    top: 25,
+    padding: 5,
+    borderColor: "#fff",
+  },
+  registerText: {
+    color: "blue",
   },
 });
 
