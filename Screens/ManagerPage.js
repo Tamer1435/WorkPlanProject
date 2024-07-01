@@ -12,6 +12,7 @@ import {
 import { getAuth, signOut } from "firebase/auth";
 import { AuthContext } from "../AuthProvider";
 import OptionsModal from "./OptionsModal";
+import ManageUsersPage from "./ManageUsersPage";
 
 const ManagerPage = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -110,7 +111,10 @@ const ManagerPage = ({ navigation }) => {
             <View style={styles.divider} />
             <Text style={styles.buttonText}>לוח השנה</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("ViewAvailability")}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate("ViewAvailability")}
+          >
             <Image source={require("../Images/availabity icon.png")} />
             <View style={styles.divider} />
             <Text style={styles.buttonText}>להציג זמינות</Text>
@@ -128,7 +132,10 @@ const ManagerPage = ({ navigation }) => {
             <View style={styles.divider} />
             <Text style={styles.buttonText}>לנהל רכבים</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("ManageUsers")}
+            style={styles.button}
+          >
             <Image source={require("../Images/users icon.png")} />
             <View style={styles.divider} />
             <Text style={styles.buttonText}>לנהל משתמשים</Text>

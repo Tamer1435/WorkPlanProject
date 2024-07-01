@@ -1,154 +1,205 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   View,
-  TextInput,
-  Button,
-  StyleSheet,
   Text,
   TouchableOpacity,
+  ScrollView,
+  TextInput,
+  Modal,
+  FlatList,
   KeyboardAvoidingView,
   Platform,
-  Alert,
-  ActivityIndicator,
-  Modal,
   Image,
-  ScrollView,
+  ActivityIndicator,
 } from "react-native";
-import { Dropdown } from "react-native-element-dropdown";
 import { AuthContext } from "../AuthProvider";
-import { format } from "date-fns";
-import { collection, setDoc, getDoc, doc, Timestamp } from "firebase/firestore";
-
-const getDaysInMonth = (month, year) => {
-  return new Date(year, month + 1, 0).getDate();
-};
-
-const getDayName = (date) => {
-  const options = { weekday: "long" };
-  return new Intl.DateTimeFormat("he-IL", options).format(date);
-};
+import DateTimePicker from "@react-native-community/datetimepicker";
+import {
+  collection,
+  setDoc,
+  getDoc,
+  getDocs,
+  doc,
+  Timestamp,
+  addDoc,
+} from "firebase/firestore";
 
 const SetJobsPage = ({ navigation }) => {
-  const [date, setDate] = useState("");
+  const { user, userData, db } = useContext(AuthContext);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [selectedFarm, setSelectedFarm] = useState("");
+  const [selectedVehicle, setSelectedVehicle] = useState("");
+  const [selectedAttendant, setSelectedAttendant] = useState("");
+  const [selectedStudents, setSelectedStudents] = useState([]);
+  const [startTime, setStartTime] = useState(new Date());
+  const [endTime, setEndTime] = useState(new Date());
+  const [showStartTimePicker, setShowStartTimePicker] = useState(null);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(null);
+  const [jobName, setJobName] = useState("");
+  const [date, setDate] = useState(new Date());
+  const [showFarmModal, setShowFarmModal] = useState(false);
+  const [showVehicleModal, setShowVehicleModal] = useState(false);
+  const [showAttendantModal, setShowAttendantModal] = useState(false);
+  const [showStudentModal, setShowStudentModal] = useState(false);
+  const [farms, setFarms] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [attendants, setAttendants] = useState([]);
+  const [allStudents, setStudents] = useState([]);
+  const [loading, setLoading] = useState(false);
+
   const [eventName, setEventName] = useState("");
   const [location, setLocation] = useState("");
   const [meetingPlace, setMeetingPlace] = useState("");
-  const [time, setTime] = useState("");
+  const [time, setTime] = useState(new Date());
   const [attendant, setAttendant] = useState("");
-  const [students, setStudents] = useState("");
   const [job, setJob] = useState("");
   const [vehicle, setVehicle] = useState("");
-  const [isFocus, setIsFocus] = useState(false);
-  const { user, userData, calendar, db, refreshData, loading } =
-    useContext(AuthContext);
-  const [isManager, setIsManager] = useState(false);
+  const [duration, setDuration] = useState("");
+  const [jobStudents, setJobStudents] = useState([]);
+  const [farmOwner, setFarmOwner] = useState("");
+  const [ownerPhone, setOwnerPhone] = useState("");
 
   useEffect(() => {
-    const checkUserRole = async () => {
-      if (user) {
-        const userRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userRef);
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setIsManager(userData.role === "manager");
-        }
+    const fetchData = async () => {
+      setLoading(true);
+
+      try {
+        const farmsCollectionRef = collection(db, "farms");
+        const farmsCollection = await getDocs(farmsCollectionRef);
+        setFarms(
+          farmsCollection.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+        );
+
+        const vehiclesCollectionRef = collection(db, "vehicles");
+        const vehiclesCollection = await getDocs(vehiclesCollectionRef);
+        setVehicles(
+          vehiclesCollection.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+        );
+
+        const userCollectionsRef = collection(db, "users");
+        const usersCollection = await getDocs(userCollectionsRef);
+
+        const students = [];
+        const teachers = [];
+
+        usersCollection.docs.forEach((doc) => {
+          const userData = doc.data();
+          if (userData.role === "student") {
+            students.push({ ...doc.data() });
+          } else if (userData.role === "teacher") {
+            teachers.push({ ...doc.data() });
+          }
+        });
+        setStudents(students);
+        setAttendants(teachers);
+      } catch (error) {
+        console.log(error);
       }
+      setLoading(false);
     };
 
-    checkUserRole();
-  }, [user]);
+    fetchData();
+  }, []);
 
-  const currentDate = new Date();
-  const currentDay = new Date().getDate();
-  const currentMonth = new Date().getMonth();
-  const monthName = currentDate.toLocaleString("he-IL", {
-    month: "long",
-    timeZone: "UTC",
-  });
-  const currentYear = new Date().getFullYear();
-  const preDaysInMonth = getDaysInMonth(currentMonth, currentYear);
-  const daysInMonth = Array.from(
-    { length: preDaysInMonth - currentDay + 1 },
-    (_, i) => currentDay + i
-  );
-  const daysStartingFromCurrent = [
-    ...daysInMonth.slice(0, currentDay - 1),
-    ...daysInMonth.slice(currentDay - 1),
-  ].map((day) => {
-    const date = new Date(currentYear, currentMonth, day);
-    const dayName = getDayName(date);
-    return {
-      label: day + "/" + (currentMonth + 1) + " , " + dayName,
-      value: day,
-    };
-  });
+  const handleDateChange = (event, selectedDate) => {
+    const currentDate = selectedDate || date;
+    setShowDatePicker(false);
+    setDate(currentDate);
+  };
 
-  const handleSubmit = async () => {
-    if (!user || !isManager) {
-      Alert.alert("Error", "You do not have permission to add events.");
-      return;
-    }
+  const handleTimeChange = (event, selectedTime) => {
+    const currentTime = selectedTime || time;
+    setShowTimePicker(false);
+    setTime(currentTime);
+  };
+
+  const handleFarmChange = (farm) => {
+    setSelectedFarm(farm.name + " - " + farm.farmType);
+    setShowFarmModal(false);
+    // Update job farm here based on the selected farm and job index
+    setLocation(farm.location);
+    setJob(farm.farmType);
+    setFarmOwner(farm.name);
+    setOwnerPhone(farm.phoneNumber);
+  };
+
+  const handleVehicleChange = (vehicle) => {
+    setSelectedVehicle(vehicle.name);
+    setShowVehicleModal(false);
+    // Update job vehicle here based on the selected vehicle and job index
+    setVehicle(vehicle.name);
+  };
+
+  const handleAttendantChange = (attendant) => {
+    setSelectedAttendant(attendant.name);
+    setShowAttendantModal(false);
+    // Update job attendant here based on the selected attendant and job index
+    setAttendant(attendant.name);
+  };
+
+  const handleStudentChange = (student) => {
+    const updatedStudents = selectedStudents.includes(student.name)
+      ? selectedStudents.filter((s) => s !== student.name)
+      : [...selectedStudents, student.name];
+    setSelectedStudents(updatedStudents);
+    // Update job students here based on the selected students and job index
+    setJobStudents(updatedStudents);
+  };
+
+  const saveChanges = async () => {
+    // Save changes to jobs here
     // Handle form submission here
     console.log("Form submitted with the following data:");
-    console.log("Date:", date);
+    console.log("Date:", date.getFullYear() + "-" + (date.getMonth() + 1));
+    console.log("day: ", date.getDate());
     console.log("Event Name:", eventName);
     console.log("Location:", location);
     console.log("Time:", time);
     console.log("Attendant:", attendant);
-    console.log("Students:", students);
+    console.log("Students:", jobStudents);
     console.log("Job:", job);
     console.log("Vehicle:", vehicle);
+    console.log("Meeting place:", meetingPlace);
 
-    const events = calendar;
-    const eventsForTheDay = [];
-    events.map((event) => {
-      if (event.day == date) {
-        index = events.indexOf(event);
-        eventsForTheDay.push(events[index]);
-      }
-    });
-
-    const i = eventsForTheDay.length + 1;
-
-    const specificTime = new Date(
-      `${currentYear}-${currentMonth + 1}-${date}T${time}:00`
-    );
+    // const specificTime = new Date(
+    //   `${date.getFullYear()}-${
+    //     date.getMonth() + 1
+    //   }-${date.getDate()}T${time}:00`
+    // );
+    const specificTime = time;
     const firestoreTime = Timestamp.fromDate(specificTime);
 
-    const studentsArray = students.split(",").map((s) => s.trim());
+    const calendarID = `${date.getFullYear()}-${date.getMonth() + 1}`;
+
     try {
-      const eventRefFirst = doc(
+      // const eventRefFirst = doc(db, "calendar", calendarID, "days", `${date}`);
+      // await setDoc(eventRefFirst, { initialized: true });
+      const eventRef = collection(
         db,
         "calendar",
-        `${currentYear}-${currentMonth + 1}`,
+        calendarID,
         "days",
-        `${date}`
+        `${date.getDate()}`,
+        "events"
       );
-      await setDoc(eventRefFirst, { initialized: true });
-      const eventRef = doc(
-        db,
-        "calendar",
-        `${currentYear}-${currentMonth + 1}`,
-        "days",
-        `${date}`,
-        "events",
-        `event ${i}`
-      );
-      await setDoc(eventRef, {
+      await addDoc(eventRef, {
         eventName,
         location,
         meetingPlace,
         attendant,
-        students: studentsArray,
+        students: jobStudents,
         vehicle,
         timeOfMoving: firestoreTime,
         job,
+        duration,
+        ownerPhone,
+        farmOwner,
       });
-      alert("Successfully added the event");
-      await refreshData();
+      alert("הוספתי בהצלחה את האירוע");
     } catch (error) {
       console.error("Error adding event: ", error);
-      alert("Failed to save event");
+      alert("שמירת האירוע נכשלה");
     }
   };
 
@@ -168,90 +219,239 @@ const SetJobsPage = ({ navigation }) => {
           />
         </TouchableOpacity>
       </View>
-
       <ScrollView>
-        <View style={styles.containerInput}>
+        <View style={styles.jobContainer}>
           <Text style={styles.headerText}>לקבוע עבודה</Text>
-          <Dropdown
-            style={styles.input}
-            placeholderStyle={styles.Drop}
-            itemTextStyle={styles.DropList}
-            inputSearchStyle={styles.Drop}
-            data={daysStartingFromCurrent}
-            labelField={"label"}
-            valueField={"value"}
-            placeholder={!isFocus ? "לבחור יום" : "..."}
-            search
-            searchPlaceholder="לחפש..."
-            onFocus={() => setIsFocus(true)}
-            onBlur={() => setIsFocus(false)}
-            value={date}
-            onChange={(item) => {
-              setDate(item.value);
-              setIsFocus(false);
-            }}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="שם אירוע:"
-            value={eventName}
-            onChangeText={setEventName}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="מקום:"
-            value={location}
-            onChangeText={setLocation}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="מקום התכנסות:"
-            value={meetingPlace}
-            onChangeText={setMeetingPlace}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="זמן תנועה:"
-            value={time}
-            onChangeText={setTime}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="מורה:"
-            value={attendant}
-            onChangeText={setAttendant}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="סטודנטים:"
-            value={students}
-            onChangeText={setStudents}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="עבודה:"
-            value={job}
-            onChangeText={setJob}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="רכב:"
-            value={vehicle}
-            onChangeText={setVehicle}
-          />
-          <TouchableOpacity
-            style={styles.button}
-            disabled={loading}
-            onPress={handleSubmit}
-          >
-            <Text style={styles.buttonText}>בוצע אירוע</Text>
-          </TouchableOpacity>
+          <View style={styles.row}>
+            <TouchableOpacity
+              style={styles.selectButton}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Text style={styles.label}>בחר תאריך: {date.toDateString()}</Text>
+            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={date}
+                mode="date"
+                display="default"
+                onChange={handleDateChange}
+              />
+            )}
+          </View>
+          <View style={styles.row}>
+            <TouchableOpacity
+              style={styles.selectButton}
+              onPress={() => setShowTimePicker(true)}
+            >
+              <Text style={styles.label}>
+                בחר זמן תנועה: {time.getHours()}:
+                {time.getMinutes() < 10
+                  ? "0" + time.getMinutes()
+                  : time.getMinutes()}
+              </Text>
+            </TouchableOpacity>
+            {showTimePicker && (
+              <DateTimePicker
+                value={time}
+                mode="time"
+                display="default"
+                onChange={handleTimeChange}
+              />
+            )}
+          </View>
+          <View style={styles.row}>
+            <TouchableOpacity
+              style={styles.selectButton}
+              onPress={() => setShowFarmModal(true)}
+            >
+              <Text style={styles.label}>בחר חווה: {selectedFarm}</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.row}>
+            <TouchableOpacity
+              style={styles.selectButton}
+              onPress={() => setShowVehicleModal(true)}
+            >
+              <Text style={styles.label}>בחר רכב: {selectedVehicle}</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.row}>
+            <TouchableOpacity
+              style={styles.selectButton}
+              onPress={() => setShowAttendantModal(true)}
+            >
+              <Text style={styles.label}>בחר מורה: {selectedAttendant}</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.row}>
+            <TouchableOpacity
+              style={styles.selectButton}
+              onPress={() => setShowStudentModal(true)}
+            >
+              <Text style={styles.label}>
+                בחר תלמידים: {selectedStudents.join(", ")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.row}>
+            <TextInput
+              style={styles.input}
+              value={eventName}
+              placeholder="שם העבודה"
+              onChangeText={(text) => setEventName(text)}
+            />
+          </View>
+          <View style={styles.row}>
+            <TextInput
+              style={styles.input}
+              value={duration}
+              inputMode="numeric"
+              placeholder="משך האירוע (בשעות)"
+              onChangeText={(text) => setDuration(text)}
+            />
+          </View>
+          <View style={styles.row}>
+            <TextInput
+              style={styles.input}
+              value={meetingPlace}
+              placeholder="מקום התכנסות"
+              onChangeText={(text) => setMeetingPlace(text)}
+            />
+          </View>
         </View>
       </ScrollView>
-      {/* Loading popup */}
-      <Modal visible={loading} transparent animationType="fade">
+      <TouchableOpacity style={styles.saveButton} onPress={saveChanges}>
+        <Text style={styles.saveButtonText}>הוסף עבודה</Text>
+      </TouchableOpacity>
+
+      {/* Modals for selecting farm, vehicle, attendant, and students */}
+      <Modal
+        visible={showFarmModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowFarmModal(false)}
+      >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>בחר בחווה</Text>
+            <ScrollView>
+              {farms.map((farm) => (
+                <TouchableOpacity
+                  key={farm.name + farm.farmType}
+                  style={styles.modalOption}
+                  onPress={() => handleFarmChange(farm)}
+                >
+                  <Text style={styles.modalOptionText}>{farm.name}</Text>
+                  <Text style={styles.modalOptionText}>{farm.farmType}</Text>
+                  <Text style={styles.modalOptionText}>{farm.location}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              onPress={() => setShowFarmModal(false)}
+              style={styles.modalCloseButton}
+            >
+              <Text style={styles.modalCloseButtonText}>סגור</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showVehicleModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowVehicleModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>בחר רכב</Text>
+            <ScrollView>
+              {vehicles.map((vehicle) => (
+                <TouchableOpacity
+                  key={vehicle.id}
+                  style={styles.modalOption}
+                  onPress={() => handleVehicleChange(vehicle)}
+                >
+                  <Text style={styles.modalOptionText}>{vehicle.name}</Text>
+                  <Text style={styles.modalOptionText}>{vehicle.capacity}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              onPress={() => setShowVehicleModal(false)}
+              style={styles.modalCloseButton}
+            >
+              <Text style={styles.modalCloseButtonText}>סגור</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showAttendantModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowAttendantModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>בחר שרת</Text>
+            <ScrollView>
+              {attendants.map((attendant) => (
+                <TouchableOpacity
+                  key={attendant}
+                  style={styles.modalOption}
+                  onPress={() => handleAttendantChange(attendant)}
+                >
+                  <Text style={styles.modalOptionText}>{attendant.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              onPress={() => setShowAttendantModal(false)}
+              style={styles.modalCloseButton}
+            >
+              <Text style={styles.modalCloseButtonText}>סגור</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showStudentModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowStudentModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>בחר סטודנטים</Text>
+            <FlatList
+              data={allStudents}
+              keyExtractor={(item) => item}
+              renderItem={({ item: student }) => (
+                <TouchableOpacity
+                  style={styles.modalOption}
+                  onPress={() => handleStudentChange(student)}
+                >
+                  <Text style={styles.modalOptionText}>{student.name}</Text>
+                </TouchableOpacity>
+              )}
+            />
+            <TouchableOpacity
+              onPress={() => setShowStudentModal(false)}
+              style={styles.modalCloseButton}
+            >
+              <Text style={styles.modalCloseButtonText}>סגור</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      {/* Loading popup */}
+      <Modal visible={loading} transparent animationType="fade">
+        <View style={styles.loadingContainer}>
+          <View style={styles.loadingContent}>
             <ActivityIndicator size="large" color="#0000ff" />
             <Text style={styles.loadingText}>טוען...</Text>
           </View>
@@ -261,16 +461,11 @@ const SetJobsPage = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const styles = {
   container: {
     flex: 1,
     paddingTop: 35,
     backgroundColor: "#85E1D7",
-  },
-  containerInput: {
-    padding: 10,
-    justifyContent: "center",
-    alignItems: "center",
   },
   backButton: {
     height: 45,
@@ -279,47 +474,128 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
     justifyContent: "center",
   },
-  input: {
-    height: 50,
-    width: "90%",
-    borderColor: "gray",
-    borderWidth: 1,
-    borderRadius: 10,
+
+  addButton: {
+    backgroundColor: "#4CAF50",
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
     marginBottom: 10,
-    paddingHorizontal: 10,
-    backgroundColor: "#ffffff",
-    textAlign: "right",
   },
-  Drop: {
-    textAlign: "right",
-    justifyContent: "flex-end",
+
+  addButtonText: {
+    color: "#fff",
+    fontSize: 16,
   },
-  DropList: {
-    textAlign: "right",
+  jobContainer: {
+    padding: 25,
+    borderRadius: 5,
   },
   headerText: {
     fontSize: 25,
     fontWeight: "700",
     padding: 30,
+    textAlign: "center",
   },
-  button: {
-    backgroundColor: "#5DBF72",
-    padding: 10,
-    marginTop: 10,
+  selectButton: {
     borderRadius: 15,
-    width: "40%",
-    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    backgroundColor: "#ddd",
+    padding: 5,
   },
-  buttonText: {
-    fontSize: 20,
+  deleteButton: {
+    backgroundColor: "#f44336",
+    padding: 5,
+    borderRadius: 5,
+    alignSelf: "flex-start",
+  },
+  deleteButtonText: {
+    color: "#fff",
+  },
+  row: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 5,
+    padding: 10,
+    textAlign: "right",
+    backgroundColor: "#fff",
+  },
+  label: {
+    marginLeft: 10,
+    fontSize: 16,
+    textAlign: "right",
+    color: "blue",
   },
   modalContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
+    width: "80%",
+    height: "80%",
+    backgroundColor: "#fff",
+    borderRadius: 5,
+    padding: 20,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 18,
+    marginBottom: 20,
+  },
+  modalOption: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
+    width: "100%",
+    alignItems: "center",
+  },
+  modalOptionText: {
+    fontSize: 16,
+  },
+  modalCloseButton: {
+    backgroundColor: "#4CAF50",
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 20,
+  },
+  modalCloseButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    alignSelf: "flex-end",
+  },
+  saveButton: {
+    backgroundColor: "#4CAF50",
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    alignSelf: "center",
+    bottom: 30,
+    width: "80%",
+  },
+  saveButtonText: {
+    color: "#fff",
+    fontSize: 16,
+  },
+
+  backButtonText: {
+    color: "#0000EE",
+    fontSize: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  loadingContent: {
     backgroundColor: "#fff",
     padding: 20,
     borderRadius: 10,
@@ -331,6 +607,6 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     backgroundColor: "#ccc",
   },
-});
+};
 
 export default SetJobsPage;

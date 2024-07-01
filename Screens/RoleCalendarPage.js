@@ -271,6 +271,15 @@ const RoleCalendarPage = ({ navigation }) => {
                 <Text style={styles.modalVehicle}>
                   רכב: {selectedEvent.vehicle}
                 </Text>
+                <Text style={styles.modalVehicle}>
+                  משך האירוע (בשעות): {selectedEvent.duration}
+                </Text>
+                <Text style={styles.modalVehicle}>
+                  בעל חווה: {selectedEvent.farmOwner}
+                </Text>
+                <Text style={styles.modalVehicle}>
+                  הטלפון של הבעלים: {selectedEvent.ownerPhone}
+                </Text>
                 <Text style={styles.modalStudentsTitle}>סטודנטים:</Text>
                 <Text style={styles.modalStudents}>
                   {selectedEvent.students.join("\n")}
