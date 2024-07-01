@@ -44,7 +44,7 @@ const getDayName = (date) => {
 
 const RoleCalendarPage = ({ navigation }) => {
   const [selectedDay, setSelectedDay] = useState(null);
-  const { user, userData, calendar, db } = useContext(AuthContext);
+  const { user, userData, db } = useContext(AuthContext);
   const [ontoHeaderDay, setHeaderDay] = useState(null);
   const [indexOfSelectedDay, setIndexOfSelectedDay] = useState(null);
   const [daysEvents, setDaysEvents] = useState(null);

@@ -34,7 +34,10 @@ const ManageUsersPage = ({ navigation }) => {
   const [userRole, setUserRole] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedClass, setSelectedClass] = useState(null);
   const { user, userData, db, auth } = useContext(AuthContext);
+
+  const classes = ["כיתה ט", "כיתה י", "כיתה יא"];
 
   useEffect(() => {
     fetchUsers();
@@ -62,12 +65,22 @@ const ManageUsersPage = ({ navigation }) => {
 
   const handleAddUser = async () => {
     try {
-      const newUser = {
-        name: userName,
-        email: selectedUser.email,
-        role: userRole,
-      };
-      await setDoc(doc(db, "users", selectedUser.uid), newUser);
+      if (userRole == "student") {
+        const newUser = {
+          name: userName,
+          email: selectedUser.email,
+          role: userRole,
+          class: selectedClass,
+        };
+        await setDoc(doc(db, "users", selectedUser.uid), newUser);
+      } else {
+        const newUser = {
+          name: userName,
+          email: selectedUser.email,
+          role: userRole,
+        };
+        await setDoc(doc(db, "users", selectedUser.uid), newUser);
+      }
 
       const userRef = doc(db, "preSignedUsers", selectedUser.uid);
 
@@ -95,11 +108,22 @@ const ManageUsersPage = ({ navigation }) => {
       const userDoc = await getDoc(userRef);
       const userAuth = auth.currentUser;
 
-      await updateDoc(userRef, {
-        name: userName,
-        email: userEmail,
-        role: userRole,
-      });
+      if (userRole == "student") {
+        const editedUser = {
+          name: userName,
+          email: userEmail,
+          role: userRole,
+          class: selectedClass,
+        };
+        await updateDoc(userRef, editedUser);
+      } else {
+        const editedUser = {
+          name: userName,
+          email: userEmail,
+          role: userRole,
+        };
+        await updateDoc(userRef, editedUser);
+      }
 
       setUserName("");
       setUserEmail("");
@@ -149,6 +173,7 @@ const ManageUsersPage = ({ navigation }) => {
     setUserEmail(user.email);
     setUserRole(user.role);
     setCurrentUserId(user.id);
+    setSelectedClass(user.class);
     setEditMode(true);
     setModalVisible(true);
   };
@@ -250,6 +275,22 @@ const ManageUsersPage = ({ navigation }) => {
               <Picker.Item label="סטודנט" value="student" />
               <Picker.Item label="מורה" value="teacher" />
             </Picker>
+            {userRole == "student" ? (
+              <Picker
+                selectedValue={selectedClass}
+                onValueChange={(itemValue, itemIndex) =>
+                  setSelectedClass(itemValue)
+                }
+                style={styles.input}
+              >
+                <Picker.Item label="בחר כיתה" value={null} />
+                {classes.map((item) => (
+                  <Picker.Item key={item} label={`${item}`} value={item} />
+                ))}
+              </Picker>
+            ) : (
+              <View></View>
+            )}
             <TextInput
               style={styles.input}
               placeholder="שם מלא"

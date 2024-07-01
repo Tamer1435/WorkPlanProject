@@ -32,11 +32,6 @@ const SetJobsPage = ({ navigation }) => {
   const [selectedVehicle, setSelectedVehicle] = useState("");
   const [selectedAttendant, setSelectedAttendant] = useState("");
   const [selectedStudents, setSelectedStudents] = useState([]);
-  const [startTime, setStartTime] = useState(new Date());
-  const [endTime, setEndTime] = useState(new Date());
-  const [showStartTimePicker, setShowStartTimePicker] = useState(null);
-  const [showEndTimePicker, setShowEndTimePicker] = useState(null);
-  const [jobName, setJobName] = useState("");
   const [date, setDate] = useState(new Date());
   const [showFarmModal, setShowFarmModal] = useState(false);
   const [showVehicleModal, setShowVehicleModal] = useState(false);
@@ -47,7 +42,6 @@ const SetJobsPage = ({ navigation }) => {
   const [attendants, setAttendants] = useState([]);
   const [allStudents, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
-
   const [eventName, setEventName] = useState("");
   const [location, setLocation] = useState("");
   const [meetingPlace, setMeetingPlace] = useState("");
@@ -147,6 +141,10 @@ const SetJobsPage = ({ navigation }) => {
     setJobStudents(updatedStudents);
   };
 
+  const isSelected = (student) => {
+    return selectedStudents.includes(student.name);
+  };
+
   const saveChanges = async () => {
     // Save changes to jobs here
     // Handle form submission here
@@ -173,8 +171,14 @@ const SetJobsPage = ({ navigation }) => {
     const calendarID = `${date.getFullYear()}-${date.getMonth() + 1}`;
 
     try {
-      // const eventRefFirst = doc(db, "calendar", calendarID, "days", `${date}`);
-      // await setDoc(eventRefFirst, { initialized: true });
+      const eventRefFirst = doc(
+        db,
+        "calendar",
+        calendarID,
+        "days",
+        `${date.getDate()}`
+      );
+      await setDoc(eventRefFirst, { initialized: true });
       const eventRef = collection(
         db,
         "calendar",
@@ -396,11 +400,11 @@ const SetJobsPage = ({ navigation }) => {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>בחר שרת</Text>
+            <Text style={styles.modalTitle}>בחר מורה</Text>
             <ScrollView>
               {attendants.map((attendant) => (
                 <TouchableOpacity
-                  key={attendant}
+                  key={attendant.email}
                   style={styles.modalOption}
                   onPress={() => handleAttendantChange(attendant)}
                 >
@@ -429,13 +433,18 @@ const SetJobsPage = ({ navigation }) => {
             <Text style={styles.modalTitle}>בחר סטודנטים</Text>
             <FlatList
               data={allStudents}
-              keyExtractor={(item) => item}
+              keyExtractor={(item) => item.email}
               renderItem={({ item: student }) => (
                 <TouchableOpacity
-                  style={styles.modalOption}
+                  style={[
+                    styles.modalOption,
+                    isSelected(student) && styles.selectedOption,
+                  ]}
                   onPress={() => handleStudentChange(student)}
                 >
-                  <Text style={styles.modalOptionText}>{student.name}</Text>
+                  <Text style={styles.modalOptionText}>
+                    {student.name} - {student.class}
+                  </Text>
                 </TouchableOpacity>
               )}
             />
@@ -443,7 +452,7 @@ const SetJobsPage = ({ navigation }) => {
               onPress={() => setShowStudentModal(false)}
               style={styles.modalCloseButton}
             >
-              <Text style={styles.modalCloseButtonText}>סגור</Text>
+              <Text style={styles.modalCloseButtonText}>סיים</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -606,6 +615,9 @@ const styles = {
   },
   buttonDisabled: {
     backgroundColor: "#ccc",
+  },
+  selectedOption: {
+    backgroundColor: "lightblue",
   },
 };
 
