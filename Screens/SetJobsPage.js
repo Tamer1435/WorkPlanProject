@@ -200,7 +200,7 @@ const SetJobsPage = ({ navigation }) => {
         ownerPhone,
         farmOwner,
       });
-      alert("הוספתי בהצלחה את האירוע");
+      alert("האירוע נוסף בהצלחה");
     } catch (error) {
       console.error("Error adding event: ", error);
       alert("שמירת האירוע נכשלה");
@@ -231,6 +231,7 @@ const SetJobsPage = ({ navigation }) => {
               style={styles.selectButton}
               onPress={() => setShowDatePicker(true)}
             >
+              <Text style={{ fontSize: 18 }}>{"  ▼ "}</Text>
               <Text style={styles.label}>בחר תאריך: {date.toDateString()}</Text>
             </TouchableOpacity>
             {showDatePicker && (
@@ -247,6 +248,7 @@ const SetJobsPage = ({ navigation }) => {
               style={styles.selectButton}
               onPress={() => setShowTimePicker(true)}
             >
+              <Text style={{ fontSize: 18 }}>{"  ▼ "}</Text>
               <Text style={styles.label}>
                 בחר זמן תנועה: {time.getHours()}:
                 {time.getMinutes() < 10
@@ -268,6 +270,7 @@ const SetJobsPage = ({ navigation }) => {
               style={styles.selectButton}
               onPress={() => setShowFarmModal(true)}
             >
+              <Text style={{ fontSize: 18 }}>{"  ▼ "}</Text>
               <Text style={styles.label}>בחר חווה: {selectedFarm}</Text>
             </TouchableOpacity>
           </View>
@@ -276,6 +279,7 @@ const SetJobsPage = ({ navigation }) => {
               style={styles.selectButton}
               onPress={() => setShowVehicleModal(true)}
             >
+              <Text style={{ fontSize: 18 }}>{"  ▼ "}</Text>
               <Text style={styles.label}>בחר רכב: {selectedVehicle}</Text>
             </TouchableOpacity>
           </View>
@@ -284,6 +288,7 @@ const SetJobsPage = ({ navigation }) => {
               style={styles.selectButton}
               onPress={() => setShowAttendantModal(true)}
             >
+              <Text style={{ fontSize: 18 }}>{"  ▼ "}</Text>
               <Text style={styles.label}>בחר מורה: {selectedAttendant}</Text>
             </TouchableOpacity>
           </View>
@@ -292,6 +297,7 @@ const SetJobsPage = ({ navigation }) => {
               style={styles.selectButton}
               onPress={() => setShowStudentModal(true)}
             >
+              <Text style={{ fontSize: 18 }}>{"  ▼ "}</Text>
               <Text style={styles.label}>
                 בחר תלמידים: {selectedStudents.join(", ")}
               </Text>
@@ -507,11 +513,13 @@ const styles = {
     textAlign: "center",
   },
   selectButton: {
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    backgroundColor: "#ddd",
+    borderRadius: 5,
+    borderBottomWidth: 1,
+    borderColor: "#999",
+    width: "100%",
     padding: 5,
+    flexDirection: "row-reverse",
+    alignItems: "center",
   },
   deleteButton: {
     backgroundColor: "#f44336",

@@ -9,6 +9,8 @@ import {
   StyleSheet,
   Image,
   Alert,
+  ScrollView,
+  KeyboardAvoidingView,
 } from "react-native";
 import {
   collection,
@@ -21,7 +23,6 @@ import {
   doc,
 } from "firebase/firestore";
 import { AuthContext } from "../AuthProvider";
-import { Picker } from "@react-native-picker/picker";
 
 const ManageUsersPage = ({ navigation }) => {
   const [users, setUsers] = useState([]);
@@ -35,6 +36,10 @@ const ManageUsersPage = ({ navigation }) => {
   const [userEmail, setUserEmail] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedClass, setSelectedClass] = useState(null);
+  const [showUsersModal, setShowUsersModal] = useState(false);
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [showClassModal, setShowClassModal] = useState(false);
+  const [roleLabel, setRoleLabel] = useState(null);
   const { user, userData, db, auth } = useContext(AuthContext);
 
   const classes = ["כיתה ט", "כיתה י", "כיתה יא"];
@@ -93,6 +98,7 @@ const ManageUsersPage = ({ navigation }) => {
       setUserName("");
       setUserEmail("");
       setUserRole("");
+      setRoleLabel("");
       setModalVisible(false);
       fetchUsers();
       alert("משתמש נוסף בהצלחה");
@@ -172,6 +178,13 @@ const ManageUsersPage = ({ navigation }) => {
     setUserName(user.name);
     setUserEmail(user.email);
     setUserRole(user.role);
+    if (user.role == "student") {
+      setRoleLabel("סטודנט");
+    } else if (user.role == "teacher") {
+      setRoleLabel("מורה");
+    } else if (user.role == "manager") {
+      setRoleLabel("מנהל");
+    }
     setCurrentUserId(user.id);
     setSelectedClass(user.class);
     setEditMode(true);
@@ -181,8 +194,25 @@ const ManageUsersPage = ({ navigation }) => {
   const openAddModal = () => {
     setUserName("");
     setUserRole("");
+    setRoleLabel("");
     setEditMode(false);
     setModalVisible(true);
+  };
+
+  const handleUserChange = (item) => {
+    setSelectedUser(item);
+    setShowUsersModal(false);
+  };
+
+  const handleRoleChange = (item) => {
+    setUserRole(item.value);
+    setRoleLabel(item.label);
+    setShowRoleModal(false);
+  };
+
+  const handleClassChange = (item) => {
+    setSelectedClass(item);
+    setShowClassModal(false);
   };
 
   return (
@@ -248,46 +278,38 @@ const ManageUsersPage = ({ navigation }) => {
             {editMode ? (
               <View></View>
             ) : (
-              <Picker
-                selectedValue={selectedUser}
-                onValueChange={(itemValue, itemIndex) =>
-                  setSelectedUser(itemValue)
-                }
-                style={styles.input}
-              >
-                <Picker.Item label="בחר משתמש" value={null} />
-                {preSignedUsers.map((user) => (
-                  <Picker.Item
-                    key={user.uid}
-                    label={`${user.email} - ${user.status}`}
-                    value={user}
-                  />
-                ))}
-              </Picker>
+              <View style={styles.row}>
+                <TouchableOpacity
+                  style={styles.selectButton}
+                  onPress={() => setShowUsersModal(true)}
+                >
+                  <Text style={{ fontSize: 18 }}>{"  ▼ "}</Text>
+                  <Text style={styles.label}>
+                    בחר משתמש: {selectedUser ? selectedUser.email : ""}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             )}
-            <Picker
-              selectedValue={userRole}
-              style={styles.input}
-              onValueChange={(itemValue) => setUserRole(itemValue)}
-            >
-              <Picker.Item label="בחר תפקיד" value={null} />
-              <Picker.Item label="מנהל" value="manager" />
-              <Picker.Item label="סטודנט" value="student" />
-              <Picker.Item label="מורה" value="teacher" />
-            </Picker>
-            {userRole == "student" ? (
-              <Picker
-                selectedValue={selectedClass}
-                onValueChange={(itemValue, itemIndex) =>
-                  setSelectedClass(itemValue)
-                }
-                style={styles.input}
+
+            <View style={styles.row}>
+              <TouchableOpacity
+                style={styles.selectButton}
+                onPress={() => setShowRoleModal(true)}
               >
-                <Picker.Item label="בחר כיתה" value={null} />
-                {classes.map((item) => (
-                  <Picker.Item key={item} label={`${item}`} value={item} />
-                ))}
-              </Picker>
+                <Text style={{ fontSize: 18 }}>{"  ▼ "}</Text>
+                <Text style={styles.label}>בחר תפקיד: {roleLabel}</Text>
+              </TouchableOpacity>
+            </View>
+            {userRole == "student" ? (
+              <View style={styles.row}>
+                <TouchableOpacity
+                  style={styles.selectButton}
+                  onPress={() => setShowClassModal(true)}
+                >
+                  <Text style={{ fontSize: 18 }}>{"  ▼ "}</Text>
+                  <Text style={styles.label}>בחר כיתה: {selectedClass}</Text>
+                </TouchableOpacity>
+              </View>
             ) : (
               <View></View>
             )}
@@ -296,6 +318,7 @@ const ManageUsersPage = ({ navigation }) => {
               placeholder="שם מלא"
               value={userName}
               onChangeText={setUserName}
+              placeholderTextColor={"#ccc"}
             />
             {editMode && (
               <TextInput
@@ -303,6 +326,7 @@ const ManageUsersPage = ({ navigation }) => {
                 placeholder="אימייל"
                 value={userEmail}
                 onChangeText={setUserEmail}
+                placeholderTextColor={"#ccc"}
               />
             )}
 
@@ -319,6 +343,112 @@ const ManageUsersPage = ({ navigation }) => {
               onPress={() => setModalVisible(false)}
             >
               <Text style={styles.closeButtonText}>לבטל</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modals for selecting Users, Role, and Classes */}
+      <Modal
+        visible={showUsersModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowUsersModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>בחר משתמש</Text>
+            <ScrollView>
+              {preSignedUsers.map((item) => (
+                <TouchableOpacity
+                  key={item.email}
+                  style={styles.modalOption}
+                  onPress={() => handleUserChange(item)}
+                >
+                  <Text style={styles.modalOptionText}>
+                    {item.email} - {item.status}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              onPress={() => setShowUsersModal(false)}
+              style={styles.modalCloseButton}
+            >
+              <Text style={styles.closeButtonText}>סגור</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showRoleModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowRoleModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>בחר תפקיד</Text>
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() =>
+                handleRoleChange({ label: "מורה", value: "teacher" })
+              }
+            >
+              <Text style={styles.modalOptionText}>מורה</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() =>
+                handleRoleChange({ label: "מנהל", value: "manager" })
+              }
+            >
+              <Text style={styles.modalOptionText}>מנהל</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() =>
+                handleRoleChange({ label: "סטודנט", value: "student" })
+              }
+            >
+              <Text style={styles.modalOptionText}>סטודנט</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setShowRoleModal(false)}
+              style={styles.modalCloseButton}
+            >
+              <Text style={styles.closeButtonText}>סגור</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showClassModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowClassModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>בחר משתמש</Text>
+            <ScrollView>
+              {classes.map((item) => (
+                <TouchableOpacity
+                  key={item}
+                  style={styles.modalOption}
+                  onPress={() => handleClassChange(item)}
+                >
+                  <Text style={styles.modalOptionText}>{item}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              onPress={() => setShowClassModal(false)}
+              style={styles.modalCloseButton}
+            >
+              <Text style={styles.closeButtonText}>סגור</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -410,6 +540,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: "right",
   },
+  picker: {
+    width: "100%",
+    height: 50,
+  },
   saveButton: {
     backgroundColor: "#4CAF50",
     padding: 10,
@@ -428,6 +562,53 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: "white",
     textAlign: "center",
+  },
+  toHidePicker: {
+    overflow: "hidden",
+  },
+  picker: {
+    height: 200,
+  },
+  row: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  label: {
+    marginLeft: 10,
+    fontSize: 16,
+    textAlign: "right",
+    color: "blue",
+  },
+  selectButton: {
+    borderRadius: 5,
+    borderBottomWidth: 1,
+    borderColor: "#999",
+    width: "100%",
+    padding: 5,
+    flexDirection: "row-reverse",
+    alignItems: "center",
+  },
+  modalOption: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
+    width: "100%",
+    alignItems: "center",
+  },
+  modalOptionText: {
+    fontSize: 16,
+  },
+  modalCloseButton: {
+    backgroundColor: "#4CAF50",
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 20,
+  },
+  modalCloseButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    alignSelf: "flex-end",
   },
 });
 
