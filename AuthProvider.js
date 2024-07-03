@@ -19,7 +19,7 @@ const AuthContext = createContext();
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState(null);
-  const [calendar, setCalendar] = useState([]);
+  // const [calendar, setCalendar] = useState([]);
   const [loading, setLoading] = useState(true);
   const auth = getAuth(app);
   const db = getFirestore(app);
@@ -30,10 +30,10 @@ const AuthProvider = ({ children }) => {
         const userDoc = await getDoc(doc(db, "users", authUser.uid));
         setUserData(userDoc.data());
         setUser(authUser);
-        await fetchCalendarInfo();
+        // await fetchCalendarInfo();
       } else {
         setUserData(null);
-        setCalendar(null);
+        // setCalendar(null);
       }
       setLoading(false);
     });
@@ -41,44 +41,58 @@ const AuthProvider = ({ children }) => {
     return unsubscribe; // Cleanup subscription on unmount
   }, []);
 
-  // Get the calendar info
-  const fetchCalendarInfo = async () => {
-    try {
-      const currentMonth = new Date().getMonth() + 1; // Adjusting month for 1-based index
-      const currentYear = new Date().getFullYear();
-      const calendarId = `${currentYear}-${currentMonth}`;
-      const daysCollectionRef = collection(db, `calendar/${calendarId}/days`);
-      const daysQuerySnapshot = await getDocs(daysCollectionRef);
+  // // Get the calendar info
+  // const fetchCalendarInfo = async () => {
+  //   try {
+  //     const currentMonth = new Date().getMonth() + 1; // Adjusting month for 1-based index
+  //     const currentYear = new Date().getFullYear();
+  //     const calendarId = `${currentYear}-${currentMonth}`;
+  //     const daysCollectionRef = collection(db, `calendar/${calendarId}/days`);
+  //     const daysQuerySnapshot = await getDocs(daysCollectionRef);
 
-      const events = [];
+  //     const events = [];
 
-      for (const dayDoc of daysQuerySnapshot.docs) {
-        const eventsSubCollectionRef = collection(
-          db,
-          `calendar/${calendarId}/days/${dayDoc.id}/events`
-        );
-        const eventsQuerySnapshot = await getDocs(eventsSubCollectionRef);
+  //     for (const dayDoc of daysQuerySnapshot.docs) {
+  //       const eventsSubCollectionRef = collection(
+  //         db,
+  //         `calendar/${calendarId}/days/${dayDoc.id}/events`
+  //       );
+  //       const eventsQuerySnapshot = await getDocs(eventsSubCollectionRef);
 
-        eventsQuerySnapshot.forEach((eventDoc) => {
-          events.push({
-            key: eventDoc.id,
-            day: dayDoc.id,
-            ...eventDoc.data(),
-          });
-        });
-      }
-      setCalendar(events);
-    } catch (error) {
-      console.error("Error fetching calendar info: ", error);
-    }
-  };
+  //       eventsQuerySnapshot.forEach((eventDoc) => {
+  //         if (userData) {
+  //           if (userData.role == "teacher") {
+  //             if (eventDoc.data().attendant == userData.name) {
+  //               events.push({
+  //                 key: eventDoc.id,
+  //                 day: dayDoc.id,
+  //                 ...eventDoc.data(),
+  //               });
+  //             }
+  //           } else if (userData.role == "student") {
+  //             if (eventDoc.data().students.includes(userData.name)) {
+  //               events.push({
+  //                 key: eventDoc.id,
+  //                 day: dayDoc.id,
+  //                 ...eventDoc.data(),
+  //               });
+  //             }
+  //           }
+  //         }
+  //       });
+  //     }
+  //     setCalendar(events);
+  //   } catch (error) {
+  //     console.error("Error fetching calendar info: ", error);
+  //   }
+  // };
 
-  // Refresh the information when needed
-  const refreshData = async () => {
-    setLoading(true);
-    await fetchCalendarInfo();
-    setLoading(false);
-  };
+  // // Refresh the information when needed
+  // const refreshData = async () => {
+  //   setLoading(true);
+  //   await fetchCalendarInfo();
+  //   setLoading(false);
+  // };
 
   // Login function
   const login = async (email, password) => {
@@ -117,12 +131,12 @@ const AuthProvider = ({ children }) => {
       value={{
         user,
         userData,
-        calendar,
+        // calendar,
         loading,
         login,
         logout,
         db,
-        refreshData,
+        // refreshData,
         auth,
       }}
     >
