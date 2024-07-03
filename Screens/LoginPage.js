@@ -94,7 +94,7 @@ const LoginPage = ({ navigation }) => {
         <View style={styles.lowerContainer}>
           <TextInput
             style={styles.input}
-            placeholder="מייל:"
+            placeholder="אימייל"
             onChangeText={(text) => setUsername(text.trim())}
             value={username}
             autoCapitalize="none"
@@ -102,8 +102,8 @@ const LoginPage = ({ navigation }) => {
           />
           <TextInput
             style={styles.input}
-            placeholder="סיסמה:"
-            onChangeText={(text) => setPassword(text)}
+            placeholder="סיסמה"
+            onChangeText={(text) => setPassword(text.trim())}
             value={password}
             autoCapitalize="none"
             secureTextEntry={true}
@@ -142,11 +142,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#85E1D7",
   },
   upperContainer: {
-    flex: 1.2,
+    flex: 1.5,
   },
   Image: {
     width: "100%",
     height: "100%",
+    padding: 40,
   },
   lowerContainer: {
     flex: 1,
@@ -163,7 +164,6 @@ const styles = StyleSheet.create({
     textAlign: "right",
     borderRadius: 10,
     marginBottom: 10,
-
     paddingHorizontal: 10,
   },
   Button: {
