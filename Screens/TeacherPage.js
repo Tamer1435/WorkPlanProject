@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,12 +10,16 @@ import {
   Button,
 } from "react-native";
 import { getAuth, signOut } from "firebase/auth";
+import { format } from "date-fns";
+import { doc, getDoc, getDocs, collection } from "firebase/firestore";
 import { AuthContext } from "../AuthProvider";
 import OptionsModal from "./OptionsModal";
 
 const TeacherPage = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
-  const { user, userData, calendar } = useContext(AuthContext);
+  const [todayActivities, setTodayActivities] = useState([]);
+  const [calendar, setCalendar] = useState([]);
+  const { user, userData, db } = useContext(AuthContext);
   const auth = getAuth();
 
   const currentDate = new Date();
@@ -47,7 +51,94 @@ const TeacherPage = ({ navigation }) => {
     }
   };
 
-  const todayActivities = [];
+  useEffect(() => {
+    refreshTodaySection();
+  }, []);
+
+  const refreshTodaySection = async () => {
+    await fetchCalendarInfo();
+    const forToday = [];
+    if (calendar) {
+      calendar.map((element) => {
+        if (element.day == day) {
+          forToday.push(element);
+        }
+      });
+      if (forToday.length != 0) {
+        // Sort the activities by eventName
+        forToday.sort((a, b) => {
+          if (a.timeOfMoving < b.timeOfMoving) return -1;
+          if (a.timeOfMoving > b.timeOfMoving) return 1;
+          return 0;
+        });
+
+        setTodayActivities(forToday);
+      }
+    }
+  };
+
+  const fetchCalendarInfo = async () => {
+    try {
+      const currentMonth = new Date().getMonth() + 1; // Adjusting month for 1-based index
+      const currentYear = new Date().getFullYear();
+      const calendarId = `${currentYear}-${currentMonth}`;
+      const daysCollectionRef = collection(db, `calendar/${calendarId}/days`);
+      const daysQuerySnapshot = await getDocs(daysCollectionRef);
+
+      const events = [];
+
+      for (const dayDoc of daysQuerySnapshot.docs) {
+        const eventsSubCollectionRef = collection(
+          db,
+          `calendar/${calendarId}/days/${dayDoc.id}/events`
+        );
+        const eventsQuerySnapshot = await getDocs(eventsSubCollectionRef);
+
+        eventsQuerySnapshot.forEach((eventDoc) => {
+          if (userData) {
+            if (userData.role == "teacher") {
+              if (eventDoc.data().attendant == userData.name) {
+                const data = eventDoc.data();
+
+                const timestamp = data.timeOfMoving;
+                if (timestamp && timestamp.seconds) {
+                  data.timeOfMoving = format(
+                    data.timeOfMoving.toDate(),
+                    "hh:mm a"
+                  ); // Convert timestamp to string
+                }
+                events.push({
+                  key: eventDoc.id,
+                  day: dayDoc.id,
+                  ...data,
+                });
+              }
+            } else if (userData.role == "student") {
+              if (eventDoc.data().students.includes(userData.name)) {
+                const data = eventDoc.data();
+
+                const timestamp = data.timeOfMoving;
+                if (timestamp && timestamp.seconds) {
+                  data.timeOfMoving = format(
+                    data.timeOfMoving.toDate(),
+                    "hh:mm a"
+                  ); // Convert timestamp to string
+                }
+                events.push({
+                  key: eventDoc.id,
+                  day: dayDoc.id,
+                  ...data,
+                });
+              }
+            }
+          }
+        });
+      }
+      setCalendar(events);
+    } catch (error) {
+      console.error("Error fetching calendar info: ", error);
+    }
+  };
 
   const openModal = () => {
     setModalVisible(true);
@@ -113,17 +204,35 @@ const TeacherPage = ({ navigation }) => {
         </Text>
         <View style={styles.todaysSection}>
           {todayActivities.length === 0 ? (
-            <View style={{ alignItems: "center" }}>
+            <TouchableOpacity
+              onPress={() => refreshTodaySection()}
+              style={{ alignItems: "center" }}
+            >
               <Image source={require("../Images/cal icon.png")} />
               <Text style={{ fontWeight: "600", marginTop: 5 }}>
                 אין לך אירועי עבודה היום
               </Text>
-            </View>
+              <Text style={{ color: "blue", fontWeight: "600", marginTop: 5 }}>
+                לחץ לרענן
+              </Text>
+            </TouchableOpacity>
           ) : (
             <FlatList
               data={todayActivities}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => <Text>{item.name}</Text>}
+              keyExtractor={(item) => item.eventName + "-" + item.location}
+              renderItem={({ item }) => (
+                <View style={styles.todaysEvent}>
+                  <Text style={styles.todaysEventText}>
+                    אירוע: {item.eventName}
+                  </Text>
+                  <Text style={styles.todaysEventText}>
+                    מקום: {item.location}
+                  </Text>
+                  <Text style={styles.todaysEventText}>
+                    זמן תנועה: {item.timeOfMoving}
+                  </Text>
+                </View>
+              )}
             />
           )}
         </View>
@@ -228,8 +337,22 @@ const styles = StyleSheet.create({
     width: "90%",
     height: "80%",
     alignSelf: "center",
-    alignItems: "center",
     justifyContent: "center",
+    padding: 10,
+  },
+  todaysEvent: {
+    backgroundColor: "rgba(0,0,255,0.35)",
+    borderRadius: 10,
+    padding: 5,
+    margin: 5,
+    alignSelf: "center",
+    justifyContent: "space-evenly",
+    width: "80%",
+  },
+  todaysEventText: {
+    fontSize: 15,
+    fontWeight: "600",
+    padding: 5,
   },
 
   row: {
