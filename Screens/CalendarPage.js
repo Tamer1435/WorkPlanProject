@@ -74,10 +74,17 @@ const CalendarPage = ({ navigation }) => {
           const eventsQuerySnapshot = await getDocs(eventsSubCollectionRef);
 
           eventsQuerySnapshot.forEach((eventDoc) => {
+            const data = eventDoc.data();
+
+            const timestamp = data.timeOfMoving;
+            if (timestamp && timestamp.seconds) {
+              data.timeOfMoving = format(timestamp.toDate(), "hh:mm a"); // Convert timestamp to string
+            }
+
             eventsList.push({
               key: eventDoc.id,
               day: dayDoc.id,
-              ...eventDoc.data(),
+              ...data,
             });
           });
         }
@@ -127,6 +134,13 @@ const CalendarPage = ({ navigation }) => {
           }
         });
         if (index != -1) {
+          // Sort the activities by eventName
+          eventsForTheDay.sort((a, b) => {
+            if (a.timeOfMoving < b.timeOfMoving) return -1;
+            if (a.timeOfMoving > b.timeOfMoving) return 1;
+            return 0;
+          });
+
           setDaysEvents(eventsForTheDay);
         } else {
           setDaysEvents(null);
@@ -160,9 +174,7 @@ const CalendarPage = ({ navigation }) => {
         <Text style={styles.eventSubText}>מקום:{item.location}</Text>
       </View>
       <View>
-        <Text style={styles.eventSubText}>
-          {format(item.timeOfMoving.toDate(), "hh:mm a")}
-        </Text>
+        <Text style={styles.eventSubText}>{item.timeOfMoving}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -242,9 +254,7 @@ const CalendarPage = ({ navigation }) => {
           {selectedEvent && (
             <>
               <Text style={styles.modalTitle}>{selectedEvent.eventName}</Text>
-              <Text style={styles.modalDate}>
-                {format(selectedEvent.timeOfMoving.toDate(), "hh:mm a")}
-              </Text>
+              <Text style={styles.modalDate}>{selectedEvent.timeOfMoving}</Text>
               <View style={{ alignSelf: "flex-end" }}>
                 <Text style={styles.modalTime}></Text>
                 <Text style={styles.modalLocation}>

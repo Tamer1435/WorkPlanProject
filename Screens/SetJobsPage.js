@@ -516,7 +516,7 @@ const styles = {
     borderRadius: 5,
     borderBottomWidth: 1,
     borderColor: "#999",
-    width: "100%",
+    width: "75%",
     padding: 5,
     flexDirection: "row-reverse",
     alignItems: "center",
