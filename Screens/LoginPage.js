@@ -22,6 +22,7 @@ const LoginPage = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const { user, login, logout } = useContext(AuthContext);
 
   const handleLogin = async () => {
@@ -100,14 +101,24 @@ const LoginPage = ({ navigation }) => {
             autoCapitalize="none"
             keyboardType="email-address"
           />
-          <TextInput
-            style={styles.input}
-            placeholder="סיסמה"
-            onChangeText={(text) => setPassword(text.trim())}
-            value={password}
-            autoCapitalize="none"
-            secureTextEntry={true}
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.PassInput}
+              placeholder="סיסמה"
+              onChangeText={(text) => setPassword(text.trim())}
+              value={password}
+              autoCapitalize="none"
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity
+              style={styles.showPasswordButton}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Text style={styles.showPasswordText}>
+                {showPassword ? "◡" : "◉"}
+              </Text>
+            </TouchableOpacity>
+          </View>
           <TouchableOpacity
             disabled={loading}
             style={[styles.Button, loading && styles.buttonDisabled]}
@@ -165,6 +176,39 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 10,
     paddingHorizontal: 10,
+  },
+
+  passwordContainer: {
+    flexDirection: "row-reverse",
+    width: "70%",
+    height: 50,
+  },
+  PassInput: {
+    width: "85%",
+    height: 50,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    backgroundColor: "#ffffff",
+    textAlign: "right",
+    borderTopRightRadius: 10,
+    borderBottomRightRadius: 10,
+    marginBottom: 10,
+    paddingHorizontal: 10,
+  },
+  showPasswordButton: {
+    height: 50,
+    width: "15%",
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 10,
+    borderBottomLeftRadius: 10,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  showPasswordText: {
+    color: "#1e90ff",
+    fontSize: 30,
   },
   Button: {
     backgroundColor: "#5DBF72",
