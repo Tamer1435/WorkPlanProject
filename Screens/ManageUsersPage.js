@@ -71,9 +71,9 @@ const styles = StyleSheet.create({
   bodyContainer: {
     padding: 20,
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "flex-start",
     alignItems: "center",
-    bottom: "5%",
+    marginTop: "20%",
   },
   title: {
     fontSize: 25,
