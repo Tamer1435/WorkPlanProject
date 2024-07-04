@@ -31,7 +31,7 @@ const ManageUsersPage = ({ navigation }) => {
 
         <TouchableOpacity
           style={styles.button}
-          onPress={() => navigation.navigate("")}
+          onPress={() => navigation.navigate("ReadReport")}
         >
           <Image
             style={{ height: 55, width: 45 }}
@@ -42,7 +42,7 @@ const ManageUsersPage = ({ navigation }) => {
 
         <TouchableOpacity
           style={styles.button}
-          onPress={() => navigation.navigate("")}
+          onPress={() => navigation.navigate("ViewAttendance")}
         >
           <Image
             style={{ height: 55, width: 50 }}
