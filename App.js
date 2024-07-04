@@ -24,6 +24,9 @@ import RoleCalendarPage from "./Screens/RoleCalendarPage";
 import ManageUsersPage from "./Screens/ManageUsersPage";
 import SignupPage from "./Screens/SignupPage";
 import SetUsersPage from "./Screens/SetUsersPage";
+import MakeReportPage from "./Screens/MakeReportPage";
+import ReadReportPage from "./Screens/ReadReportPage";
+import ViewAttendancePage from "./Screens/ViewAttendancePage";
 
 const Stack = createStackNavigator();
 
@@ -60,6 +63,12 @@ export default function App() {
           <Stack.Screen name="RoleCalendar" component={RoleCalendarPage} />
           <Stack.Screen name="ManageUsers" component={ManageUsersPage} />
           <Stack.Screen name="SetUsers" component={SetUsersPage} />
+          <Stack.Screen name="MakeReport" component={MakeReportPage} />
+          <Stack.Screen name="ReadReport" component={ReadReportPage} />
+          <Stack.Screen name="ViewAttendance" component={ViewAttendancePage} />
+
+          
+          
         </Stack.Navigator>
       </NavigationContainer>
     </AuthProvider>
