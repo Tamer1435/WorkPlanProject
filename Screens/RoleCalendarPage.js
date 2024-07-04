@@ -44,7 +44,7 @@ const getDayName = (date) => {
 
 const RoleCalendarPage = ({ navigation }) => {
   const [selectedDay, setSelectedDay] = useState(null);
-  const { user, userData, calendar, db } = useContext(AuthContext);
+  const { user, userData, db } = useContext(AuthContext);
   const [ontoHeaderDay, setHeaderDay] = useState(null);
   const [indexOfSelectedDay, setIndexOfSelectedDay] = useState(null);
   const [daysEvents, setDaysEvents] = useState(null);
@@ -95,18 +95,32 @@ const RoleCalendarPage = ({ navigation }) => {
         eventsQuerySnapshot.forEach((eventDoc) => {
           if (userData.role == "teacher") {
             if (eventDoc.data().attendant == userData.name) {
+              const data = eventDoc.data();
+
+              const timestamp = data.timeOfMoving;
+              if (timestamp && timestamp.seconds) {
+                data.timeOfMoving = format(timestamp.toDate(), "hh:mm a"); // Convert timestamp to string
+              }
+
               eventslist.push({
                 key: eventDoc.id,
                 day: dayDoc.id,
-                ...eventDoc.data(),
+                ...data,
               });
             }
           } else if (userData.role == "student") {
             if (eventDoc.data().students.includes(userData.name)) {
+              const data = eventDoc.data();
+
+              const timestamp = data.timeOfMoving;
+              if (timestamp && timestamp.seconds) {
+                data.timeOfMoving = format(timestamp.toDate(), "hh:mm a"); // Convert timestamp to string
+              }
+
               eventslist.push({
                 key: eventDoc.id,
                 day: dayDoc.id,
-                ...eventDoc.data(),
+                ...data,
               });
             }
           }
@@ -136,6 +150,12 @@ const RoleCalendarPage = ({ navigation }) => {
           }
         });
         if (index != -1) {
+          // Sort the activities by eventName
+          eventsForTheDay.sort((a, b) => {
+            if (a.timeOfMoving < b.timeOfMoving) return -1;
+            if (a.timeOfMoving > b.timeOfMoving) return 1;
+            return 0;
+          });
           setDaysEvents(eventsForTheDay);
         } else {
           setDaysEvents(null);
@@ -169,9 +189,7 @@ const RoleCalendarPage = ({ navigation }) => {
         <Text style={styles.eventSubText}>מקום:{item.location}</Text>
       </View>
       <View>
-        <Text style={styles.eventSubText}>
-          {format(item.timeOfMoving.toDate(), "hh:mm a")}
-        </Text>
+        <Text style={styles.eventSubText}>{item.timeOfMoving}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -251,9 +269,7 @@ const RoleCalendarPage = ({ navigation }) => {
           {selectedEvent && (
             <>
               <Text style={styles.modalTitle}>{selectedEvent.eventName}</Text>
-              <Text style={styles.modalDate}>
-                {format(selectedEvent.timeOfMoving.toDate(), "hh:mm a")}
-              </Text>
+              <Text style={styles.modalDate}>{selectedEvent.timeOfMoving}</Text>
               <View style={{ alignSelf: "flex-end" }}>
                 <Text style={styles.modalTime}></Text>
                 <Text style={styles.modalLocation}>
@@ -270,6 +286,15 @@ const RoleCalendarPage = ({ navigation }) => {
                 </Text>
                 <Text style={styles.modalVehicle}>
                   רכב: {selectedEvent.vehicle}
+                </Text>
+                <Text style={styles.modalVehicle}>
+                  משך האירוע (בשעות): {selectedEvent.duration}
+                </Text>
+                <Text style={styles.modalVehicle}>
+                  בעל חווה: {selectedEvent.farmOwner}
+                </Text>
+                <Text style={styles.modalVehicle}>
+                  הטלפון של הבעלים: {selectedEvent.ownerPhone}
                 </Text>
                 <Text style={styles.modalStudentsTitle}>סטודנטים:</Text>
                 <Text style={styles.modalStudents}>

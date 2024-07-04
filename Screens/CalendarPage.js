@@ -44,17 +44,58 @@ const getDayName = (date) => {
 
 const CalendarPage = ({ navigation }) => {
   const [selectedDay, setSelectedDay] = useState(null);
-  const { user, userData, calendar, db, refreshData, loading } =
-    useContext(AuthContext);
+  const [events, setEvents] = useState([]);
+  const { user, userData, db } = useContext(AuthContext);
   const [ontoHeaderDay, setHeaderDay] = useState(null);
   const [indexOfSelectedDay, setIndexOfSelectedDay] = useState(null);
   const [daysEvents, setDaysEvents] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Refresh the data when mounted
   useEffect(() => {
-    refreshData();
+    const fetchCalendarInfo = async () => {
+      try {
+        setLoading(true);
+        const currentMonth = new Date().getMonth() + 1; // Adjusting month for 1-based index
+        const currentYear = new Date().getFullYear();
+        const calendarId = `${currentYear}-${currentMonth}`;
+        const daysCollectionRef = collection(db, `calendar/${calendarId}/days`);
+        const daysQuerySnapshot = await getDocs(daysCollectionRef);
+
+        const eventsList = [];
+
+        for (const dayDoc of daysQuerySnapshot.docs) {
+          const eventsSubCollectionRef = collection(
+            db,
+            `calendar/${calendarId}/days/${dayDoc.id}/events`
+          );
+          const eventsQuerySnapshot = await getDocs(eventsSubCollectionRef);
+
+          eventsQuerySnapshot.forEach((eventDoc) => {
+            const data = eventDoc.data();
+
+            const timestamp = data.timeOfMoving;
+            if (timestamp && timestamp.seconds) {
+              data.timeOfMoving = format(timestamp.toDate(), "hh:mm a"); // Convert timestamp to string
+            }
+
+            eventsList.push({
+              key: eventDoc.id,
+              day: dayDoc.id,
+              ...data,
+            });
+          });
+        }
+        setEvents(eventsList);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching calendar info: ", error);
+      }
+    };
+
+    fetchCalendarInfo();
   }, []);
 
   // Getting date info
@@ -75,7 +116,6 @@ const CalendarPage = ({ navigation }) => {
   });
 
   // Getting the calendar from database
-  const events = calendar;
 
   const renderDay = ({ item }) => (
     <TouchableOpacity
@@ -94,6 +134,13 @@ const CalendarPage = ({ navigation }) => {
           }
         });
         if (index != -1) {
+          // Sort the activities by eventName
+          eventsForTheDay.sort((a, b) => {
+            if (a.timeOfMoving < b.timeOfMoving) return -1;
+            if (a.timeOfMoving > b.timeOfMoving) return 1;
+            return 0;
+          });
+
           setDaysEvents(eventsForTheDay);
         } else {
           setDaysEvents(null);
@@ -127,9 +174,7 @@ const CalendarPage = ({ navigation }) => {
         <Text style={styles.eventSubText}>מקום:{item.location}</Text>
       </View>
       <View>
-        <Text style={styles.eventSubText}>
-          {format(item.timeOfMoving.toDate(), "hh:mm a")}
-        </Text>
+        <Text style={styles.eventSubText}>{item.timeOfMoving}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -209,9 +254,7 @@ const CalendarPage = ({ navigation }) => {
           {selectedEvent && (
             <>
               <Text style={styles.modalTitle}>{selectedEvent.eventName}</Text>
-              <Text style={styles.modalDate}>
-                {format(selectedEvent.timeOfMoving.toDate(), "hh:mm a")}
-              </Text>
+              <Text style={styles.modalDate}>{selectedEvent.timeOfMoving}</Text>
               <View style={{ alignSelf: "flex-end" }}>
                 <Text style={styles.modalTime}></Text>
                 <Text style={styles.modalLocation}>
@@ -228,6 +271,15 @@ const CalendarPage = ({ navigation }) => {
                 </Text>
                 <Text style={styles.modalVehicle}>
                   רכב: {selectedEvent.vehicle}
+                </Text>
+                <Text style={styles.modalVehicle}>
+                  משך האירוע (בשעות): {selectedEvent.duration}
+                </Text>
+                <Text style={styles.modalVehicle}>
+                  בעל חווה: {selectedEvent.farmOwner}
+                </Text>
+                <Text style={styles.modalVehicle}>
+                  הטלפון של הבעלים: {selectedEvent.ownerPhone}
                 </Text>
                 <Text style={styles.modalStudentsTitle}>סטודנטים:</Text>
                 <Text style={styles.modalStudents}>

@@ -43,6 +43,7 @@ const LoginPage = ({ navigation }) => {
           navigation.navigate("Manager");
         } else {
           console.log("User has no role.");
+          Alert.alert("אין לך תפקיד", "צור קשר עם ההנהלה כדי לפתור את הבעיה");
         }
       } else {
         console.log("User document not found");
@@ -93,7 +94,7 @@ const LoginPage = ({ navigation }) => {
         <View style={styles.lowerContainer}>
           <TextInput
             style={styles.input}
-            placeholder="מייל:"
+            placeholder="אימייל"
             onChangeText={(text) => setUsername(text.trim())}
             value={username}
             autoCapitalize="none"
@@ -101,8 +102,8 @@ const LoginPage = ({ navigation }) => {
           />
           <TextInput
             style={styles.input}
-            placeholder="סיסמה:"
-            onChangeText={(text) => setPassword(text)}
+            placeholder="סיסמה"
+            onChangeText={(text) => setPassword(text.trim())}
             value={password}
             autoCapitalize="none"
             secureTextEntry={true}
@@ -113,6 +114,12 @@ const LoginPage = ({ navigation }) => {
             onPress={handleLogin}
           >
             <Text style={styles.buttonText}>כניסה</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Signup")}
+            style={styles.register}
+          >
+            <Text style={styles.registerText}>רישום למערכת</Text>
           </TouchableOpacity>
           {/* Loading popup */}
           <Modal visible={loading} transparent animationType="fade">
@@ -135,11 +142,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#85E1D7",
   },
   upperContainer: {
-    flex: 1.2,
+    flex: 1.5,
   },
   Image: {
     width: "100%",
     height: "100%",
+    padding: 40,
   },
   lowerContainer: {
     flex: 1,
@@ -156,7 +164,6 @@ const styles = StyleSheet.create({
     textAlign: "right",
     borderRadius: 10,
     marginBottom: 10,
-
     paddingHorizontal: 10,
   },
   Button: {
@@ -188,6 +195,17 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     backgroundColor: "#ccc",
+  },
+  register: {
+    borderWidth: 1,
+    borderRadius: 10,
+    top: 25,
+    padding: 5,
+    borderColor: "#fff",
+  },
+  registerText: {
+    color: "#fff",
+    fontSize: 16,
   },
 });
 
