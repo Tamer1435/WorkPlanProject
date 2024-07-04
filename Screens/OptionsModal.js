@@ -100,6 +100,7 @@ const OptionsModal = ({ visible, onClose, onLogout }) => {
               value={currentPassword}
               onChangeText={setCurrentPassword}
               secureTextEntry={true}
+              placeholderTextColor={"#ccc"}
             />
 
             <TextInput
@@ -108,6 +109,7 @@ const OptionsModal = ({ visible, onClose, onLogout }) => {
               value={newPassword}
               onChangeText={setNewPassword}
               secureTextEntry={true}
+              placeholderTextColor={"#ccc"}
             />
 
             <TextInput
@@ -116,6 +118,7 @@ const OptionsModal = ({ visible, onClose, onLogout }) => {
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry={true}
+              placeholderTextColor={"#ccc"}
             />
 
             <TouchableOpacity
