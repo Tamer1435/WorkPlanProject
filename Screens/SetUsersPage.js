@@ -229,12 +229,12 @@ const SetUsersPage = ({ navigation }) => {
         </TouchableOpacity>
       </View>
       <View style={styles.insiderContainer}>
-        <Text style={styles.title}>ניהול משתמשים</Text>
+        <Text style={styles.title}>להגדיר/לערוך משתמשים</Text>
         <TouchableOpacity style={styles.addButton} onPress={openAddModal}>
           <Text style={styles.addButtonText}>הוסף משתמש</Text>
         </TouchableOpacity>
         {loading ? (
-          <Text>Loading...</Text>
+          <Text style={{ textAlign: "right" }}>טוען...</Text>
         ) : (
           <FlatList
             data={users}
@@ -346,112 +346,111 @@ const SetUsersPage = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         </View>
-      </Modal>
-
-      {/* Modals for selecting Users, Role, and Classes */}
-      <Modal
-        visible={showUsersModal}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowUsersModal(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>בחר משתמש</Text>
-            <ScrollView>
-              {preSignedUsers.map((item) => (
-                <TouchableOpacity
-                  key={item.email}
-                  style={styles.modalOption}
-                  onPress={() => handleUserChange(item)}
-                >
-                  <Text style={styles.modalOptionText}>
-                    {item.email} - {item.status}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <TouchableOpacity
-              onPress={() => setShowUsersModal(false)}
-              style={styles.modalCloseButton}
-            >
-              <Text style={styles.closeButtonText}>סגור</Text>
-            </TouchableOpacity>
+        {/* Modals for selecting Users, Role, and Classes */}
+        <Modal
+          visible={showUsersModal}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowUsersModal(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>בחר משתמש</Text>
+              <ScrollView>
+                {preSignedUsers.map((item) => (
+                  <TouchableOpacity
+                    key={item.email}
+                    style={styles.modalOption}
+                    onPress={() => handleUserChange(item)}
+                  >
+                    <Text style={styles.modalOptionText}>
+                      {item.email} - {item.status}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              <TouchableOpacity
+                onPress={() => setShowUsersModal(false)}
+                style={styles.modalCloseButton}
+              >
+                <Text style={styles.closeButtonText}>סגור</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
 
-      <Modal
-        visible={showRoleModal}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowRoleModal(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>בחר תפקיד</Text>
-            <TouchableOpacity
-              style={styles.modalOption}
-              onPress={() =>
-                handleRoleChange({ label: "מורה", value: "teacher" })
-              }
-            >
-              <Text style={styles.modalOptionText}>מורה</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.modalOption}
-              onPress={() =>
-                handleRoleChange({ label: "מנהל", value: "manager" })
-              }
-            >
-              <Text style={styles.modalOptionText}>מנהל</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.modalOption}
-              onPress={() =>
-                handleRoleChange({ label: "סטודנט", value: "student" })
-              }
-            >
-              <Text style={styles.modalOptionText}>סטודנט</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setShowRoleModal(false)}
-              style={styles.modalCloseButton}
-            >
-              <Text style={styles.closeButtonText}>סגור</Text>
-            </TouchableOpacity>
+        <Modal
+          visible={showRoleModal}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowRoleModal(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>בחר תפקיד</Text>
+              <TouchableOpacity
+                style={styles.modalOption}
+                onPress={() =>
+                  handleRoleChange({ label: "מורה", value: "teacher" })
+                }
+              >
+                <Text style={styles.modalOptionText}>מורה</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalOption}
+                onPress={() =>
+                  handleRoleChange({ label: "מנהל", value: "manager" })
+                }
+              >
+                <Text style={styles.modalOptionText}>מנהל</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalOption}
+                onPress={() =>
+                  handleRoleChange({ label: "סטודנט", value: "student" })
+                }
+              >
+                <Text style={styles.modalOptionText}>סטודנט</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setShowRoleModal(false)}
+                style={styles.modalCloseButton}
+              >
+                <Text style={styles.closeButtonText}>סגור</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
 
-      <Modal
-        visible={showClassModal}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowClassModal(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>בחר משתמש</Text>
-            <ScrollView>
-              {classes.map((item) => (
-                <TouchableOpacity
-                  key={item}
-                  style={styles.modalOption}
-                  onPress={() => handleClassChange(item)}
-                >
-                  <Text style={styles.modalOptionText}>{item}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <TouchableOpacity
-              onPress={() => setShowClassModal(false)}
-              style={styles.modalCloseButton}
-            >
-              <Text style={styles.closeButtonText}>סגור</Text>
-            </TouchableOpacity>
+        <Modal
+          visible={showClassModal}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowClassModal(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>בחר כיתה</Text>
+              <ScrollView>
+                {classes.map((item) => (
+                  <TouchableOpacity
+                    key={item}
+                    style={styles.modalOption}
+                    onPress={() => handleClassChange(item)}
+                  >
+                    <Text style={styles.modalOptionText}>{item}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              <TouchableOpacity
+                onPress={() => setShowClassModal(false)}
+                style={styles.modalCloseButton}
+              >
+                <Text style={styles.closeButtonText}>סגור</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        </Modal>
       </Modal>
     </View>
   );
@@ -477,6 +476,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
+    textAlign: "right",
   },
   addButton: {
     backgroundColor: "#4CAF50",
