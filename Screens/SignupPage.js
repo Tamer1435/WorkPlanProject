@@ -14,7 +14,7 @@ import { AuthContext } from "../AuthProvider";
 const SignupPage = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("student"); // Default role
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const { db, auth } = useContext(AuthContext);
 
@@ -70,14 +70,23 @@ const SignupPage = ({ navigation }) => {
           onChangeText={setEmail}
           style={styles.input}
         />
-        <TextInput
-          placeholder="סיסמה"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          style={styles.input}
-        />
-
+        <View style={styles.passwordContainer}>
+          <TextInput
+            placeholder="סיסמה"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+            style={styles.PassInput}
+          />
+          <TouchableOpacity
+            style={styles.showPasswordButton}
+            onPress={() => setShowPassword(!showPassword)}
+          >
+            <Text style={styles.showPasswordText}>
+              {showPassword ? "◡" : "◉"}
+            </Text>
+          </TouchableOpacity>
+        </View>
         <TouchableOpacity style={styles.saveButton} onPress={handleSignup}>
           <Text>Sign Up</Text>
         </TouchableOpacity>
@@ -116,12 +125,35 @@ const styles = StyleSheet.create({
 
   input: {
     borderBottomWidth: 1,
-    marginBottom: 20,
     padding: 10,
     borderRadius: 5,
     marginBottom: 20,
     textAlign: "right",
     width: "80%",
+  },
+
+  passwordContainer: {
+    flexDirection: "row-reverse",
+    width: "80%",
+  },
+  PassInput: {
+    width: "85%",
+    padding: 10,
+    borderBottomWidth: 1,
+    textAlign: "right",
+    marginBottom: 20,
+    paddingHorizontal: 10,
+  },
+  showPasswordButton: {
+    width: "15%",
+    borderBottomWidth: 1,
+    marginBottom: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  showPasswordText: {
+    color: "#1e90ff",
+    fontSize: 30,
   },
   saveButton: {
     backgroundColor: "#4CAF50",
@@ -132,6 +164,7 @@ const styles = StyleSheet.create({
     top: 20,
     fontSize: 15,
     width: "75%",
+    textAlign: "right",
   },
 });
 
