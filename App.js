@@ -27,6 +27,8 @@ import SetUsersPage from "./Screens/SetUsersPage";
 import MakeReportPage from "./Screens/MakeReportPage";
 import ReadReportPage from "./Screens/ReadReportPage";
 import ViewAttendancePage from "./Screens/ViewAttendancePage";
+import SetContactsPage from "./Screens/SetContactsPage";
+import ViewContactsPage from "./Screens/ViewContactsPage";
 
 const Stack = createStackNavigator();
 
@@ -72,6 +74,8 @@ export default function App() {
               name="ViewAttendance"
               component={ViewAttendancePage}
             />
+            <Stack.Screen name="SetContacts" component={SetContactsPage} />
+            <Stack.Screen name="ViewContacts" component={ViewContactsPage} />
           </Stack.Navigator>
         </NavigationContainer>
       </AuthProvider>

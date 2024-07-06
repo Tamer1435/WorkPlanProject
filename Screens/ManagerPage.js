@@ -163,7 +163,10 @@ const ManagerPage = ({ navigation }) => {
           </TouchableOpacity>
         </View>
         <View style={styles.row}>
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("SetContacts")}
+            style={styles.button}
+          >
             <Image
               style={{ marginTop: 0 }}
               source={require("../Images/contact icon.png")}
