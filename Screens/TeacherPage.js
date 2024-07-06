@@ -261,7 +261,10 @@ const TeacherPage = ({ navigation }) => {
           </TouchableOpacity>
         </View>
         <View style={styles.row}>
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("ViewContacts")}
+            style={styles.button}
+          >
             <Image
               style={{ marginTop: 10 }}
               source={require("../Images/contact icon.png")}
