@@ -19,7 +19,6 @@ import {
   addDoc,
   deleteDoc,
 } from "firebase/firestore";
-import { firestore } from "../firebase-config";
 
 const ManageFarmsPage = ({ navigation }) => {
   const [farms, setFarms] = useState([]);
@@ -64,7 +63,7 @@ const ManageFarmsPage = ({ navigation }) => {
       setNewLocation("");
       setNewPhoneNumber("");
       fetchFarms();
-      alert("החווה הוספה בהצלחה");
+      alert("החווה נוספה בהצלחה");
       setModalVisible(false);
     } catch (error) {
       console.error("Error adding farm: ", error);
