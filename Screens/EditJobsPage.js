@@ -59,6 +59,9 @@ const EditJobsPage = ({ navigation }) => {
         });
       });
     }
+    eventList.sort((a, b) => {
+      return a.day - b.day;
+    });
     setEvents(eventList);
     setLoading(false);
   };

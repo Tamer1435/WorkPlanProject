@@ -117,6 +117,19 @@ const CalendarPage = ({ navigation }) => {
 
   // Getting the calendar from database
 
+  const parseTime = (time) => {
+    // to help with sorting the events by time
+    const [timePart, modifier] = time.split(" ");
+    let [hours, minutes] = timePart.split(":");
+    if (hours === "12") {
+      hours = "00";
+    }
+    if (modifier === "PM") {
+      hours = parseInt(hours, 10) + 12;
+    }
+    return new Date(`2020-01-01T${hours}:${minutes}:00`);
+  };
+
   const renderDay = ({ item }) => (
     <TouchableOpacity
       style={[
@@ -136,9 +149,9 @@ const CalendarPage = ({ navigation }) => {
         if (index != -1) {
           // Sort the activities by eventName
           eventsForTheDay.sort((a, b) => {
-            if (a.timeOfMoving < b.timeOfMoving) return -1;
-            if (a.timeOfMoving > b.timeOfMoving) return 1;
-            return 0;
+            const timeA = parseTime(a.timeOfMoving);
+            const timeB = parseTime(b.timeOfMoving);
+            return timeA - timeB;
           });
 
           setDaysEvents(eventsForTheDay);

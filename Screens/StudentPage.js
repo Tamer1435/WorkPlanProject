@@ -56,6 +56,19 @@ const StudentPage = ({ navigation }) => {
     refreshTodaySection();
   }, []);
 
+  const parseTime = (time) => {
+    // to help with sorting the events by time
+    const [timePart, modifier] = time.split(" ");
+    let [hours, minutes] = timePart.split(":");
+    if (hours === "12") {
+      hours = "00";
+    }
+    if (modifier === "PM") {
+      hours = parseInt(hours, 10) + 12;
+    }
+    return new Date(`2020-01-01T${hours}:${minutes}:00`);
+  };
+
   const refreshTodaySection = async () => {
     await fetchCalendarInfo();
     const forToday = [];
@@ -68,9 +81,9 @@ const StudentPage = ({ navigation }) => {
       if (forToday.length != 0) {
         // Sort the activities by eventName
         forToday.sort((a, b) => {
-          if (a.timeOfMoving < b.timeOfMoving) return -1;
-          if (a.timeOfMoving > b.timeOfMoving) return 1;
-          return 0;
+          const timeA = parseTime(a.timeOfMoving);
+          const timeB = parseTime(b.timeOfMoving);
+          return timeA - timeB;
         });
 
         setTodayActivities(forToday);
@@ -80,61 +93,58 @@ const StudentPage = ({ navigation }) => {
 
   const fetchCalendarInfo = async () => {
     try {
+      const day = currentDate.getDate();
       const currentMonth = new Date().getMonth() + 1; // Adjusting month for 1-based index
       const currentYear = new Date().getFullYear();
       const calendarId = `${currentYear}-${currentMonth}`;
-      const daysCollectionRef = collection(db, `calendar/${calendarId}/days`);
-      const daysQuerySnapshot = await getDocs(daysCollectionRef);
 
       const events = [];
 
-      for (const dayDoc of daysQuerySnapshot.docs) {
-        const eventsSubCollectionRef = collection(
-          db,
-          `calendar/${calendarId}/days/${dayDoc.id}/events`
-        );
-        const eventsQuerySnapshot = await getDocs(eventsSubCollectionRef);
+      const eventsSubCollectionRef = collection(
+        db,
+        `calendar/${calendarId}/days/${day}/events`
+      );
+      const eventsQuerySnapshot = await getDocs(eventsSubCollectionRef);
 
-        eventsQuerySnapshot.forEach((eventDoc) => {
-          if (userData) {
-            if (userData.role == "teacher") {
-              if (eventDoc.data().attendant == userData.name) {
-                const data = eventDoc.data();
+      eventsQuerySnapshot.forEach((eventDoc) => {
+        if (userData) {
+          if (userData.role == "teacher") {
+            if (eventDoc.data().attendant == userData.name) {
+              const data = eventDoc.data();
 
-                const timestamp = data.timeOfMoving;
-                if (timestamp && timestamp.seconds) {
-                  data.timeOfMoving = format(
-                    data.timeOfMoving.toDate(),
-                    "hh:mm a"
-                  ); // Convert timestamp to string
-                }
-                events.push({
-                  key: eventDoc.id,
-                  day: dayDoc.id,
-                  ...data,
-                });
+              const timestamp = data.timeOfMoving;
+              if (timestamp && timestamp.seconds) {
+                data.timeOfMoving = format(
+                  data.timeOfMoving.toDate(),
+                  "hh:mm a"
+                ); // Convert timestamp to string
               }
-            } else if (userData.role == "student") {
-              if (eventDoc.data().students.includes(userData.name)) {
-                const data = eventDoc.data();
+              events.push({
+                key: eventDoc.id,
+                day: day,
+                ...data,
+              });
+            }
+          } else if (userData.role == "student") {
+            if (eventDoc.data().students.includes(userData.name)) {
+              const data = eventDoc.data();
 
-                const timestamp = data.timeOfMoving;
-                if (timestamp && timestamp.seconds) {
-                  data.timeOfMoving = format(
-                    data.timeOfMoving.toDate(),
-                    "hh:mm a"
-                  ); // Convert timestamp to string
-                }
-                events.push({
-                  key: eventDoc.id,
-                  day: dayDoc.id,
-                  ...data,
-                });
+              const timestamp = data.timeOfMoving;
+              if (timestamp && timestamp.seconds) {
+                data.timeOfMoving = format(
+                  data.timeOfMoving.toDate(),
+                  "hh:mm a"
+                ); // Convert timestamp to string
               }
+              events.push({
+                key: eventDoc.id,
+                day: day,
+                ...data,
+              });
             }
           }
-        });
-      }
+        }
+      });
       setCalendar(events);
     } catch (error) {
       console.error("Error fetching calendar info: ", error);
