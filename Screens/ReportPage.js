@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, Image, Alert, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
+import React, { useState, useEffect, useContext } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, Image, Alert, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator } from "react-native";
+import { AuthContext } from "../AuthProvider";
+import { collection, getDocs, doc, setDoc, getDoc } from "firebase/firestore";
 
 const ReportPage = ({ navigation }) => {
   const [name, setName] = useState('');
@@ -10,11 +12,47 @@ const ReportPage = ({ navigation }) => {
   const [extraField3, setExtraField3] = useState('');
   const [paragraph, setParagraph] = useState('');
   const [isPastDeadline, setIsPastDeadline] = useState(false);
+  const [events, setEvents] = useState([]);
+  const [selectedClass, setSelectedClass] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { userData, db } = useContext(AuthContext);
 
-  const submitReport = () => {
-    // Handle the report submission logic here
-    Alert.alert('הדו"ח הוגש בהצלחה');
-    navigation.goBack();
+  const submitReport = async () => {
+    try {
+      if (!selectedClass) {
+        Alert.alert("שגיאה", "בחר קבוצה לפני הגשת הדו\"ח");
+        return;
+      }
+
+      // Ensure userData is correctly populated
+      if (!userData || !userData.role) {
+        console.error("User data is not available or user role is missing", userData);
+        Alert.alert("שגיאה", "נתוני משתמש לא זמינים");
+        return;
+      }
+
+      const date = new Date();
+      const dateId = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+      const reportRef = doc(db, `jobReports/${dateId}/events/${selectedClass}/jobreport/${userData.name}`);
+
+      const reportData = {
+        "שם החווה שבה השתתפת": name,
+        "מיקום": location,
+        "כמה זמן עבדת": time,
+        "שדה נוסף 1": extraField1,
+        "שדה נוסף 2": extraField2,
+        "שדה נוסף 3": extraField3,
+        "כתבו פסקה כאן": paragraph,
+        "submittedAt": new Date(),
+      };
+
+      await setDoc(reportRef, reportData);
+      Alert.alert('הדו"ח הוגש בהצלחה');
+      navigation.goBack();
+    } catch (error) {
+      console.error("Error submitting report: ", error);
+      Alert.alert("שגיאה", "לא ניתן להגיש את הדו\"ח");
+    }
   };
 
   useEffect(() => {
@@ -34,80 +72,133 @@ const ReportPage = ({ navigation }) => {
     return () => clearInterval(intervalId);
   }, []);
 
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    if (!userData || !userData.role || userData.role !== 'student') {
+      console.error("User data is not available or user is not a student", userData);
+      return;
+    }
+    setLoading(true);
+
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // Adjusting month for 1-based index
+    const currentYear = currentDate.getFullYear();
+    const calendarId = `${currentYear}-${currentMonth}`;
+    const dayId = currentDate.getDate();
+
+    try {
+      const eventsRef = collection(db, `calendar/${calendarId}/days/${dayId}/events`);
+      const eventsSnapshot = await getDocs(eventsRef);
+      const eventsList = [];
+
+      eventsSnapshot.forEach((doc) => {
+        const eventData = doc.data();
+        if (eventData.students.includes(userData.name)) {
+          eventsList.push({ id: doc.id, ...eventData });
+        }
+      });
+
+      setEvents(eventsList);
+      if (eventsList.length > 0) {
+        setSelectedClass(eventsList[0].eventName);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching events: ', error);
+      setLoading(false);
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       style={styles.pageContainer}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 80} // Adjust this offset value if needed
+      keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 80}
     >
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
-      >
-        <Image
-          style={{ height: 20, width: 30 }}
-          source={require("../Images/back button.png")}
-        />
-      </TouchableOpacity>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Text style={styles.title}>דו"ח קבוצה 1</Text>
-        <View style={styles.dateContainer}>
-          <Text style={styles.timeText}>עד: 23:59</Text>
-          <Text style={styles.detailsText}>עבודה מרחבית</Text>
-          <Text style={styles.detailsText}>מקום: אונב</Text>
-        </View>
-        <TextInput
-          style={styles.textInput}
-          placeholder="שם החווה שבה השתתפת"
-          placeholderTextColor="#888"
-          value={name}
-          onChangeText={setName}
-        />
-        <TextInput
-          style={styles.textInput}
-          placeholder="כמה זמן עבדת"
-          placeholderTextColor="#888"
-          value={time}
-          onChangeText={setTime}
-        />
-        <TextInput
-          style={styles.textInput}
-          placeholder="שדה נוסף 1"
-          placeholderTextColor="#888"
-          value={extraField1}
-          onChangeText={setExtraField1}
-        />
-        <TextInput
-          style={styles.textInput}
-          placeholder="שדה נוסף 2"
-          placeholderTextColor="#888"
-          value={extraField2}
-          onChangeText={setExtraField2}
-        />
-        <TextInput
-          style={styles.textInput}
-          placeholder="שדה נוסף 3"
-          placeholderTextColor="#888"
-          value={extraField3}
-          onChangeText={setExtraField3}
-        />
-        <TextInput
-          style={styles.paragraphInput}
-          placeholder="כתבו פסקה כאן..."
-          placeholderTextColor="#888"
-          value={paragraph}
-          onChangeText={setParagraph}
-          multiline
-        />
+      <View>
         <TouchableOpacity
-          style={[styles.submitButton, isPastDeadline && styles.disabledButton]}
-          onPress={submitReport}
-          disabled={isPastDeadline}
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
         >
-          <Text style={styles.submitButtonText}>הגש את הדו"ח</Text>
+          <Image
+            style={{ height: 20, width: 30 }}
+            source={require("../Images/back button.png")}
+          />
         </TouchableOpacity>
-        {isPastDeadline && (
-          <Text style={styles.deadlineText}>הדדליין להגשת הדו"ח עבר</Text>
+        <Text style={styles.title}>דו"ח העבודה</Text>
+      </View>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <Text style={styles.noteText}>ההגשה עד 23:59</Text>
+        {loading ? (
+          <ActivityIndicator size="large" color="#0000ff" />
+        ) : events.length > 0 ? (
+          <>
+            <TextInput
+              style={styles.textInput}
+              placeholder="שם החווה שבה השתתפת"
+              placeholderTextColor="#888"
+              value={name}
+              onChangeText={setName}
+            />
+            <TextInput
+              style={styles.textInput}
+              placeholder="מיקום"
+              placeholderTextColor="#888"
+              value={location}
+              onChangeText={setLocation}
+            />
+            <TextInput
+              style={styles.textInput}
+              placeholder="כמה זמן עבדת"
+              placeholderTextColor="#888"
+              value={time}
+              onChangeText={setTime}
+            />
+            <TextInput
+              style={styles.textInput}
+              placeholder="שדה נוסף 1"
+              placeholderTextColor="#888"
+              value={extraField1}
+              onChangeText={setExtraField1}
+            />
+            <TextInput
+              style={styles.textInput}
+              placeholder="שדה נוסף 2"
+              placeholderTextColor="#888"
+              value={extraField2}
+              onChangeText={setExtraField2}
+            />
+            <TextInput
+              style={styles.textInput}
+              placeholder="שדה נוסף 3"
+              placeholderTextColor="#888"
+              value={extraField3}
+              onChangeText={setExtraField3}
+            />
+            <TextInput
+              style={styles.paragraphInput}
+              placeholder="כתבו פסקה כאן..."
+              placeholderTextColor="#888"
+              value={paragraph}
+              onChangeText={setParagraph}
+              multiline
+            />
+            <TouchableOpacity
+              style={[styles.submitButton, isPastDeadline && styles.disabledButton]}
+              onPress={submitReport}
+              disabled={isPastDeadline}
+            >
+              <Text style={styles.submitButtonText}>הגש את הדו"ח</Text>
+            </TouchableOpacity>
+            {isPastDeadline && (
+              <Text style={styles.deadlineText}>הדדליין להגשת הדו"ח עבר</Text>
+            )}
+          </>
+        ) : (
+          <Text style={styles.noEventsText}>אין אירועים להיום</Text>
         )}
       </ScrollView>
     </KeyboardAvoidingView>
@@ -117,7 +208,7 @@ const ReportPage = ({ navigation }) => {
 const styles = StyleSheet.create({
   pageContainer: {
     flex: 1,
-    backgroundColor: "#E3E3E3",
+    backgroundColor: "#85E1D7",
   },
   scrollContainer: {
     padding: 20,
@@ -132,27 +223,19 @@ const styles = StyleSheet.create({
     marginRight: 20,
     marginTop: 44,
   },
+  noteText: {
+    fontSize: 18,
+    color: "#FF0000",
+    fontWeight: "600",
+    textAlign: "center",
+    marginBottom: 10,
+  },
   title: {
     fontSize: 24,
     fontWeight: "600",
     color: "#000",
     marginBottom: 20,
-  },
-  dateContainer: {
-    backgroundColor: "#f0f0f0",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  timeText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#000",
-  },
-  detailsText: {
-    fontSize: 15,
-    color: "#666",
+    textAlign: "center",
   },
   textInput: {
     backgroundColor: "#FFF",
@@ -195,6 +278,11 @@ const styles = StyleSheet.create({
     color: "#FF0000",
     fontWeight: "600",
     marginTop: 10,
+  },
+  noEventsText: {
+    fontSize: 18,
+    color: 'red',
+    fontWeight: '600',
   },
 });
 
