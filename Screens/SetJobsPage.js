@@ -201,6 +201,7 @@ const SetJobsPage = ({ navigation }) => {
         farmOwner,
       });
       alert("האירוע נוסף בהצלחה");
+      navigation.goBack();
     } catch (error) {
       console.error("Error adding event: ", error);
       alert("שמירת האירוע נכשלה");
