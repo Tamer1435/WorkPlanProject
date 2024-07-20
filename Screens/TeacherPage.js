@@ -25,6 +25,7 @@ const TeacherPage = ({ navigation }) => {
   const currentDate = new Date();
   const day = currentDate.getDate();
   const month = currentDate.getMonth();
+  const year = currentDate.getFullYear();
   const dayName = currentDate.toLocaleString("he-IL", {
     weekday: "long",
     timeZone: "UTC",
@@ -194,7 +195,15 @@ const TeacherPage = ({ navigation }) => {
             </Text>
             <Text style={{ fontSize: 15, textAlign: "right" }}>
               {" "}
-              {dayName}, {day} {monthName}
+              {dayName} {"\n"}
+              {day} {monthName} {year}
+            </Text>
+            <Text style={{ fontSize: 15, textAlign: "right" }}>
+              {new Intl.DateTimeFormat("he-u-ca-hebrew", {
+                year: "numeric",
+                month: "numeric",
+                day: "numeric",
+              }).format(new Date())}
             </Text>
           </View>
         </View>

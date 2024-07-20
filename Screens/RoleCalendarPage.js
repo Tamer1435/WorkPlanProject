@@ -236,6 +236,12 @@ const RoleCalendarPage = ({ navigation }) => {
         <Text style={styles.headerText}>
           {monthName} {currentYear}
         </Text>
+        <Text style={styles.headerText}>
+          {new Intl.DateTimeFormat("he-u-ca-hebrew", {
+            year: "numeric",
+            month: "numeric",
+          }).format(new Date())}
+        </Text>
         <FlatList
           data={daysStartingFromCurrent}
           renderItem={renderDay}
