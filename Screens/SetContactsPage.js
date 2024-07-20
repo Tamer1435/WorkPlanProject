@@ -146,7 +146,7 @@ const SetContactsPage = ({ navigation }) => {
             style={styles.button}
             onPress={() => setModalVisible(true)}
           >
-            <Text>הוסף חווה</Text>
+            <Text>הוסף אישי קשר</Text>
           </TouchableOpacity>
         </View>
       </View>
