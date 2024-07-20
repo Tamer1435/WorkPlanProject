@@ -12,6 +12,7 @@ import { doc, setDoc } from "firebase/firestore";
 import { AuthContext } from "../AuthProvider";
 
 const SignupPage = ({ navigation }) => {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -29,6 +30,7 @@ const SignupPage = ({ navigation }) => {
 
       // Store user information in preSignedUsers collection
       await setDoc(doc(db, "preSignedUsers", user.uid), {
+        name: name,
         email: user.email,
         uid: user.uid,
         status: "pending",
@@ -54,6 +56,7 @@ const SignupPage = ({ navigation }) => {
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
+          אימייל
         >
           <Image
             style={{ height: 20, width: 30 }}
@@ -64,6 +67,12 @@ const SignupPage = ({ navigation }) => {
       <View style={styles.insiderContainer}>
         <Text style={styles.title}>רישום</Text>
         {error && <Text style={{ color: "red" }}>{error}</Text>}
+        <TextInput
+          placeholder="שם מלא"
+          value={name}
+          onChangeText={setName}
+          style={styles.input}
+        />
         <TextInput
           placeholder="אימייל"
           value={email}

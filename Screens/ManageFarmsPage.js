@@ -138,7 +138,6 @@ const ManageFarmsPage = ({ navigation }) => {
               >
                 <View style={{ alignItems: "flex-end" }}>
                   <Text>שם: {item.name}</Text>
-                  <Text>ID: {item.id}</Text>
                   <Text>סוג חקלאות: {item.farmType}</Text>
                   <Text>מקום: {item.location}</Text>
                   <Text>טלפון: {item.phoneNumber}</Text>

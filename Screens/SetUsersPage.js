@@ -89,11 +89,7 @@ const SetUsersPage = ({ navigation }) => {
 
       const userRef = doc(db, "preSignedUsers", selectedUser.uid);
 
-      await updateDoc(userRef, {
-        email: selectedUser.email,
-        status: "Done",
-        uid: selectedUser.uid,
-      });
+      await deleteDoc(userRef);
 
       setUserName("");
       setUserEmail("");
@@ -201,6 +197,7 @@ const SetUsersPage = ({ navigation }) => {
 
   const handleUserChange = (item) => {
     setSelectedUser(item);
+    setUserName(item.name);
     setShowUsersModal(false);
   };
 
@@ -364,7 +361,7 @@ const SetUsersPage = ({ navigation }) => {
                     onPress={() => handleUserChange(item)}
                   >
                     <Text style={styles.modalOptionText}>
-                      {item.email} - {item.status}
+                      {item.email} - {item.name}
                     </Text>
                   </TouchableOpacity>
                 ))}

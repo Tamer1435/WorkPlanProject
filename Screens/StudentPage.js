@@ -12,7 +12,6 @@ import {
 import { getAuth, signOut } from "firebase/auth";
 import { format } from "date-fns";
 import { doc, getDoc, getDocs, collection } from "firebase/firestore";
-
 import { AuthContext } from "../AuthProvider";
 import OptionsModal from "./OptionsModal";
 
@@ -26,6 +25,7 @@ const StudentPage = ({ navigation }) => {
   const currentDate = new Date();
   const day = currentDate.getDate();
   const month = currentDate.getMonth();
+  const year = currentDate.getFullYear();
   const dayName = currentDate.toLocaleString("he-IL", {
     weekday: "long",
     timeZone: "UTC",
@@ -195,7 +195,15 @@ const StudentPage = ({ navigation }) => {
             </Text>
             <Text style={{ fontSize: 15, textAlign: "right" }}>
               {" "}
-              {dayName}, {day} {monthName}
+              {dayName} {"\n"}
+              {day} {monthName} {year}
+            </Text>
+            <Text style={{ fontSize: 15, textAlign: "right" }}>
+              {new Intl.DateTimeFormat("he-u-ca-hebrew", {
+                year: "numeric",
+                month: "numeric",
+                day: "numeric",
+              }).format(new Date())}
             </Text>
           </View>
         </View>
