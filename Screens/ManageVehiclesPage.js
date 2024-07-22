@@ -128,7 +128,6 @@ const ManageVehiclesPage = ({ navigation }) => {
               >
                 <View style={{ alignItems: "flex-end" }}>
                   <Text>שם: {item.name}</Text>
-                  <Text>ID: {item.id}</Text>
                   <Text>מקומות: {item.capacity}</Text>
                 </View>
                 <TouchableOpacity
