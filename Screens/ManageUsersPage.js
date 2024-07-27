@@ -37,7 +37,7 @@ const ManageUsersPage = ({ navigation }) => {
             style={{ height: 55, width: 45 }}
             source={require("../Images/report icon.png")}
           />
-          <Text style={styles.buttonText}>הצג דוחות</Text>
+          <Text style={styles.buttonText}>הצג דוחות סטודנטים</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -49,6 +49,17 @@ const ManageUsersPage = ({ navigation }) => {
             source={require("../Images/attendance icon.png")}
           />
           <Text style={styles.buttonText}>הצג נוכחות</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate("ViewTeacherReport")}
+        >
+          <Image
+            style={{ height: 55, width: 45 }}
+            source={require("../Images/report icon.png")}
+          />
+          <Text style={styles.buttonText}>הצג דוחות מורים</Text>
         </TouchableOpacity>
       </View>
     </View>
