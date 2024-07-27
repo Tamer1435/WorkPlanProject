@@ -146,7 +146,7 @@ const ManageFarmsPage = ({ navigation }) => {
                   style={styles.buttonDelete}
                   onPress={() => handleDeleteFarm(item.id)}
                 >
-                  <Text style={{ color: "#fff" }}>מחק</Text>
+                  <Text style={{ color: "#fff" }}>למחוק</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -296,12 +296,12 @@ const styles = StyleSheet.create({
     margin: 5,
     width: "35%",
     height: 50,
-    backgroundColor: "#FF2400",
+    backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
   },
   closeButtonText: {
-    color: "white",
+    color: "black",
     textAlign: "center",
   },
 });
