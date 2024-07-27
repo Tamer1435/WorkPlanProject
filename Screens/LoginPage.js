@@ -34,13 +34,10 @@ const LoginPage = ({ navigation }) => {
       //Navigate after authentication of the user data....
       if (userInfo) {
         if (userInfo.role === "student") {
-          console.log(userInfo.role);
           navigation.navigate("Student");
         } else if (userInfo.role === "teacher") {
-          console.log(userInfo.role);
           navigation.navigate("Teacher");
         } else if (userInfo.role === "manager") {
-          console.log(userInfo.role);
           navigation.navigate("Manager");
         } else {
           console.log("User has no role.");
