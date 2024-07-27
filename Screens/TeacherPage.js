@@ -2,16 +2,14 @@ import React, { useState, useContext, useEffect } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   Image,
   FlatList,
-  Button,
 } from "react-native";
 import { getAuth, signOut } from "firebase/auth";
 import { format } from "date-fns";
-import { doc, getDoc, getDocs, collection } from "firebase/firestore";
+import { getDocs, collection } from "firebase/firestore";
 import { AuthContext } from "../AuthProvider";
 import OptionsModal from "./OptionsModal";
 
@@ -35,13 +33,7 @@ const TeacherPage = ({ navigation }) => {
     timeZone: "UTC",
   });
 
-  let name = "";
-
-  if (userData) {
-    name = userData.name;
-  } else {
-    name = "no name";
-  }
+  let name = userData ? userData.name : "no name";
 
   const handleLogout = async () => {
     try {
@@ -57,7 +49,6 @@ const TeacherPage = ({ navigation }) => {
   }, []);
 
   const parseTime = (time) => {
-    // to help with sorting the events by time
     const [timePart, modifier] = time.split(" ");
     let [hours, minutes] = timePart.split(":");
     if (hours === "12") {
@@ -79,7 +70,6 @@ const TeacherPage = ({ navigation }) => {
         }
       });
       if (forToday.length != 0) {
-        // Sort the activities by eventName
         forToday.sort((a, b) => {
           const timeA = parseTime(a.timeOfMoving);
           const timeB = parseTime(b.timeOfMoving);
@@ -93,7 +83,7 @@ const TeacherPage = ({ navigation }) => {
 
   const fetchCalendarInfo = async () => {
     try {
-      const currentMonth = new Date().getMonth() + 1; // Adjusting month for 1-based index
+      const currentMonth = new Date().getMonth() + 1; 
       const currentYear = new Date().getFullYear();
       const day = new Date().getDate();
       const calendarId = `${currentYear}-${currentMonth}`;
@@ -108,40 +98,28 @@ const TeacherPage = ({ navigation }) => {
 
       eventsQuerySnapshot.forEach((eventDoc) => {
         if (userData) {
-          if (userData.role == "teacher") {
-            if (eventDoc.data().attendant == userData.name) {
-              const data = eventDoc.data();
-
-              const timestamp = data.timeOfMoving;
-              if (timestamp && timestamp.seconds) {
-                data.timeOfMoving = format(
-                  data.timeOfMoving.toDate(),
-                  "hh:mm a"
-                ); // Convert timestamp to string
-              }
-              events.push({
-                key: eventDoc.id,
-                day: day,
-                ...data,
-              });
+          if (userData.role == "teacher" && eventDoc.data().attendant == userData.name) {
+            const data = eventDoc.data();
+            const timestamp = data.timeOfMoving;
+            if (timestamp && timestamp.seconds) {
+              data.timeOfMoving = format(data.timeOfMoving.toDate(), "hh:mm a");
             }
-          } else if (userData.role == "student") {
-            if (eventDoc.data().students.includes(userData.name)) {
-              const data = eventDoc.data();
-
-              const timestamp = data.timeOfMoving;
-              if (timestamp && timestamp.seconds) {
-                data.timeOfMoving = format(
-                  data.timeOfMoving.toDate(),
-                  "hh:mm a"
-                ); // Convert timestamp to string
-              }
-              events.push({
-                key: eventDoc.id,
-                day: day,
-                ...data,
-              });
+            events.push({
+              key: eventDoc.id,
+              day: day,
+              ...data,
+            });
+          } else if (userData.role == "student" && eventDoc.data().students.includes(userData.name)) {
+            const data = eventDoc.data();
+            const timestamp = data.timeOfMoving;
+            if (timestamp && timestamp.seconds) {
+              data.timeOfMoving = format(data.timeOfMoving.toDate(), "hh:mm a");
             }
+            events.push({
+              key: eventDoc.id,
+              day: day,
+              ...data,
+            });
           }
         }
       });
@@ -300,6 +278,24 @@ const TeacherPage = ({ navigation }) => {
             <Text style={styles.buttonText}>נוכחות</Text>
           </TouchableOpacity>
         </View>
+        <View style={styles.row}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate("ReadReportTeacherPage")}
+          >
+            <Image source={require("../Images/report icon.png")} />
+            <View style={styles.divider} />
+            <Text style={styles.buttonText}>הצג דוחות</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate("TeacherReportPage")}
+          >
+            <Image source={require("../Images/report icon.png")} />
+            <View style={styles.divider} />
+            <Text style={styles.buttonText}>הגשת דוח יומי</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       <OptionsModal
         visible={modalVisible}
@@ -346,13 +342,11 @@ const styles = StyleSheet.create({
     fontSize: 25,
     fontWeight: "bold",
   },
-
   personalSection: {
     flexDirection: "row",
     alignItems: "stretch",
     top: 30,
   },
-
   todaysSection: {
     backgroundColor: "#ffffff",
     borderRadius: 15,
@@ -376,7 +370,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     padding: 5,
   },
-
   row: {
     flexDirection: "row",
     marginLeft: 20,
@@ -391,7 +384,6 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     borderRadius: 10,
   },
-
   buttonNull: {
     flex: 1,
     margin: 3,
@@ -400,14 +392,12 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     borderRadius: 10,
   },
-
   divider: {
     width: "98%",
     height: 1,
     backgroundColor: "#85E1D7",
     marginVertical: 10,
   },
-
   buttonText: {
     fontSize: 18,
     color: "#000",
