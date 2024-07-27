@@ -194,6 +194,7 @@ const SetJobsPage = ({ navigation }) => {
   const saveChanges = async () => {
     // Save changes to jobs here
     // Handle form submission here
+
     if (
       eventName &&
       location &&
@@ -320,6 +321,7 @@ const SetJobsPage = ({ navigation }) => {
       }
     } else {
       alert("אנא הוסיף את כל המשתנים");
+
     }
   };
 

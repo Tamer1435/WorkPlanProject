@@ -6,84 +6,116 @@ import {
   StyleSheet,
   FlatList,
   Modal,
-  TouchableWithoutFeedback,
   Image,
+  ScrollView,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { AuthContext } from "../AuthProvider";
-import { collection, getDocs, doc, getDoc } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 
 const ViewAttendancePage = ({ navigation }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedGroup, setSelectedGroup] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState(null);
   const [students, setStudents] = useState([]);
-  const [groups, setGroups] = useState([]);
+  const [events, setEvents] = useState([]);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-  const [showGroupPicker, setShowGroupPicker] = useState(false);
   const { db } = useContext(AuthContext);
 
   useEffect(() => {
-    const fetchGroups = async () => {
-      const groupsCollectionRef = collection(db, "groups");
-      const groupsCollection = await getDocs(groupsCollectionRef);
-      setGroups(groupsCollection.docs.map((doc) => doc.data().name));
-    };
+    fetchEvents();
+  }, [selectedDate]);
 
-    fetchGroups();
-  }, [db]);
+  const fetchEvents = async () => {
+    const currentMonth = selectedDate.getMonth() + 1; // Adjusting month for 1-based index
+    const currentYear = selectedDate.getFullYear();
+    const calendarId = `${currentYear}-${currentMonth}`;
+    const dayId = selectedDate.getDate();
 
-  const fetchAttendance = async (group, date) => {
-    const dateString = date.toLocaleDateString("he-IL");
-    const attendanceDocRef = doc(db, `attendance/${group}/records/${dateString}`);
-    const attendanceDoc = await getDoc(attendanceDocRef);
+    try {
+      const eventsRef = collection(db, `calendar/${calendarId}/days/${dayId}/events`);
+      const eventsSnapshot = await getDocs(eventsRef);
+      const eventsList = [];
 
-    if (attendanceDoc.exists) {
-      const studentList = attendanceDoc.data().students || [];
-      setStudents(studentList);
-    } else {
-      setStudents([]);
+      eventsSnapshot.forEach((doc) => {
+        const eventData = doc.data();
+        eventsList.push({ id: doc.id, ...eventData });
+      });
+
+      setEvents(eventsList);
+    } catch (error) {
+      console.error('Error fetching events: ', error);
     }
+  };
+
+  const fetchAttendance = async (eventName, date) => {
+    const dateId = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+    const attendanceRef = collection(db, `attendance/${dateId}/events/${eventName}/attendance`);
+    const attendanceSnapshot = await getDocs(attendanceRef);
+
+    const studentList = [];
+    attendanceSnapshot.forEach((doc) => {
+      const data = doc.data();
+      studentList.push({
+        name: data.studentName,
+        present: data.isHere,
+      });
+    });
+
+    setStudents(studentList);
   };
 
   const handleDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || date;
     setSelectedDate(currentDate);
     setDatePickerVisibility(false);
+    setSelectedGroup(null);
+    setStudents([]);
+    fetchEvents();
   };
 
-  const handleGroupChange = (group) => {
+  const handleGroupSelect = (group) => {
     setSelectedGroup(group);
-    setShowGroupPicker(false);
-    fetchAttendance(group, selectedDate);
+    fetchAttendance(group.eventName, selectedDate);
   };
 
   const renderStudentRow = ({ item }) => (
     <View style={styles.studentRowWrapper}>
-      <View style={styles.studentRow}>
-        <Text style={styles.studentName}>{item.name}</Text>
-        <View
-          style={[
-            styles.statusCircle,
-            { backgroundColor: item.present ? "green" : "red" },
-          ]}
-        />
-      </View>
+      <Text style={styles.studentName}>{item.name}</Text>
+      <View
+        style={[
+          styles.statusCircle,
+          { backgroundColor: item.present ? "green" : "red" },
+        ]}
+      />
     </View>
+  );
+
+  const renderGroupRow = ({ item }) => (
+    <TouchableOpacity
+      style={styles.groupRow}
+      onPress={() => handleGroupSelect(item)}
+    >
+      <Text style={[styles.groupName, selectedGroup && selectedGroup.id === item.id && styles.selectedGroupName]}>
+        {item.eventName}
+      </Text>
+    </TouchableOpacity>
   );
 
   return (
     <View style={styles.pageContainer}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
-      >
-        <Image
-          style={{ height: 20, width: 30 }}
-          source={require("../Images/back button.png")}
-        />
-      </TouchableOpacity>
+      <View>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Image
+            style={{ height: 20, width: 30 }}
+            source={require("../Images/back button.png")}
+          />
+        </TouchableOpacity>
+        <Text style={styles.header}>צפה בנוכחות</Text>
+      </View>
       <View style={styles.contentContainer}>
-        <Text style={styles.title}>צפה בנוכחות</Text>
         <TouchableOpacity
           style={styles.dateTimeButton}
           onPress={() => setDatePickerVisibility(true)}
@@ -111,53 +143,35 @@ const ViewAttendancePage = ({ navigation }) => {
             </View>
           </TouchableOpacity>
         </Modal>
-        <TouchableOpacity onPress={() => setShowGroupPicker(true)}>
-          <View style={styles.groupContainer}>
-            <Text style={styles.title}>קבוצה</Text>
-            <View style={styles.groupBackground}>
-              <Text style={styles.selectedGroup}>
-                {selectedGroup || "בחר קבוצה"}
-              </Text>
-            </View>
-          </View>
-        </TouchableOpacity>
-        {selectedGroup ? (
-          <>
-            <Text style={styles.subTitle}>תלמידים:</Text>
-            <FlatList
-              data={students}
-              keyExtractor={(item) => item.name}
-              renderItem={renderStudentRow}
-            />
-          </>
+        {events.length > 0 ? (
+          <FlatList
+            data={events}
+            keyExtractor={(item) => item.id}
+            renderItem={renderGroupRow}
+            ListHeaderComponent={<Text style={styles.subTitle}>קבוצות:</Text>}
+          />
         ) : (
-          <Text style={styles.noGroupSelected}>אנא בחר קבוצה להצגת נוכחות</Text>
+          <Text style={styles.noGroupSelected}>אין קבוצות להצגה</Text>
         )}
-        <Modal
-          visible={showGroupPicker}
-          transparent={true}
-          animationType="slide"
-          onRequestClose={() => setShowGroupPicker(false)}
-        >
-          <TouchableWithoutFeedback onPress={() => setShowGroupPicker(false)}>
-            <View style={styles.modalBackground}>
-              <TouchableWithoutFeedback>
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>בחר קבוצה</Text>
-                  {groups.map((group) => (
-                    <TouchableOpacity
-                      key={group}
-                      style={styles.modalOption}
-                      onPress={() => handleGroupChange(group)}
-                    >
-                      <Text style={styles.modalOptionText}>{group}</Text>
-                    </TouchableOpacity>
-                  ))}
+        {selectedGroup && (
+          <>
+            <Text style={styles.groupTitle}>{selectedGroup.eventName}</Text>
+            <Text style={styles.subTitle}>תלמידים:</Text>
+            <ScrollView style={styles.scrollContainer}>
+              {students.map((student, index) => (
+                <View key={index} style={styles.studentRowWrapper}>
+                  <Text style={styles.studentName}>{student.name}</Text>
+                  <View
+                    style={[
+                      styles.statusCircle,
+                      { backgroundColor: student.present ? "green" : "red" },
+                    ]}
+                  />
                 </View>
-              </TouchableWithoutFeedback>
-            </View>
-          </TouchableWithoutFeedback>
-        </Modal>
+              ))}
+            </ScrollView>
+          </>
+        )}
       </View>
     </View>
   );
@@ -179,8 +193,12 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     alignSelf: "flex-end",
     justifyContent: "center",
-    marginRight: 20,
-    marginTop: 44,
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
   },
   title: {
     fontSize: 24,
@@ -189,19 +207,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: "center",
   },
-  groupContainer: {
-    flexDirection: "column",
-    alignItems: "center",
-  },
-  groupBackground: {
-    backgroundColor: "white",
-    paddingHorizontal: 5,
-    borderRadius: 5,
-    marginTop: 10,
-  },
-  selectedGroup: {
-    fontSize: 30,
+  groupTitle: {
+    fontSize: 22,
+    fontWeight: "600",
     color: "darkblue",
+    marginBottom: 10,
   },
   subTitle: {
     fontSize: 20,
@@ -215,11 +225,30 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 20,
   },
-  studentRowWrapper: {
+  groupRow: {
     backgroundColor: "#E8E8E8",
     borderRadius: 10,
     marginVertical: 5,
     padding: 10,
+    alignItems: "center",
+  },
+  groupName: {
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  selectedGroupName: {
+    fontWeight: "bold",
+  },
+  studentRowWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
+    marginVertical: 5,
+    padding: 10,
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderColor: "#E8E8E8",
   },
   studentRow: {
     flexDirection: "row-reverse",
@@ -230,12 +259,16 @@ const styles = StyleSheet.create({
     flex: 2,
     fontSize: 16,
     color: "#000",
-    textAlign: "right",
+    textAlign: 'right',
   },
   statusCircle: {
     width: 20,
     height: 20,
     borderRadius: 10,
+    marginHorizontal: 10,
+  },
+  scrollContainer: {
+    width: "100%",
   },
   modalBackground: {
     flex: 1,
@@ -247,29 +280,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 20,
     borderRadius: 10,
-  },
-  modalContent: {
-    width: "80%",
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    marginBottom: 20,
-  },
-  modalOption: {
-    padding: 10,
-    marginVertical: 5,
-    backgroundColor: "#E8E8E8",
-    borderRadius: 5,
-    width: "100%",
-    alignItems: "center",
-  },
-  modalOptionText: {
-    fontSize: 18,
   },
   dateTimeButton: {
     backgroundColor: "#007BFF",

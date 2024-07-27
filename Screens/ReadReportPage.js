@@ -6,84 +6,134 @@ import {
   StyleSheet,
   FlatList,
   Modal,
-  TouchableWithoutFeedback,
   Image,
+  ScrollView,
+  TouchableWithoutFeedback,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { AuthContext } from "../AuthProvider";
-import { collection, getDocs, doc, getDoc } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 
-const ViewAttendancePage = ({ navigation }) => {
+const ReadReportPage = ({ navigation }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedGroup, setSelectedGroup] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState(null);
   const [students, setStudents] = useState([]);
   const [groups, setGroups] = useState([]);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [showGroupPicker, setShowGroupPicker] = useState(false);
   const { db } = useContext(AuthContext);
+  const [selectedStudent, setSelectedStudent] = useState(null);
 
   useEffect(() => {
-    const fetchGroups = async () => {
-      const groupsCollectionRef = collection(db, "groups");
-      const groupsCollection = await getDocs(groupsCollectionRef);
-      setGroups(groupsCollection.docs.map((doc) => doc.data().name));
-    };
+    fetchEvents();
+  }, [selectedDate]);
 
-    fetchGroups();
-  }, [db]);
+  const fetchEvents = async () => {
+    const currentMonth = selectedDate.getMonth() + 1; // Adjusting month for 1-based index
+    const currentYear = selectedDate.getFullYear();
+    const calendarId = `${currentYear}-${currentMonth}`;
+    const dayId = selectedDate.getDate();
 
-  const fetchAttendance = async (group, date) => {
-    const dateString = date.toLocaleDateString("he-IL");
-    const attendanceDocRef = doc(db, `attendance/${group}/records/${dateString}`);
-    const attendanceDoc = await getDoc(attendanceDocRef);
+    try {
+      const eventsRef = collection(db, `calendar/${calendarId}/days/${dayId}/events`);
+      const eventsSnapshot = await getDocs(eventsRef);
+      const eventsList = [];
 
-    if (attendanceDoc.exists) {
-      const studentList = attendanceDoc.data().students || [];
-      setStudents(studentList);
-    } else {
-      setStudents([]);
+      eventsSnapshot.forEach((doc) => {
+        const eventData = doc.data();
+        eventsList.push({ id: doc.id, ...eventData });
+      });
+
+      setGroups(eventsList);
+    } catch (error) {
+      console.error('Error fetching events: ', error);
     }
+  };
+
+  const fetchReports = async (group, date) => {
+    const dateId = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+    const reportsRef = collection(db, `jobReports/${dateId}/events/${group.eventName}/jobreport`);
+    const reportsSnapshot = await getDocs(reportsRef);
+
+    const studentList = [];
+    reportsSnapshot.forEach((doc) => {
+      const data = doc.data();
+      studentList.push({
+        id: doc.id,
+        ...data,
+      });
+    });
+
+    setStudents(studentList);
   };
 
   const handleDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || selectedDate;
     setSelectedDate(currentDate);
     setDatePickerVisibility(false);
+    setSelectedGroup(null);
+    setStudents([]);
+    fetchEvents();
   };
 
-  const handleGroupChange = (group) => {
+  const handleGroupSelect = (group) => {
     setSelectedGroup(group);
-    setShowGroupPicker(false);
-    fetchAttendance(group, selectedDate);
+    fetchReports(group, selectedDate);
+  };
+
+  const handleStudentPress = (student) => {
+    if (selectedStudent && selectedStudent.id === student.id) {
+      setSelectedStudent(null); // Deselect if the same student is clicked again
+    } else {
+      setSelectedStudent(student);
+    }
   };
 
   const renderStudentRow = ({ item }) => (
-    <View style={styles.studentRowWrapper}>
-      <View style={styles.studentRow}>
-        <Text style={styles.studentName}>{item.name}</Text>
-        <View
-          style={[
-            styles.statusCircle,
-            { backgroundColor: item.present ? "green" : "red" },
-          ]}
-        />
+    <TouchableOpacity onPress={() => handleStudentPress(item)}>
+      <View style={styles.studentRowWrapper}>
+        <Text style={styles.studentName}>{item.id}</Text>
+        {selectedStudent && selectedStudent.id === item.id && (
+          <View style={styles.reportDetails}>
+            <Text style={styles.reportField}><Text style={styles.fieldLabel}>שם החווה:</Text> {item["שם החווה שבה השתתפת"]}</Text>
+            <Text style={styles.reportField}><Text style={styles.fieldLabel}>מיקום:</Text> {item["מיקום"]}</Text>
+            <Text style={styles.reportField}><Text style={styles.fieldLabel}>זמן עבודה:</Text> {item["כמה זמן עבדת"]}</Text>
+            <Text style={styles.reportField}><Text style={styles.fieldLabel}>שדה נוסף 1:</Text> {item["שדה נוסף 1"]}</Text>
+            <Text style={styles.reportField}><Text style={styles.fieldLabel}>שדה נוסף 2:</Text> {item["שדה נוסף 2"]}</Text>
+            <Text style={styles.reportField}><Text style={styles.fieldLabel}>שדה נוסף 3:</Text> {item["שדה נוסף 3"]}</Text>
+            <Text style={styles.reportField}><Text style={styles.fieldLabel}>פסקה:</Text> {item["כתבו פסקה כאן"]}</Text>
+          </View>
+        )}
       </View>
-    </View>
+    </TouchableOpacity>
+  );
+
+  const renderGroupRow = ({ item }) => (
+    <TouchableOpacity
+      style={styles.groupRow}
+      onPress={() => handleGroupSelect(item)}
+    >
+      <Text style={[styles.groupName, selectedGroup && selectedGroup.id === item.id && styles.selectedGroupName]}>
+        {item.eventName}
+      </Text>
+    </TouchableOpacity>
   );
 
   return (
     <View style={styles.pageContainer}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
-      >
-        <Image
-          style={{ height: 20, width: 30 }}
-          source={require("../Images/back button.png")}
-        />
-      </TouchableOpacity>
+      <View>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Image
+            style={{ height: 20, width: 30 }}
+            source={require("../Images/back button.png")}
+          />
+        </TouchableOpacity>
+        <Text style={styles.header}>צפה בדו"חות עבודה</Text>
+      </View>
       <View style={styles.contentContainer}>
-        <Text style={styles.title}>צפה בנוכחות</Text>
         <TouchableOpacity
           style={styles.dateTimeButton}
           onPress={() => setDatePickerVisibility(true)}
@@ -111,53 +161,27 @@ const ViewAttendancePage = ({ navigation }) => {
             </View>
           </TouchableOpacity>
         </Modal>
-        <TouchableOpacity onPress={() => setShowGroupPicker(true)}>
-          <View style={styles.groupContainer}>
-            <Text style={styles.title}>קבוצה</Text>
-            <View style={styles.groupBackground}>
-              <Text style={styles.selectedGroup}>
-                {selectedGroup || "בחר קבוצה"}
-              </Text>
-            </View>
-          </View>
-        </TouchableOpacity>
-        {selectedGroup ? (
+        {groups.length > 0 ? (
+          <FlatList
+            data={groups}
+            keyExtractor={(item) => item.id}
+            renderItem={renderGroupRow}
+            ListHeaderComponent={<Text style={styles.subTitle}>קבוצות:</Text>}
+          />
+        ) : (
+          <Text style={styles.noGroupSelected}>אין קבוצות להצגה</Text>
+        )}
+        {selectedGroup && (
           <>
+            <Text style={styles.groupTitle}>{selectedGroup.eventName}</Text>
             <Text style={styles.subTitle}>תלמידים:</Text>
             <FlatList
               data={students}
-              keyExtractor={(item) => item.name}
+              keyExtractor={(item) => item.id}
               renderItem={renderStudentRow}
             />
           </>
-        ) : (
-          <Text style={styles.noGroupSelected}>אנא בחר קבוצה להצגת נוכחות</Text>
         )}
-        <Modal
-          visible={showGroupPicker}
-          transparent={true}
-          animationType="slide"
-          onRequestClose={() => setShowGroupPicker(false)}
-        >
-          <TouchableWithoutFeedback onPress={() => setShowGroupPicker(false)}>
-            <View style={styles.modalBackground}>
-              <TouchableWithoutFeedback>
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>בחר קבוצה</Text>
-                  {groups.map((group) => (
-                    <TouchableOpacity
-                      key={group}
-                      style={styles.modalOption}
-                      onPress={() => handleGroupChange(group)}
-                    >
-                      <Text style={styles.modalOptionText}>{group}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </TouchableWithoutFeedback>
-            </View>
-          </TouchableWithoutFeedback>
-        </Modal>
       </View>
     </View>
   );
@@ -179,8 +203,12 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     alignSelf: "flex-end",
     justifyContent: "center",
-    marginRight: 20,
-    marginTop: 44,
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
   },
   title: {
     fontSize: 24,
@@ -189,19 +217,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: "center",
   },
-  groupContainer: {
-    flexDirection: "column",
-    alignItems: "center",
-  },
-  groupBackground: {
-    backgroundColor: "white",
-    paddingHorizontal: 5,
-    borderRadius: 5,
-    marginTop: 10,
-  },
-  selectedGroup: {
-    fontSize: 30,
+  groupTitle: {
+    fontSize: 22,
+    fontWeight: "600",
     color: "darkblue",
+    marginBottom: 10,
   },
   subTitle: {
     fontSize: 20,
@@ -215,27 +235,48 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 20,
   },
-  studentRowWrapper: {
+  groupRow: {
     backgroundColor: "#E8E8E8",
     borderRadius: 10,
     marginVertical: 5,
     padding: 10,
-  },
-  studentRow: {
-    flexDirection: "row-reverse",
     alignItems: "center",
+  },
+  groupName: {
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  selectedGroupName: {
+    fontWeight: "bold",
+  },
+  studentRowWrapper: {
+    flexDirection: "column",
+    alignItems: "flex-start",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
+    marginVertical: 5,
+    padding: 10,
     justifyContent: "space-between",
+    borderWidth: 1,
+    borderColor: "#E8E8E8",
+    width: "100%",
   },
   studentName: {
-    flex: 2,
     fontSize: 16,
     color: "#000",
-    textAlign: "right",
+    textAlign: 'right',
+    width: "100%",
   },
-  statusCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+  reportDetails: {
+    marginTop: 10,
+  },
+  reportField: {
+    fontSize: 16,
+    color: "#000",
+    textAlign: 'right',
+  },
+  fieldLabel: {
+    fontWeight: "bold",
   },
   modalBackground: {
     flex: 1,
@@ -247,29 +288,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 20,
     borderRadius: 10,
-  },
-  modalContent: {
-    width: "80%",
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    marginBottom: 20,
-  },
-  modalOption: {
-    padding: 10,
-    marginVertical: 5,
-    backgroundColor: "#E8E8E8",
-    borderRadius: 5,
-    width: "100%",
-    alignItems: "center",
-  },
-  modalOptionText: {
-    fontSize: 18,
   },
   dateTimeButton: {
     backgroundColor: "#007BFF",
@@ -285,4 +303,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ViewAttendancePage;
+export default ReadReportPage;

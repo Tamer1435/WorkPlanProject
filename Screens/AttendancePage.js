@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Modal, Alert, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert, Image, ActivityIndicator } from 'react-native';
 import { AuthContext } from '../AuthProvider';
-import { doc, setDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, setDoc } from 'firebase/firestore';
 
 const AttendancePage = ({ navigation }) => {
-  const [selectedClass, setSelectedClass] = useState('צוות 1');
+  const [selectedClass, setSelectedClass] = useState('');
   const [attendance, setAttendance] = useState({});
-  const [showClassPicker, setShowClassPicker] = useState(false);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const [isAfter8PM, setIsAfter8PM] = useState(false);
+  const [savedAttendance, setSavedAttendance] = useState({});
+  const [isBeforeMidnight, setIsBeforeMidnight] = useState(true);
+  const [events, setEvents] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [loading, setLoading] = useState(false);
   const { userData, db } = useContext(AuthContext);
 
   const hebrewDays = ['יום ראשון', 'יום שני', 'יום שלישי', 'יום רביעי', 'יום חמישי', 'יום שישי', 'שבת'];
@@ -17,8 +19,7 @@ const AttendancePage = ({ navigation }) => {
   useEffect(() => {
     const checkTime = () => {
       const now = new Date();
-      const currentHour = now.getHours();
-      setIsAfter8PM(currentHour >= 20);
+      setIsBeforeMidnight(now.getHours() < 24);
     };
 
     checkTime();
@@ -27,18 +28,75 @@ const AttendancePage = ({ navigation }) => {
     return () => clearInterval(intervalId);
   }, []);
 
-  const students = [
-    'תלמיד 1',
-    'תלמיד 2',
-    'תלמיד 3',
-    'תלמיד 4',
-    'תלמיד 5',
-    'תלמיד 6',
-    'תלמיד 7',
-    'תלמיד 8',
-  ];
+  useEffect(() => {
+    fetchEvents();
+  }, [selectedDate]);
 
-  const classes = ['צוות 1', 'צוות 2', 'צוות 3', 'צוות 4'];
+  const fetchEvents = async () => {
+    if (!userData || userData.role !== 'teacher') return;
+    setLoading(true);
+
+    const currentMonth = selectedDate.getMonth() + 1; // Adjusting month for 1-based index
+    const currentYear = selectedDate.getFullYear();
+    const calendarId = `${currentYear}-${currentMonth}`;
+    const dayId = selectedDate.getDate();
+
+    try {
+      const eventsRef = collection(db, `calendar/${calendarId}/days/${dayId}/events`);
+      const eventsSnapshot = await getDocs(eventsRef);
+      const eventsList = [];
+
+      eventsSnapshot.forEach((doc) => {
+        const eventData = doc.data();
+        if (eventData.attendant === userData.name) {
+          eventsList.push({ id: doc.id, ...eventData });
+        }
+      });
+
+      setEvents(eventsList);
+      if (eventsList.length > 0) {
+        setSelectedClass(eventsList[0].eventName);
+        fetchSavedAttendance(eventsList[0].eventName);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching events: ', error);
+      setLoading(false);
+    }
+  };
+
+  const fetchSavedAttendance = async (eventName) => {
+    const date = selectedDate.getDate();
+    const month = selectedDate.getMonth() + 1;
+    const year = selectedDate.getFullYear();
+    const dateId = `${year}-${month}-${date}`;
+
+    try {
+      const attendanceRef = collection(db, `attendance/${dateId}/events/${eventName}/attendance`);
+      const attendanceSnapshot = await getDocs(attendanceRef);
+
+      const fetchedData = {};
+      attendanceSnapshot.forEach((doc) => {
+        const data = doc.data();
+        fetchedData[doc.id] = data;
+      });
+
+      setSavedAttendance(fetchedData);
+      console.log('Fetched saved attendance:', fetchedData); // Debugging log
+      setAttendance((prev) => {
+        const updated = { ...prev };
+        Object.keys(fetchedData).forEach((student) => {
+          if (!updated[student]) {
+            updated[student] = fetchedData[student].isHere ? 'נוכח' : 'לא נוכח';
+          }
+        });
+        return updated;
+      });
+    } catch (error) {
+      console.error('Error fetching saved attendance:', error);
+      Alert.alert('שגיאה', 'לא ניתן לטעון את הנוכחות שנשמרה');
+    }
+  };
 
   const handleAttendanceChange = (student, status) => {
     setAttendance((prev) => ({
@@ -48,6 +106,13 @@ const AttendancePage = ({ navigation }) => {
   };
 
   const getStatusStyle = (student, status) => {
+    if (savedAttendance[student] && savedAttendance[student].hasOwnProperty('isHere')) {
+      if (savedAttendance[student].isHere && status === 'נוכח') {
+        return styles.savedPresent;
+      } else if (!savedAttendance[student].isHere && status === 'לא נוכח') {
+        return styles.savedAbsent;
+      }
+    }
     if (attendance[student] === status) {
       return status === 'נוכח' ? styles.present : styles.absent;
     }
@@ -55,27 +120,42 @@ const AttendancePage = ({ navigation }) => {
   };
 
   const saveAttendance = async () => {
-    if (isAfter8PM) return;
+    if (!isBeforeMidnight) return;
 
     try {
-      const date = new Date().toLocaleDateString("he-IL");
-      const attendanceRef = doc(
-        db,
-        `attendance/${selectedClass}/records/${date}`
-      );
-      await setDoc(attendanceRef, {
-        class: selectedClass,
-        date: date,
-        attendance,
-        savedBy: userData.name,
+      const date = selectedDate.getDate();
+      const month = selectedDate.getMonth() + 1;
+      const year = selectedDate.getFullYear();
+      const dateId = `${year}-${month}-${date}`;
+      const attendanceRef = doc(db, `attendance/${dateId}/events/${selectedClass}`);
+
+      const attendanceData = {};
+      Object.keys(attendance).forEach((student) => {
+        attendanceData[student] = {
+          studentName: student,
+          isHere: attendance[student] === 'נוכח',
+        };
       });
-      setShowSuccessMessage(true);
-      setTimeout(() => {
-        setShowSuccessMessage(false);
-      }, 3000);
+
+      if (userData && userData.role === 'teacher') {
+        await setDoc(attendanceRef, { eventName: selectedClass });
+
+        for (const student in attendanceData) {
+          const studentRef = doc(db, `attendance/${dateId}/events/${selectedClass}/attendance/${student}`);
+          await setDoc(studentRef, attendanceData[student]);
+        }
+
+        Alert.alert('הצלחה', 'הנוכחות נשמרה בהצלחה.');
+        // Refresh saved attendance after saving
+        fetchSavedAttendance(selectedClass);
+        // Reset local attendance state to reflect saved state
+        setAttendance({});
+      } else {
+        throw new Error('Unauthorized');
+      }
     } catch (error) {
-      console.error("Error saving attendance: ", error);
-      Alert.alert("שגיאה", "לא נשמר הנוכחות");
+      console.error('Error saving attendance:', error);
+      Alert.alert('שגיאה', 'הנוכחות לא נשמרה.');
     }
   };
 
@@ -93,6 +173,21 @@ const AttendancePage = ({ navigation }) => {
     </View>
   );
 
+  const renderEventStudents = () => {
+    if (events.length === 0) {
+      return <Text style={styles.noEventsText}>אין אירועים להיום</Text>;
+    }
+
+    const students = events.flatMap((event) => event.students);
+    return (
+      <FlatList
+        data={students}
+        keyExtractor={(item) => item}
+        renderItem={renderStudentRow}
+      />
+    );
+  };
+
   return (
     <View style={styles.container}>
       <View>
@@ -102,59 +197,32 @@ const AttendancePage = ({ navigation }) => {
         >
           <Image
             style={{ height: 20, width: 30 }}
-            source={require("../Images/back button.png")}
+            source={require('../Images/back button.png')}
           />
         </TouchableOpacity>
         <Text style={styles.currentDay}>{hebrewDays[currentDay]}</Text>
       </View>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => setShowClassPicker(true)}>
-          <View style={styles.classContainer}>
-            <Text style={styles.title}>קבוצה</Text>
-            <View style={styles.classBackground}>
-              <Text style={styles.selectedClass}>{selectedClass}</Text>
-            </View>
+        <View style={styles.classContainer}>
+          <Text style={styles.title}>קבוצה</Text>
+          <View style={styles.groupBackground}>
+            <Text style={styles.selectedClass}>{selectedClass}</Text>
           </View>
-        </TouchableOpacity>
+        </View>
       </View>
       <Text style={styles.subTitle}>התלמידים:</Text>
-      <FlatList data={students} keyExtractor={(item) => item} renderItem={renderStudentRow} />
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        renderEventStudents()
+      )}
       <TouchableOpacity
-        style={[styles.saveButton, isAfter8PM && styles.disabledButton]}
+        style={[styles.saveButton, !isBeforeMidnight && styles.disabledButton]}
         onPress={saveAttendance}
-        disabled={isAfter8PM}
+        disabled={!isBeforeMidnight}
       >
         <Text style={styles.saveButtonText}>שמור</Text>
       </TouchableOpacity>
-      {showSuccessMessage && (
-        <View style={styles.successMessage}>
-          <Text style={styles.successMessageText}>נשמר בהצלחה</Text>
-        </View>
-      )}
-      <Modal
-        visible={showClassPicker}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowClassPicker(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>בחר כיתה</Text>
-            {classes.map((className) => (
-              <TouchableOpacity
-                key={className}
-                style={styles.modalOption}
-                onPress={() => {
-                  setSelectedClass(className);
-                  setShowClassPicker(false);
-                }}
-              >
-                <Text style={styles.modalOptionText}>{className}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 };
@@ -178,6 +246,8 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     alignSelf: "flex-end",
     justifyContent: "center",
+    marginRight: 20,
+    marginTop: 44,
   },
   currentDay: {
     fontSize: 30,
@@ -194,14 +264,14 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'center',
   },
-  classBackground: {
+  groupBackground: {
     backgroundColor: 'white',
     paddingHorizontal: 5,
     borderRadius: 5,
     marginTop: 10,
   },
   selectedClass: {
-    fontSize: 30, // Increase font size
+    fontSize: 30,
     color: 'darkblue',
   },
   subTitle: {
@@ -243,11 +313,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 10,
   },
+  savedPresent: {
+    flex: 1,
+    margin: 5,
+    padding: 10,
+    backgroundColor: '#A5D6A7', // Faded green
+    alignItems: 'center',
+    borderRadius: 10,
+  },
   absent: {
     flex: 1,
     margin: 5,
     padding: 10,
     backgroundColor: '#F44336',
+    alignItems: 'center',
+    borderRadius: 10,
+  },
+  savedAbsent: {
+    flex: 1,
+    margin: 5,
+    padding: 10,
+    backgroundColor: '#EF9A9A', // Faded red
     alignItems: 'center',
     borderRadius: 10,
   },
@@ -263,54 +349,12 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   disabledButton: {
-    backgroundColor: '#A5D6A7',
+    backgroundColor: '#A9A9A9',
   },
   saveButtonText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
-  },
-  successMessage: {
-    position: 'absolute',
-    bottom: 20,
-    left: '50%',
-    transform: [{ translateX: -50 }],
-    backgroundColor: '#4CAF50',
-    padding: 10,
-    borderRadius: 5,
-  },
-  successMessageText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '80%',
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 20,
-  },
-  modalOption: {
-    padding: 10,
-    marginVertical: 5,
-    backgroundColor: '#E8E8E8',
-    borderRadius: 5,
-    width: '100%',
-    alignItems: 'center',
-  },
-  modalOptionText: {
-    fontSize: 18,
   },
 });
 
