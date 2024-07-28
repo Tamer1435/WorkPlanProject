@@ -210,12 +210,12 @@ const styles = StyleSheet.create({
   },
   upperContainer: {
     flex: 1,
-    paddingTop: 30,
+    paddingTop: "7%",
   },
   lowerContainer: {
     flex: 3,
     justifyContent: "flex-start",
-    top: 10,
+    marginTop: "5%",
   },
   headerContainer: {
     flexDirection: "row",
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
   personalSection: {
     flexDirection: "row",
     alignItems: "stretch",
-    top: 30,
+    marginTop: "5%",
   },
 
   todaysSection: {
