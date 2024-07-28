@@ -78,6 +78,7 @@ const SignupPage = ({ navigation }) => {
           value={email}
           onChangeText={setEmail}
           style={styles.input}
+          keyboardType="email-address"
         />
         <View style={styles.passwordContainer}>
           <TextInput

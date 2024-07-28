@@ -83,7 +83,7 @@ const TeacherPage = ({ navigation }) => {
 
   const fetchCalendarInfo = async () => {
     try {
-      const currentMonth = new Date().getMonth() + 1; 
+      const currentMonth = new Date().getMonth() + 1;
       const currentYear = new Date().getFullYear();
       const day = new Date().getDate();
       const calendarId = `${currentYear}-${currentMonth}`;
@@ -98,7 +98,10 @@ const TeacherPage = ({ navigation }) => {
 
       eventsQuerySnapshot.forEach((eventDoc) => {
         if (userData) {
-          if (userData.role == "teacher" && eventDoc.data().attendant == userData.name) {
+          if (
+            userData.role == "teacher" &&
+            eventDoc.data().attendant == userData.name
+          ) {
             const data = eventDoc.data();
             const timestamp = data.timeOfMoving;
             if (timestamp && timestamp.seconds) {
@@ -109,7 +112,10 @@ const TeacherPage = ({ navigation }) => {
               day: day,
               ...data,
             });
-          } else if (userData.role == "student" && eventDoc.data().students.includes(userData.name)) {
+          } else if (
+            userData.role == "student" &&
+            eventDoc.data().students.includes(userData.name)
+          ) {
             const data = eventDoc.data();
             const timestamp = data.timeOfMoving;
             if (timestamp && timestamp.seconds) {
@@ -209,7 +215,7 @@ const TeacherPage = ({ navigation }) => {
               <Text style={{ fontWeight: "600", marginTop: 5 }}>
                 אין לך אירועי עבודה היום
               </Text>
-              <Text style={{ color: "blue", fontWeight: "600", marginTop: 5 }}>
+              <Text style={{ color: "blue", fontWeight: "600" }}>
                 לחץ לרענן
               </Text>
             </TouchableOpacity>
@@ -313,14 +319,16 @@ const styles = StyleSheet.create({
   },
   upperContainer: {
     flex: 1,
-    paddingTop: 30,
+    paddingTop: "7%",
   },
   middleContainer: {
     flex: 1,
+    marginTop: "5%",
   },
   lowerContainer: {
-    flex: 2,
+    flex: 2.5,
     justifyContent: "flex-start",
+    marginTop: "3%",
   },
   headerContainer: {
     flexDirection: "row",
@@ -345,7 +353,7 @@ const styles = StyleSheet.create({
   personalSection: {
     flexDirection: "row",
     alignItems: "stretch",
-    top: 30,
+    marginTop: "2%",
   },
   todaysSection: {
     backgroundColor: "#ffffff",
