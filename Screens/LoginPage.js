@@ -23,7 +23,15 @@ const LoginPage = ({ navigation }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const { user, login, logout } = useContext(AuthContext);
+  const { user, login, logout, forgotPassword } = useContext(AuthContext);
+
+  const handleForgotPassword = async () => {
+    if (username == "") {
+      Alert.alert("שגיעה", "אנא הכנס את כתובת המייל שלך.");
+      return;
+    }
+    await forgotPassword(username);
+  };
 
   const handleLogin = async () => {
     // Implement the login here
@@ -122,6 +130,12 @@ const LoginPage = ({ navigation }) => {
             onPress={handleLogin}
           >
             <Text style={styles.buttonText}>כניסה</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{ marginTop: "5%" }}
+            onPress={() => handleForgotPassword()}
+          >
+            <Text style={{ color: "blue" }}>שכחת את הסיסמה?</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => navigation.navigate("Signup")}
@@ -240,7 +254,7 @@ const styles = StyleSheet.create({
   register: {
     borderWidth: 1,
     borderRadius: 10,
-    top: 25,
+    marginTop: "5%",
     padding: 5,
     borderColor: "#fff",
   },

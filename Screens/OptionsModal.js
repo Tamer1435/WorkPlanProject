@@ -37,11 +37,11 @@ const OptionsModal = ({ visible, onClose, onLogout }) => {
         user
           .updatePassword(newPassword)
           .then(() => {
-            alert("Password changed successfully!");
+            alert("סיסמה שונתה בהצלחה!");
             setShowPasswordChangeModal(false);
           })
           .catch((error) => {
-            alert("Error updating password: " + error.message);
+            alert("שגיאה בעדכון הסיסמה: " + error.message);
           });
       })
       .catch((error) => {
@@ -67,7 +67,7 @@ const OptionsModal = ({ visible, onClose, onLogout }) => {
           onPress={() => setShowContactModal(true)}
           style={styles.title}
         >
-          <Text style={styles.closeButtonText}>צור קשר</Text>
+          <Text style={styles.closeButtonText}>קרדיט</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => setShowPasswordChangeModal(true)}
@@ -147,10 +147,22 @@ const OptionsModal = ({ visible, onClose, onLogout }) => {
       >
         <View style={styles.passContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>צור קשר</Text>
-            <TouchableOpacity>
-              <Text>התקשר להנהלה: 050-0000000</Text>
-            </TouchableOpacity>
+            <Text style={styles.modalTitle}>קרדיט</Text>
+            <Text style={{ fontWeight: "bold", ...styles.modalBody }}>
+              מנחה אקדמי:
+            </Text>
+            <Text style={styles.modalBody}>ד"ר ראובן יגל</Text>
+            <Text></Text>
+            <Text style={{ fontWeight: "bold", ...styles.modalBody }}>
+              פיתוח פרויקט:
+            </Text>
+            <Text style={styles.modalBody}>אנס שוויקי</Text>
+            <Text style={styles.modalBody}>תאמר דאביט</Text>
+            <Text></Text>
+            <Text style={styles.modalBody}>
+              האפליקציה הזו הייתה פרויקט גמר במחלקה להנדסת תוכנה במכללה אקדמית
+              להנדסה ירושלים, עזריאלי.
+            </Text>
             <Text>{"\n"}</Text>
 
             <TouchableOpacity
@@ -189,10 +201,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: "bold",
     marginBottom: 20,
     color: "#fff",
+  },
+  modalBody: {
+    fontSize: 17,
+    color: "#fff",
+    textAlign: "center",
   },
   input: {
     width: "100%",
