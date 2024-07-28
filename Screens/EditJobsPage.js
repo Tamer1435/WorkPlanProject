@@ -138,6 +138,7 @@ const EditJobsPage = ({ navigation }) => {
           (eventTime.getMinutes() < 10
             ? "0" + eventTime.getMinutes()
             : eventTime.getMinutes()),
+        "משך אירוע": event.duration,
         "בעל חווה": event.farmOwner,
         מכום: event.location,
         "סוג חקלאות": event.job,
@@ -154,7 +155,9 @@ const EditJobsPage = ({ navigation }) => {
     XLSX.utils.book_append_sheet(wb, ws, "Events");
 
     const wbout = XLSX.write(wb, { type: "base64", bookType: "xlsx" });
-    const filePath = FileSystem.documentDirectory + "Events.xlsx";
+    const filePath =
+      FileSystem.documentDirectory +
+      `Events ${currentMonth}-${currentYear}.xlsx`;
 
     await FileSystem.writeAsStringAsync(filePath, wbout, {
       encoding: FileSystem.EncodingType.Base64,
@@ -436,7 +439,7 @@ const EditJobsPage = ({ navigation }) => {
                       </Text>
                     </TouchableOpacity>
                   </View>
-                  <Text>שם האירוע:</Text>
+                  <Text style={{ textAlign: "right" }}>שם האירוע:</Text>
                   <View style={styles.row}>
                     <TextInput
                       style={styles.input}
@@ -448,7 +451,9 @@ const EditJobsPage = ({ navigation }) => {
                       placeholderTextColor={"#808080"}
                     />
                   </View>
-                  <Text>משך האירוע (בשעות):</Text>
+                  <Text style={{ textAlign: "right" }}>
+                    משך האירוע (בשעות):
+                  </Text>
                   <View style={styles.row}>
                     <TextInput
                       style={styles.input}
@@ -461,7 +466,7 @@ const EditJobsPage = ({ navigation }) => {
                       placeholderTextColor={"#808080"}
                     />
                   </View>
-                  <Text>מקום התכנסות:</Text>
+                  <Text style={{ textAlign: "right" }}>מקום התכנסות:</Text>
                   <View style={styles.row}>
                     <TextInput
                       style={styles.input}
