@@ -1,10 +1,18 @@
 import React, { useState, useEffect, useContext } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Image, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  Image,
+  Dimensions,
+} from "react-native";
 import { AuthContext } from "../AuthProvider";
 import { collection, getDoc, doc, setDoc } from "firebase/firestore";
-import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import { PanGestureHandler, State } from "react-native-gesture-handler";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 const AvailabilityPage = ({ navigation }) => {
   const [weekDates, setWeekDates] = useState([]);
@@ -18,7 +26,9 @@ const AvailabilityPage = ({ navigation }) => {
     const getWeekDates = (offset = 0) => {
       const today = new Date();
       today.setDate(today.getDate() + offset * 7);
-      const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
+      const startOfWeek = new Date(
+        today.setDate(today.getDate() - today.getDay())
+      );
       let dates = [];
       for (let i = 0; i < 7; i++) {
         const nextDate = new Date(startOfWeek);
@@ -44,7 +54,11 @@ const AvailabilityPage = ({ navigation }) => {
       // Check if it is past Wednesday 23:59
       if (
         currentDay > 3 ||
-        (currentDay === 3 && (currentHour > 23 || (currentHour === 23 && (currentMinute > 59 || (currentMinute === 59 && currentSecond > 0)))))
+        (currentDay === 3 &&
+          (currentHour > 23 ||
+            (currentHour === 23 &&
+              (currentMinute > 59 ||
+                (currentMinute === 59 && currentSecond > 0)))))
       ) {
         setIsPastDeadline(true);
       } else {
@@ -96,7 +110,9 @@ const AvailabilityPage = ({ navigation }) => {
 
   const getStatusStyle = (date, status) => {
     if (savedAvailability[date] === status) {
-      return status === "available" ? styles.savedAvailable : styles.savedUnavailable;
+      return status === "available"
+        ? styles.savedAvailable
+        : styles.savedUnavailable;
     } else if (availability[date] === status) {
       return status === "available" ? styles.available : styles.unavailable;
     }
@@ -158,13 +174,19 @@ const AvailabilityPage = ({ navigation }) => {
             />
           </TouchableOpacity>
           <View style={styles.header}>
-            <TouchableOpacity onPress={() => changeWeek(-1)} style={styles.navButton}>
+            <TouchableOpacity
+              onPress={() => changeWeek(-1)}
+              style={styles.navButton}
+            >
               <Text style={styles.navButtonText}>◀</Text>
             </TouchableOpacity>
             <Text style={styles.weekText}>{`${weekDates[0]?.toLocaleDateString(
               "he-IL"
             )} - ${weekDates[5]?.toLocaleDateString("he-IL")}`}</Text>
-            <TouchableOpacity onPress={() => changeWeek(1)} style={styles.navButton}>
+            <TouchableOpacity
+              onPress={() => changeWeek(1)}
+              style={styles.navButton}
+            >
               <Text style={styles.navButtonText}>▶</Text>
             </TouchableOpacity>
           </View>
@@ -204,7 +226,12 @@ const AvailabilityPage = ({ navigation }) => {
             })}
           </View>
           <TouchableOpacity
-            style={[styles.saveButton, (isPastDeadline && currentWeekOffset === 0) || isPastWeek ? styles.disabledButton : null]}
+            style={[
+              styles.saveButton,
+              (isPastDeadline && currentWeekOffset === 0) || isPastWeek
+                ? styles.disabledButton
+                : null,
+            ]}
             onPress={saveAvailability}
             disabled={(isPastDeadline && currentWeekOffset === 0) || isPastWeek}
           >
@@ -219,7 +246,7 @@ const AvailabilityPage = ({ navigation }) => {
 const styles = StyleSheet.create({
   pageContainer: {
     flex: 1,
-    paddingTop: 50,
+    paddingTop: "10%",
     backgroundColor: "#85E1D7",
   },
   container: {

@@ -10,9 +10,9 @@ import {
 } from "react-native";
 import { collection, getDocs } from "firebase/firestore";
 import { firestore } from "../firebase-config";
-import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import { PanGestureHandler, State } from "react-native-gesture-handler";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 const ViewAvailabilityPage = ({ navigation }) => {
   const [weekDays, setWeekDays] = useState([
@@ -53,13 +53,16 @@ const ViewAvailabilityPage = ({ navigation }) => {
       try {
         const startDate = currentWeekDates[0];
         const endDate = currentWeekDates[currentWeekDates.length - 1];
-        const availabilityRef = collection(firestore, `availability/${startDate}-${endDate}/staff`);
+        const availabilityRef = collection(
+          firestore,
+          `availability/${startDate}-${endDate}/staff`
+        );
         const snapshot = await getDocs(availabilityRef);
         const availabilityData = {};
-        
-        snapshot.forEach(doc => {
+
+        snapshot.forEach((doc) => {
           const data = doc.data();
-          Object.keys(data.dayJob).forEach(date => {
+          Object.keys(data.dayJob).forEach((date) => {
             if (!availabilityData[date]) {
               availabilityData[date] = [];
             }
@@ -68,7 +71,7 @@ const ViewAvailabilityPage = ({ navigation }) => {
             }
           });
         });
-        
+
         setAvailability(availabilityData);
       } catch (error) {
         console.error("Error fetching availability: ", error);
@@ -100,24 +103,26 @@ const ViewAvailabilityPage = ({ navigation }) => {
   return (
     <PanGestureHandler onHandlerStateChange={onPanGestureEvent}>
       <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Image
+              style={{ height: 20, width: 30 }}
+              source={require("../Images/back button.png")}
+            />
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.title}>זמינות</Text>
         <View style={styles.innerContainer}>
-          <View style={styles.header}>
-            <Text style={styles.title}>זמינות</Text>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-            >
-              <Image
-                style={{ height: 20, width: 30 }}
-                source={require("../Images/back button.png")}
-              />
-            </TouchableOpacity>
-          </View>
           <View style={styles.weekNavigation}>
             <TouchableOpacity onPress={() => changeWeek(-1)}>
               <Text style={styles.navButton}>◀</Text>
             </TouchableOpacity>
-            <Text style={styles.weekText}>{`${currentWeekDates[0]} - ${currentWeekDates[currentWeekDates.length - 1]}`}</Text>
+            <Text style={styles.weekText}>{`${currentWeekDates[0]} - ${
+              currentWeekDates[currentWeekDates.length - 1]
+            }`}</Text>
             <TouchableOpacity onPress={() => changeWeek(1)}>
               <Text style={styles.navButton}>▶</Text>
             </TouchableOpacity>
@@ -129,11 +134,13 @@ const ViewAvailabilityPage = ({ navigation }) => {
               <View style={styles.dayRow}>
                 <Text style={styles.dayText}>{day}</Text>
                 <View style={styles.teacherList}>
-                  {availability[currentWeekDates[index]]?.map((teacher, index) => (
-                    <Text key={index} style={styles.teacherText}>
-                      {teacher}
-                    </Text>
-                  ))}
+                  {availability[currentWeekDates[index]]?.map(
+                    (teacher, index) => (
+                      <Text key={index} style={styles.teacherText}>
+                        {teacher}
+                      </Text>
+                    )
+                  )}
                 </View>
               </View>
             )}
@@ -148,17 +155,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#85E1D7",
-    paddingTop: 60,
+    paddingTop: "10%",
   },
   innerContainer: {
     flex: 1,
     padding: 20,
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
   },
   backButton: {
     height: 45,
@@ -171,7 +175,7 @@ const styles = StyleSheet.create({
     fontSize: 25,
     fontWeight: "600",
     textAlign: "center",
-    flex: 1,
+    marginBottom: "5%",
   },
   weekNavigation: {
     flexDirection: "row",
@@ -193,7 +197,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 10,
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
   dayText: {
     fontSize: 20,

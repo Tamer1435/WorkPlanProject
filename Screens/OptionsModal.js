@@ -157,7 +157,7 @@ const OptionsModal = ({ visible, onClose, onLogout }) => {
               פיתוח פרויקט:
             </Text>
             <Text style={styles.modalBody}>אנס שוויקי</Text>
-            <Text style={styles.modalBody}>תאמר דאביט</Text>
+            <Text style={styles.modalBody}>תאמר דביט</Text>
             <Text></Text>
             <Text style={styles.modalBody}>
               האפליקציה הזו הייתה פרויקט גמר במחלקה להנדסת תוכנה במכללה אקדמית
