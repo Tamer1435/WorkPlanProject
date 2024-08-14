@@ -50,14 +50,12 @@ const ViewTeacherReport = ({ navigation }) => {
   const fetchReports = async (group, date) => {
     const dateId = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
     const reportsRef = collection(db, `teacherReports/${dateId}/events/${group.eventName}/reports`);
-    console.log(`Fetching reports from: teacherReports/${dateId}/events/${group.eventName}/reports`);
     try {
       const reportsSnapshot = await getDocs(reportsRef);
 
       const reportList = [];
       reportsSnapshot.forEach((doc) => {
         const data = doc.data();
-        console.log('Fetched report:', data);
         reportList.push({
           id: doc.id,
           ...data,
@@ -65,7 +63,6 @@ const ViewTeacherReport = ({ navigation }) => {
       });
 
       setReports(reportList);
-      console.log('Reports list set in state:', reportList);
     } catch (error) {
       console.error('Error fetching reports: ', error);
     }

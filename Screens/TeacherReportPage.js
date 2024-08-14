@@ -50,7 +50,7 @@ const TeacherReportPage = ({ navigation }) => {
 
   const handleFarmChange = (farm) => {
     setFarmName(`${farm.name} - ${farm.location}`);
-    setEventName(farm.name);  // Update the event name with the selected farm name
+    setEventName(eventName);  // Update the event name with the selected farm name
     setShowFarmSelection(false);
   };
 
