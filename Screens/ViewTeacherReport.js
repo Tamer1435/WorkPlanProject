@@ -15,6 +15,7 @@ import * as XLSX from 'xlsx';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
+
 const ViewTeacherReport = ({ navigation }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedGroup, setSelectedGroup] = useState(null);
@@ -23,6 +24,8 @@ const ViewTeacherReport = ({ navigation }) => {
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const { db } = useContext(AuthContext);
   const [selectedReport, setSelectedReport] = useState(null);
+  const [loading, setLoading] = useState(false);
+
 
   useEffect(() => {
     fetchEvents();
@@ -142,6 +145,7 @@ const ViewTeacherReport = ({ navigation }) => {
 };
 
 const exportMonthlyReportsToExcel = async () => {
+  setLoading(true);
   const currentMonth = selectedDate.getMonth() + 1;
   const currentYear = selectedDate.getFullYear();
   const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
@@ -164,7 +168,7 @@ const exportMonthlyReportsToExcel = async () => {
               const duration = (endTime - startTime) / 3600000; // Convert ms to hours
 
               monthlyReportData.push({
-                  "יום": day,
+                  "תאריך": `${day}/${currentMonth}/${currentYear}`, // Formatted date for each entry
                   "שם החווה": reportData["שם החווה"],
                   "שעת התחלה": startTime.toLocaleTimeString(),
                   "שעת סיום": endTime.toLocaleTimeString(),
@@ -189,10 +193,13 @@ const exportMonthlyReportsToExcel = async () => {
       });
 
       await Sharing.shareAsync(filePath);
+      setLoading(false);
   } else {
       alert('No reports available for the month.');
+      setLoading(false);
   }
 };
+
 
 
 
@@ -320,9 +327,9 @@ const exportMonthlyReportsToExcel = async () => {
     >
         <Text style={{ color: "#fff" }}>יצוא דו"ח חודשי ל-Excel</Text>
     </TouchableOpacity>
-</View>
-
     </View>
+    
+  </View>
 
     
   );
@@ -444,6 +451,7 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontWeight: "600",
   },
+  
 });
 
 export default ViewTeacherReport;
