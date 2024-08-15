@@ -61,6 +61,16 @@ const ManageUsersPage = ({ navigation }) => {
           />
           <Text style={styles.buttonText}>הצג דוחות מורים</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate("ExportExcel")}
+        >
+          <Image
+            style={{ height: 55, width: 45 }}
+            source={require("../Images/Excel icon.png")}
+          />
+          <Text style={styles.buttonText}>ייצא קבצי אקסל</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );

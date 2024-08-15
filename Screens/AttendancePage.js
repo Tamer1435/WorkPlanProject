@@ -153,6 +153,9 @@ const AttendancePage = ({ navigation }) => {
       const month = selectedDate.getMonth() + 1;
       const year = selectedDate.getFullYear();
       const dateId = `${year}-${month}-${date}`;
+
+      await setDoc(doc(db, `attendance/${dateId}`), { initialized: true });
+
       const attendanceRef = doc(
         db,
         `attendance/${dateId}/events/${selectedClass}`
