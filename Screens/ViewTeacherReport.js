@@ -11,6 +11,9 @@ import {
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { AuthContext } from "../AuthProvider";
 import { collection, getDocs } from "firebase/firestore";
+import * as XLSX from 'xlsx';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 const ViewTeacherReport = ({ navigation }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -89,6 +92,109 @@ const ViewTeacherReport = ({ navigation }) => {
       setSelectedReport(report);
     }
   };
+
+  const exportReportsToExcel = async () => {
+    const reportData = [];
+
+    // Loop through all groups to fetch and prepare data
+    for (let group of groups) {
+        const dateId = `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`;
+        const reportsRef = collection(db, `teacherReports/${dateId}/events/${group.eventName}/reports`);
+
+        try {
+            const reportsSnapshot = await getDocs(reportsRef);
+            reportsSnapshot.forEach((doc) => {
+                const data = doc.data();
+                const startTime = new Date(data["שעת התחלה"].seconds * 1000);
+                const endTime = new Date(data["שעת סיום"].seconds * 1000);
+                const duration = (endTime - startTime) / 1000 / 60 / 60; // Duration in hours
+
+                reportData.push({
+                    "שם החווה": data["שם החווה"],
+                    "שעת התחלה": startTime.toLocaleTimeString(),
+                    "שעת סיום": endTime.toLocaleTimeString(),
+                    "משך זמן": duration.toFixed(2) + ' שעות',
+                    "הערות": data["הערות"],
+                    "אירוע": group.eventName,  // Include event name for clarity
+                });
+            });
+        } catch (error) {
+            console.error('Error fetching reports for group: ', group.eventName, error);
+        }
+    }
+
+    if (reportData.length > 0) {
+        const ws = XLSX.utils.json_to_sheet(reportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Reports");
+
+        const wbout = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
+        const filePath = FileSystem.documentDirectory + 'TeacherReports.xlsx';
+
+        await FileSystem.writeAsStringAsync(filePath, wbout, {
+            encoding: FileSystem.EncodingType.Base64,
+        });
+
+        await Sharing.shareAsync(filePath);
+    } else {
+        alert('No reports available for export.');
+    }
+};
+
+const exportMonthlyReportsToExcel = async () => {
+  const currentMonth = selectedDate.getMonth() + 1;
+  const currentYear = selectedDate.getFullYear();
+  const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+  const monthlyReportData = [];
+
+  for (let day = 1; day <= daysInMonth; day++) {
+      const dateId = `${currentYear}-${currentMonth}-${day}`;
+      const eventsRef = collection(db, `calendar/${currentYear}-${currentMonth}/days/${day}/events`);
+      const eventsSnapshot = await getDocs(eventsRef);
+
+      for (const doc of eventsSnapshot.docs) {
+          const eventData = doc.data();
+          const reportsRef = collection(db, `teacherReports/${dateId}/events/${eventData.eventName}/reports`);
+          const reportsSnapshot = await getDocs(reportsRef);
+
+          for (const reportDoc of reportsSnapshot.docs) {
+              const reportData = reportDoc.data();
+              const startTime = new Date(reportData["שעת התחלה"].seconds * 1000);
+              const endTime = new Date(reportData["שעת סיום"].seconds * 1000);
+              const duration = (endTime - startTime) / 3600000; // Convert ms to hours
+
+              monthlyReportData.push({
+                  "יום": day,
+                  "שם החווה": reportData["שם החווה"],
+                  "שעת התחלה": startTime.toLocaleTimeString(),
+                  "שעת סיום": endTime.toLocaleTimeString(),
+                  "משך זמן": duration.toFixed(2) + ' שעות',
+                  "הערות": reportData["הערות"],
+                  "אירוע": eventData.eventName,
+              });
+          }
+      }
+  }
+
+  if (monthlyReportData.length > 0) {
+      const ws = XLSX.utils.json_to_sheet(monthlyReportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Monthly Reports");
+
+      const wbout = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
+      const filePath = FileSystem.documentDirectory + 'MonthlyTeacherReports.xlsx';
+
+      await FileSystem.writeAsStringAsync(filePath, wbout, {
+          encoding: FileSystem.EncodingType.Base64,
+      });
+
+      await Sharing.shareAsync(filePath);
+  } else {
+      alert('No reports available for the month.');
+  }
+};
+
+
 
   const renderReportRow = ({ item }) => (
     <TouchableOpacity onPress={() => handleReportPress(item)}>
@@ -181,9 +287,47 @@ const ViewTeacherReport = ({ navigation }) => {
             />
           </>
         )}
+         <View style={{ marginTop: 20 }}>
+        <TouchableOpacity
+          style={{
+            backgroundColor: "#5DBF72",
+            justifyContent: "center",
+            alignItems: "center",
+            borderRadius: 15,
+            padding: 10,
+            marginBottom: "10%",
+            height: 50,
+          }}
+          onPress={() => exportReportsToExcel()}
+        >
+          <Text>יצוא דו"ח יומי ל-Excel</Text>
+        </TouchableOpacity>
+        </View>
+
       </View>
+      <View style={{ marginTop: 20 }}>
+    <TouchableOpacity
+        style={{
+            backgroundColor: "#4CAF50",
+            justifyContent: "center",
+            alignItems: "center",
+            borderRadius: 15,
+            padding: 10,
+            marginBottom: "10%",
+            height: 50,
+        }}
+        onPress={exportMonthlyReportsToExcel}
+    >
+        <Text style={{ color: "#fff" }}>יצוא דו"ח חודשי ל-Excel</Text>
+    </TouchableOpacity>
+</View>
+
     </View>
+
+    
   );
+
+  
 };
 
 const styles = StyleSheet.create({
