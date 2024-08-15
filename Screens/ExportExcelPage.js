@@ -324,6 +324,7 @@ const ExportExcelPage = ({ navigation }) => {
       XLSX.utils.book_append_sheet(wb, ws, "Events");
 
       const wbout = XLSX.write(wb, { type: "base64", bookType: "xlsx" });
+      const namePath = modalOutput == "attendance" ? "Attendance" : "Jobs";
       const datePath =
         modalType == "daily"
           ? model1Date.getFullYear() +
@@ -333,7 +334,7 @@ const ExportExcelPage = ({ navigation }) => {
             model1Date.getDate()
           : model1Month + "-" + new Date().getFullYear();
       const filePath =
-        FileSystem.documentDirectory + `Attendance ${datePath}.xlsx`;
+        FileSystem.documentDirectory + `${namePath} ${datePath}.xlsx`;
 
       await FileSystem.writeAsStringAsync(filePath, wbout, {
         encoding: FileSystem.EncodingType.Base64,
@@ -377,7 +378,7 @@ const ExportExcelPage = ({ navigation }) => {
             setModalOutput("attendance");
           }}
         >
-          <Text style={styles.buttonText}>ייצוא נוכחות יומית</Text>
+          <Text style={styles.buttonText}>ייצא נוכחות יומית</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -388,7 +389,7 @@ const ExportExcelPage = ({ navigation }) => {
             setModalOutput("attendance");
           }}
         >
-          <Text style={styles.buttonText}>ייצוא נוכחות חודשית</Text>
+          <Text style={styles.buttonText}>ייצא נוכחות חודשית</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -399,7 +400,7 @@ const ExportExcelPage = ({ navigation }) => {
             setModalOutput("jobs");
           }}
         >
-          <Text style={styles.buttonText}>יצוא עבודות יומיות</Text>
+          <Text style={styles.buttonText}>ייצא עבודות יומיות</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -410,7 +411,7 @@ const ExportExcelPage = ({ navigation }) => {
             setModalOutput("jobs");
           }}
         >
-          <Text style={styles.buttonText}>יצוא עבודות חודשיות</Text>
+          <Text style={styles.buttonText}>ייצא עבודות חודשיות</Text>
         </TouchableOpacity>
       </View>
       <Modal
