@@ -55,31 +55,41 @@ const TeacherReportPage = ({ navigation }) => {
   };
 
   const submitReport = async () => {
-    if (!eventName || !farmName || !startTime || !endTime || !comments) {
-      Alert.alert("שגיאה", "אנא מלא את כל השדות");
+    const missingFields = [];
+  
+    if (!eventName) missingFields.push('שם הקבוצה');
+    if (!farmName) missingFields.push('שם החווה');
+    if (!startTime) missingFields.push('שעת התחלה');
+    if (!endTime) missingFields.push('שעת סיום');
+  
+    if (missingFields.length > 0) {
+      Alert.alert(
+        "שגיאה",
+        `אנא מלא את השדות הבאים: ${missingFields.join(', ')}`
+      );
       return;
     }
-
+  
     try {
       if (!userData || !userData.role) {
         console.error("User data is not available or user role is missing", userData);
         Alert.alert("שגיאה", "נתוני משתמש לא זמינים");
         return;
       }
-
+  
       const date = new Date();
       const dateId = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
       const reportRef = doc(db, `teacherReports/${dateId}/events/${eventName}/reports/${userData.name}`);
-
+  
       const reportData = {
         "שם קבוצה": eventName,
         "שעת התחלה": startTime,
         "שעת סיום": endTime,
         "שם החווה": farmName,
-        "הערות": comments,
+        "הערות": comments || '', // Optional field, can be empty
         "submittedAt": new Date(),
       };
-
+  
       await setDoc(reportRef, reportData);
       Alert.alert('הדו"ח הוגש בהצלחה');
       navigation.goBack();
@@ -88,6 +98,8 @@ const TeacherReportPage = ({ navigation }) => {
       Alert.alert("שגיאה", "לא ניתן להגיש את הדו\"ח");
     }
   };
+  
+  
 
   const handleStartTimeChange = (event, selectedDate) => {
     const currentDate = selectedDate || startTime;
