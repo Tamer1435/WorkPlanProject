@@ -101,53 +101,64 @@ const ViewAvailabilityPage = ({ navigation }) => {
   };
 
   return (
-    <PanGestureHandler onHandlerStateChange={onPanGestureEvent}>
-      <View style={styles.container}>
-        <View style={styles.header}>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Image
+            style={{ height: 20, width: 30 }}
+            source={require("../Images/back button.png")}
+          />
+        </TouchableOpacity>
+      </View>
+      <Text style={styles.title}>זמינות</Text>
+      <View style={styles.innerContainer}>
+        <View style={styles.weekNavigation}>
           <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
+            onPress={() => changeWeek(-1)}
+            style={{
+              width: "15%",
+              padding: 5,
+            }}
           >
-            <Image
-              style={{ height: 20, width: 30 }}
-              source={require("../Images/back button.png")}
-            />
+            <Text style={styles.navButton}>◀</Text>
+          </TouchableOpacity>
+          <Text style={styles.weekText}>{`${currentWeekDates[0]} - ${
+            currentWeekDates[currentWeekDates.length - 1]
+          }`}</Text>
+          <TouchableOpacity
+            onPress={() => changeWeek(1)}
+            style={{
+              width: "15%",
+              alignItems: "flex-end",
+              padding: 5,
+            }}
+          >
+            <Text style={styles.navButton}>▶</Text>
           </TouchableOpacity>
         </View>
-        <Text style={styles.title}>זמינות</Text>
-        <View style={styles.innerContainer}>
-          <View style={styles.weekNavigation}>
-            <TouchableOpacity onPress={() => changeWeek(-1)}>
-              <Text style={styles.navButton}>◀</Text>
-            </TouchableOpacity>
-            <Text style={styles.weekText}>{`${currentWeekDates[0]} - ${
-              currentWeekDates[currentWeekDates.length - 1]
-            }`}</Text>
-            <TouchableOpacity onPress={() => changeWeek(1)}>
-              <Text style={styles.navButton}>▶</Text>
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            data={weekDays}
-            keyExtractor={(item) => item}
-            renderItem={({ item: day, index }) => (
-              <View style={styles.dayRow}>
-                <Text style={styles.dayText}>{day}</Text>
-                <View style={styles.teacherList}>
-                  {availability[currentWeekDates[index]]?.map(
-                    (teacher, index) => (
-                      <Text key={index} style={styles.teacherText}>
-                        {teacher}
-                      </Text>
-                    )
-                  )}
-                </View>
+        <FlatList
+          data={weekDays}
+          keyExtractor={(item) => item}
+          renderItem={({ item: day, index }) => (
+            <View style={styles.dayRow}>
+              <Text style={styles.dayText}>{day}</Text>
+              <View style={styles.teacherList}>
+                {availability[currentWeekDates[index]]?.map(
+                  (teacher, index) => (
+                    <Text key={index} style={styles.teacherText}>
+                      {teacher}
+                    </Text>
+                  )
+                )}
               </View>
-            )}
-          />
-        </View>
+            </View>
+          )}
+        />
       </View>
-    </PanGestureHandler>
+    </View>
   );
 };
 
