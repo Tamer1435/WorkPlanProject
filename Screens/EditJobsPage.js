@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   Modal,
   Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import {
   collection,
@@ -370,7 +371,10 @@ const EditJobsPage = ({ navigation }) => {
       >
         <View style={styles.tofade}>
           <View style={styles.blur}>
-            <View style={styles.modalContainer}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              style={styles.modalContainer}
+            >
               {currentEvent && (
                 <ScrollView>
                   <Text style={styles.header}>ערוך עבודה</Text>
@@ -480,7 +484,11 @@ const EditJobsPage = ({ navigation }) => {
                   </View>
 
                   <View
-                    style={{ flexDirection: "row", justifyContent: "center" }}
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "center",
+                      padding: "5%",
+                    }}
                   >
                     <TouchableOpacity
                       style={styles.buttonUpdate}
@@ -497,7 +505,7 @@ const EditJobsPage = ({ navigation }) => {
                   </View>
                 </ScrollView>
               )}
-            </View>
+            </KeyboardAvoidingView>
           </View>
         </View>
         {/* Modals for selecting farm, vehicle, attendant, and students */}

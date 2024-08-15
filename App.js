@@ -32,6 +32,7 @@ import ViewContactsPage from "./Screens/ViewContactsPage";
 import ReadReportTeacherPage from "./Screens/ReadReportTeacherPage";
 import TeacherReportPage from "./Screens/TeacherReportPage";
 import ViewTeacherReport from "./Screens/ViewTeacherReport";
+import ExportExcelPage from "./Screens/ExportExcelPage";
 
 const Stack = createStackNavigator();
 
@@ -79,10 +80,19 @@ export default function App() {
             />
             <Stack.Screen name="SetContacts" component={SetContactsPage} />
             <Stack.Screen name="ViewContacts" component={ViewContactsPage} />
-            <Stack.Screen name="ReadReportTeacherPage" component={ReadReportTeacherPage} />
-            <Stack.Screen name="TeacherReportPage" component={TeacherReportPage} />
-            <Stack.Screen name="ViewTeacherReport" component={ViewTeacherReport} />
-
+            <Stack.Screen
+              name="ReadReportTeacherPage"
+              component={ReadReportTeacherPage}
+            />
+            <Stack.Screen
+              name="TeacherReportPage"
+              component={TeacherReportPage}
+            />
+            <Stack.Screen
+              name="ViewTeacherReport"
+              component={ViewTeacherReport}
+            />
+            <Stack.Screen name="ExportExcel" component={ExportExcelPage} />
           </Stack.Navigator>
         </NavigationContainer>
       </AuthProvider>
