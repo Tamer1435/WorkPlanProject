@@ -5,28 +5,34 @@ import {
   TouchableOpacity,
   StyleSheet,
   FlatList,
-  Modal,
   Image,
-  ScrollView,
-  TouchableWithoutFeedback,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { AuthContext } from "../AuthProvider";
 import { collection, getDocs } from "firebase/firestore";
 
 const ReadReportTeacherPage = ({ navigation }) => {
+  const [loading, setLoading] = useState(false);
+  const { db, userData } = useContext(AuthContext);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [students, setStudents] = useState([]);
   const [groups, setGroups] = useState([]);
-  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-  const [showGroupPicker, setShowGroupPicker] = useState(false);
-  const { db, userData } = useContext(AuthContext);
   const [selectedStudent, setSelectedStudent] = useState(null);
 
   useEffect(() => {
     fetchEvents();
   }, [selectedDate]);
+
+  const handleDateChange = (event, date) => {
+    const selectedDate = date || selectedDate;
+    setShowDatePicker(false);
+    setSelectedDate(selectedDate);
+    setSelectedGroup(null);
+    setStudents([]);
+    fetchEvents();
+  };
 
   const fetchEvents = async () => {
     const currentMonth = selectedDate.getMonth() + 1; // Adjusting month for 1-based index
@@ -52,8 +58,8 @@ const ReadReportTeacherPage = ({ navigation }) => {
     }
   };
 
-  const fetchReports = async (group, date) => {
-    const dateId = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+  const fetchReports = async (group) => {
+    const dateId = `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`;
     const reportsRef = collection(db, `jobReports/${dateId}/events/${group.eventName}/jobreport`);
     const reportsSnapshot = await getDocs(reportsRef);
 
@@ -69,18 +75,9 @@ const ReadReportTeacherPage = ({ navigation }) => {
     setStudents(studentList);
   };
 
-  const handleDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || selectedDate;
-    setSelectedDate(currentDate);
-    setDatePickerVisibility(false);
-    setSelectedGroup(null);
-    setStudents([]);
-    fetchEvents();
-  };
-
   const handleGroupSelect = (group) => {
     setSelectedGroup(group);
-    fetchReports(group, selectedDate);
+    fetchReports(group);
   };
 
   const handleStudentPress = (student) => {
@@ -138,31 +135,20 @@ const ReadReportTeacherPage = ({ navigation }) => {
       <View style={styles.contentContainer}>
         <TouchableOpacity
           style={styles.dateTimeButton}
-          onPress={() => setDatePickerVisibility(true)}
+          onPress={() => setShowDatePicker(true)}
         >
           <Text style={styles.dateTimeButtonText}>
-            בחר תאריך: {selectedDate.toLocaleDateString()}
+            בחר תאריך: {selectedDate.toDateString()}
           </Text>
         </TouchableOpacity>
-        <Modal
-          transparent={true}
-          visible={isDatePickerVisible}
-          animationType="slide"
-        >
-          <TouchableOpacity
-            style={styles.modalBackground}
-            onPress={() => setDatePickerVisibility(false)}
-          >
-            <View style={styles.modalContainer}>
-              <DateTimePicker
-                value={selectedDate}
-                mode="date"
-                display="default"
-                onChange={handleDateChange}
-              />
-            </View>
-          </TouchableOpacity>
-        </Modal>
+        {showDatePicker && (
+          <DateTimePicker
+            value={selectedDate}
+            mode="date"
+            display="default"
+            onChange={handleDateChange}
+          />
+        )}
         {groups.length > 0 ? (
           <FlatList
             data={groups}
@@ -279,17 +265,6 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     fontWeight: "bold",
-  },
-  modalBackground: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  modalContainer: {
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 10,
   },
   dateTimeButton: {
     backgroundColor: "#007BFF",

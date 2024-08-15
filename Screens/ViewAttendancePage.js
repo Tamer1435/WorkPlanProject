@@ -14,22 +14,24 @@ import { AuthContext } from "../AuthProvider";
 import { collection, getDocs } from "firebase/firestore";
 
 const ViewAttendancePage = ({ navigation }) => {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [loading, setLoading] = useState(false);
+  const { db } = useContext(AuthContext);
+  const [showModal, setShowModal] = useState(false);
+  const [showModel1DatePicker, setShowModel1DatePicker] = useState(false);
+  const [model1Date, setModel1Date] = useState(new Date());
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [students, setStudents] = useState([]);
   const [events, setEvents] = useState([]);
-  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-  const { db } = useContext(AuthContext);
 
   useEffect(() => {
     fetchEvents();
-  }, [selectedDate]);
+  }, [model1Date]);
 
   const fetchEvents = async () => {
-    const currentMonth = selectedDate.getMonth() + 1; // Adjusting month for 1-based index
-    const currentYear = selectedDate.getFullYear();
+    const currentMonth = model1Date.getMonth() + 1; // Adjusting month for 1-based index
+    const currentYear = model1Date.getFullYear();
     const calendarId = `${currentYear}-${currentMonth}`;
-    const dayId = selectedDate.getDate();
+    const dayId = model1Date.getDate();
 
     try {
       const eventsRef = collection(db, `calendar/${calendarId}/days/${dayId}/events`);
@@ -64,18 +66,15 @@ const ViewAttendancePage = ({ navigation }) => {
     setStudents(studentList);
   };
 
-  const handleDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || date;
-    setSelectedDate(currentDate);
-    setDatePickerVisibility(false);
-    setSelectedGroup(null);
-    setStudents([]);
-    fetchEvents();
+  const handleModel1DateChange = (event, selectedDate) => {
+    const currentDate = selectedDate || model1Date;
+    setShowModel1DatePicker(false);
+    setModel1Date(currentDate);
   };
 
   const handleGroupSelect = (group) => {
     setSelectedGroup(group);
-    fetchAttendance(group.eventName, selectedDate);
+    fetchAttendance(group.eventName, model1Date);
   };
 
   const renderStudentRow = ({ item }) => (
@@ -118,31 +117,20 @@ const ViewAttendancePage = ({ navigation }) => {
       <View style={styles.contentContainer}>
         <TouchableOpacity
           style={styles.dateTimeButton}
-          onPress={() => setDatePickerVisibility(true)}
+          onPress={() => setShowModel1DatePicker(true)}
         >
           <Text style={styles.dateTimeButtonText}>
-            בחר תאריך: {selectedDate.toLocaleDateString()}
+            בחר תאריך: {model1Date.toDateString()}
           </Text>
         </TouchableOpacity>
-        <Modal
-          transparent={true}
-          visible={isDatePickerVisible}
-          animationType="slide"
-        >
-          <TouchableOpacity
-            style={styles.modalBackground}
-            onPress={() => setDatePickerVisibility(false)}
-          >
-            <View style={styles.modalContainer}>
-              <DateTimePicker
-                value={selectedDate}
-                mode="date"
-                display="default"
-                onChange={handleDateChange}
-              />
-            </View>
-          </TouchableOpacity>
-        </Modal>
+        {showModel1DatePicker && (
+          <DateTimePicker
+            value={model1Date}
+            mode="date"
+            display="default"
+            onChange={handleModel1DateChange}
+          />
+        )}
         {events.length > 0 ? (
           <FlatList
             data={events}
@@ -269,17 +257,6 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     width: "100%",
-  },
-  modalBackground: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  modalContainer: {
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 10,
   },
   dateTimeButton: {
     backgroundColor: "#007BFF",

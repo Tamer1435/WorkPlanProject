@@ -7,6 +7,7 @@ import {
   FlatList,
   Modal,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { AuthContext } from "../AuthProvider";
@@ -15,17 +16,15 @@ import * as XLSX from 'xlsx';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
-
 const ViewTeacherReport = ({ navigation }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [reports, setReports] = useState([]);
   const [groups, setGroups] = useState([]);
-  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const { db } = useContext(AuthContext);
   const [selectedReport, setSelectedReport] = useState(null);
   const [loading, setLoading] = useState(false);
-
 
   useEffect(() => {
     fetchEvents();
@@ -76,8 +75,8 @@ const ViewTeacherReport = ({ navigation }) => {
 
   const handleDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || selectedDate;
+    setShowDatePicker(false);
     setSelectedDate(currentDate);
-    setDatePickerVisibility(false);
     setSelectedGroup(null);
     setReports([]);
     fetchEvents();
@@ -142,66 +141,63 @@ const ViewTeacherReport = ({ navigation }) => {
     } else {
         alert('No reports available for export.');
     }
-};
+  };
 
-const exportMonthlyReportsToExcel = async () => {
-  setLoading(true);
-  const currentMonth = selectedDate.getMonth() + 1;
-  const currentYear = selectedDate.getFullYear();
-  const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
-  const monthlyReportData = [];
+  const exportMonthlyReportsToExcel = async () => {
+    setLoading(true);
+    const currentMonth = selectedDate.getMonth() + 1;
+    const currentYear = selectedDate.getFullYear();
+    const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+    const monthlyReportData = [];
 
-  for (let day = 1; day <= daysInMonth; day++) {
-      const dateId = `${currentYear}-${currentMonth}-${day}`;
-      const eventsRef = collection(db, `calendar/${currentYear}-${currentMonth}/days/${day}/events`);
-      const eventsSnapshot = await getDocs(eventsRef);
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateId = `${currentYear}-${currentMonth}-${day}`;
+        const eventsRef = collection(db, `calendar/${currentYear}-${currentMonth}/days/${day}/events`);
+        const eventsSnapshot = await getDocs(eventsRef);
 
-      for (const doc of eventsSnapshot.docs) {
-          const eventData = doc.data();
-          const reportsRef = collection(db, `teacherReports/${dateId}/events/${eventData.eventName}/reports`);
-          const reportsSnapshot = await getDocs(reportsRef);
+        for (const doc of eventsSnapshot.docs) {
+            const eventData = doc.data();
+            const reportsRef = collection(db, `teacherReports/${dateId}/events/${eventData.eventName}/reports`);
+            const reportsSnapshot = await getDocs(reportsRef);
 
-          for (const reportDoc of reportsSnapshot.docs) {
-              const reportData = reportDoc.data();
-              const startTime = new Date(reportData["שעת התחלה"].seconds * 1000);
-              const endTime = new Date(reportData["שעת סיום"].seconds * 1000);
-              const duration = (endTime - startTime) / 3600000; // Convert ms to hours
+            for (const reportDoc of reportsSnapshot.docs) {
+                const reportData = reportDoc.data();
+                const startTime = new Date(reportData["שעת התחלה"].seconds * 1000);
+                const endTime = new Date(reportData["שעת סיום"].seconds * 1000);
+                const duration = (endTime - startTime) / 3600000; // Convert ms to hours
 
-              monthlyReportData.push({
-                  "תאריך": `${day}/${currentMonth}/${currentYear}`, // Formatted date for each entry
-                  "שם החווה": reportData["שם החווה"],
-                  "שעת התחלה": startTime.toLocaleTimeString(),
-                  "שעת סיום": endTime.toLocaleTimeString(),
-                  "משך זמן": duration.toFixed(2) + ' שעות',
-                  "הערות": reportData["הערות"],
-                  "אירוע": eventData.eventName,
-              });
-          }
-      }
-  }
+                monthlyReportData.push({
+                    "תאריך": `${day}/${currentMonth}/${currentYear}`, // Formatted date for each entry
+                    "שם החווה": reportData["שם החווה"],
+                    "שעת התחלה": startTime.toLocaleTimeString(),
+                    "שעת סיום": endTime.toLocaleTimeString(),
+                    "משך זמן": duration.toFixed(2) + ' שעות',
+                    "הערות": reportData["הערות"],
+                    "אירוע": eventData.eventName,
+                });
+            }
+        }
+    }
 
-  if (monthlyReportData.length > 0) {
-      const ws = XLSX.utils.json_to_sheet(monthlyReportData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Monthly Reports");
+    if (monthlyReportData.length > 0) {
+        const ws = XLSX.utils.json_to_sheet(monthlyReportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Monthly Reports");
 
-      const wbout = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
-      const filePath = FileSystem.documentDirectory + 'MonthlyTeacherReports.xlsx';
+        const wbout = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
+        const filePath = FileSystem.documentDirectory + 'MonthlyTeacherReports.xlsx';
 
-      await FileSystem.writeAsStringAsync(filePath, wbout, {
-          encoding: FileSystem.EncodingType.Base64,
-      });
+        await FileSystem.writeAsStringAsync(filePath, wbout, {
+            encoding: FileSystem.EncodingType.Base64,
+        });
 
-      await Sharing.shareAsync(filePath);
-      setLoading(false);
-  } else {
-      alert('No reports available for the month.');
-      setLoading(false);
-  }
-};
-
-
-
+        await Sharing.shareAsync(filePath);
+        setLoading(false);
+    } else {
+        alert('No reports available for the month.');
+        setLoading(false);
+    }
+  };
 
   const renderReportRow = ({ item }) => (
     <TouchableOpacity onPress={() => handleReportPress(item)}>
@@ -248,31 +244,20 @@ const exportMonthlyReportsToExcel = async () => {
       <View style={styles.contentContainer}>
         <TouchableOpacity
           style={styles.dateTimeButton}
-          onPress={() => setDatePickerVisibility(true)}
+          onPress={() => setShowDatePicker(true)}
         >
           <Text style={styles.dateTimeButtonText}>
-            בחר תאריך: {selectedDate.toLocaleDateString()}
+            בחר תאריך: {selectedDate.toDateString()}
           </Text>
         </TouchableOpacity>
-        <Modal
-          transparent={true}
-          visible={isDatePickerVisible}
-          animationType="slide"
-        >
-          <TouchableOpacity
-            style={styles.modalBackground}
-            onPress={() => setDatePickerVisibility(false)}
-          >
-            <View style={styles.modalContainer}>
-              <DateTimePicker
-                value={selectedDate}
-                mode="date"
-                display="default"
-                onChange={handleDateChange}
-              />
-            </View>
-          </TouchableOpacity>
-        </Modal>
+        {showDatePicker && (
+          <DateTimePicker
+            value={selectedDate}
+            mode="date"
+            display="default"
+            onChange={handleDateChange}
+          />
+        )}
         {groups.length > 0 ? (
           <FlatList
             data={groups}
@@ -294,47 +279,56 @@ const exportMonthlyReportsToExcel = async () => {
             />
           </>
         )}
-         <View style={{ marginTop: 20 }}>
-        <TouchableOpacity
-          style={{
-            backgroundColor: "#5DBF72",
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: 15,
-            padding: 10,
-            marginBottom: "10%",
-            height: 50,
-          }}
-          onPress={() => exportReportsToExcel()}
-        >
-          <Text>יצוא דו"ח יומי ל-Excel</Text>
-        </TouchableOpacity>
+        <View style={{ marginTop: 20 }}>
+          <TouchableOpacity
+            style={{
+              backgroundColor: "#5DBF72",
+              justifyContent: "center",
+              alignItems: "center",
+              borderRadius: 15,
+              padding: 10,
+              marginBottom: "10%",
+              height: 50,
+            }}
+            onPress={() => exportReportsToExcel()}
+          >
+            <Text>יצוא דו"ח יומי ל-Excel</Text>
+          </TouchableOpacity>
         </View>
-
       </View>
       <View style={{ marginTop: 20 }}>
-    <TouchableOpacity
-        style={{
-            backgroundColor: "#4CAF50",
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: 15,
-            padding: 10,
-            marginBottom: "10%",
-            height: 50,
-        }}
-        onPress={exportMonthlyReportsToExcel}
-    >
-        <Text style={{ color: "#fff" }}>יצוא דו"ח חודשי ל-Excel</Text>
-    </TouchableOpacity>
+        <TouchableOpacity
+            style={{
+                backgroundColor: "#4CAF50",
+                justifyContent: "center",
+                alignItems: "center",
+                borderRadius: 15,
+                padding: 10,
+                marginBottom: "10%",
+                height: 50,
+            }}
+            onPress={exportMonthlyReportsToExcel}
+        >
+            <Text style={{ color: "#fff" }}>יצוא דו"ח חודשי ל-Excel</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Loading Modal */}
+      <Modal
+        visible={loading}
+        transparent
+        animationType="fade"
+        style={styles.tofade}
+      >
+        <View style={styles.loadingContainer}>
+          <View style={styles.loadingContent}>
+            <ActivityIndicator size="large" color="#0000ff" />
+            <Text style={styles.loadingText}>טוען...</Text>
+          </View>
+        </View>
+      </Modal>
     </View>
-    
-  </View>
-
-    
   );
-
-  
 };
 
 const styles = StyleSheet.create({
@@ -451,7 +445,27 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontWeight: "600",
   },
-  
+  tofade: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.7)",
+  },
+  loadingContent: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 10,
+  },
 });
 
 export default ViewTeacherReport;
