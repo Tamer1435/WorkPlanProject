@@ -8,13 +8,15 @@ import {
   Modal,
   Image,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { AuthContext } from "../AuthProvider";
 import { collection, getDocs } from "firebase/firestore";
-import * as XLSX from 'xlsx';
-import * as FileSystem from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
+import * as XLSX from "xlsx";
+import * as FileSystem from "expo-file-system";
+import * as Sharing from "expo-sharing";
+import * as IntentLauncher from "expo-intent-launcher";
 
 const ViewTeacherReport = ({ navigation }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -37,7 +39,10 @@ const ViewTeacherReport = ({ navigation }) => {
     const dayId = selectedDate.getDate();
 
     try {
-      const eventsRef = collection(db, `calendar/${calendarId}/days/${dayId}/events`);
+      const eventsRef = collection(
+        db,
+        `calendar/${calendarId}/days/${dayId}/events`
+      );
       const eventsSnapshot = await getDocs(eventsRef);
       const eventsList = [];
 
@@ -48,13 +53,18 @@ const ViewTeacherReport = ({ navigation }) => {
 
       setGroups(eventsList);
     } catch (error) {
-      console.error('Error fetching events: ', error);
+      console.error("Error fetching events: ", error);
     }
   };
 
   const fetchReports = async (group, date) => {
-    const dateId = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-    const reportsRef = collection(db, `teacherReports/${dateId}/events/${group.eventName}/reports`);
+    const dateId = `${date.getFullYear()}-${
+      date.getMonth() + 1
+    }-${date.getDate()}`;
+    const reportsRef = collection(
+      db,
+      `teacherReports/${dateId}/events/${group.eventName}/reports`
+    );
     try {
       const reportsSnapshot = await getDocs(reportsRef);
 
@@ -69,7 +79,7 @@ const ViewTeacherReport = ({ navigation }) => {
 
       setReports(reportList);
     } catch (error) {
-      console.error('Error fetching reports: ', error);
+      console.error("Error fetching reports: ", error);
     }
   };
 
@@ -100,46 +110,65 @@ const ViewTeacherReport = ({ navigation }) => {
 
     // Loop through all groups to fetch and prepare data
     for (let group of groups) {
-        const dateId = `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`;
-        const reportsRef = collection(db, `teacherReports/${dateId}/events/${group.eventName}/reports`);
+      const dateId = `${selectedDate.getFullYear()}-${
+        selectedDate.getMonth() + 1
+      }-${selectedDate.getDate()}`;
+      const reportsRef = collection(
+        db,
+        `teacherReports/${dateId}/events/${group.eventName}/reports`
+      );
 
-        try {
-            const reportsSnapshot = await getDocs(reportsRef);
-            reportsSnapshot.forEach((doc) => {
-                const data = doc.data();
-                const startTime = new Date(data["שעת התחלה"].seconds * 1000);
-                const endTime = new Date(data["שעת סיום"].seconds * 1000);
-                const duration = (endTime - startTime) / 1000 / 60 / 60; // Duration in hours
+      try {
+        const reportsSnapshot = await getDocs(reportsRef);
+        reportsSnapshot.forEach((doc) => {
+          const data = doc.data();
+          const startTime = new Date(data["שעת התחלה"].seconds * 1000);
+          const endTime = new Date(data["שעת סיום"].seconds * 1000);
+          const duration = (endTime - startTime) / 1000 / 60 / 60; // Duration in hours
 
-                reportData.push({
-                    "שם החווה": data["שם החווה"],
-                    "שעת התחלה": startTime.toLocaleTimeString(),
-                    "שעת סיום": endTime.toLocaleTimeString(),
-                    "משך זמן": duration.toFixed(2) + ' שעות',
-                    "הערות": data["הערות"],
-                    "אירוע": group.eventName,  // Include event name for clarity
-                });
-            });
-        } catch (error) {
-            console.error('Error fetching reports for group: ', group.eventName, error);
-        }
+          reportData.push({
+            "שם החווה": data["שם החווה"],
+            "שעת התחלה": startTime.toLocaleTimeString(),
+            "שעת סיום": endTime.toLocaleTimeString(),
+            "משך זמן": duration.toFixed(2) + " שעות",
+            הערות: data["הערות"],
+            אירוע: group.eventName, // Include event name for clarity
+          });
+        });
+      } catch (error) {
+        console.error(
+          "Error fetching reports for group: ",
+          group.eventName,
+          error
+        );
+      }
     }
 
     if (reportData.length > 0) {
-        const ws = XLSX.utils.json_to_sheet(reportData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Reports");
+      const ws = XLSX.utils.json_to_sheet(reportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Reports");
 
-        const wbout = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
-        const filePath = FileSystem.documentDirectory + 'TeacherReports.xlsx';
+      const wbout = XLSX.write(wb, { type: "base64", bookType: "xlsx" });
+      const filePath = FileSystem.documentDirectory + "TeacherReports.xlsx";
 
-        await FileSystem.writeAsStringAsync(filePath, wbout, {
-            encoding: FileSystem.EncodingType.Base64,
-        });
+      await FileSystem.writeAsStringAsync(filePath, wbout, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
 
+      // Share the file
+      if (Platform.OS === "ios") {
         await Sharing.shareAsync(filePath);
+      } else {
+        const cUri = await FileSystem.getContentUriAsync(filePath);
+
+        IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
+          data: cUri,
+          flags: 1,
+        });
+      }
     } else {
-        alert('No reports available for export.');
+      alert("No reports available for export.");
     }
   };
 
@@ -151,51 +180,68 @@ const ViewTeacherReport = ({ navigation }) => {
     const monthlyReportData = [];
 
     for (let day = 1; day <= daysInMonth; day++) {
-        const dateId = `${currentYear}-${currentMonth}-${day}`;
-        const eventsRef = collection(db, `calendar/${currentYear}-${currentMonth}/days/${day}/events`);
-        const eventsSnapshot = await getDocs(eventsRef);
+      const dateId = `${currentYear}-${currentMonth}-${day}`;
+      const eventsRef = collection(
+        db,
+        `calendar/${currentYear}-${currentMonth}/days/${day}/events`
+      );
+      const eventsSnapshot = await getDocs(eventsRef);
 
-        for (const doc of eventsSnapshot.docs) {
-            const eventData = doc.data();
-            const reportsRef = collection(db, `teacherReports/${dateId}/events/${eventData.eventName}/reports`);
-            const reportsSnapshot = await getDocs(reportsRef);
+      for (const doc of eventsSnapshot.docs) {
+        const eventData = doc.data();
+        const reportsRef = collection(
+          db,
+          `teacherReports/${dateId}/events/${eventData.eventName}/reports`
+        );
+        const reportsSnapshot = await getDocs(reportsRef);
 
-            for (const reportDoc of reportsSnapshot.docs) {
-                const reportData = reportDoc.data();
-                const startTime = new Date(reportData["שעת התחלה"].seconds * 1000);
-                const endTime = new Date(reportData["שעת סיום"].seconds * 1000);
-                const duration = (endTime - startTime) / 3600000; // Convert ms to hours
+        for (const reportDoc of reportsSnapshot.docs) {
+          const reportData = reportDoc.data();
+          const startTime = new Date(reportData["שעת התחלה"].seconds * 1000);
+          const endTime = new Date(reportData["שעת סיום"].seconds * 1000);
+          const duration = (endTime - startTime) / 3600000; // Convert ms to hours
 
-                monthlyReportData.push({
-                    "תאריך": `${day}/${currentMonth}/${currentYear}`, // Formatted date for each entry
-                    "שם החווה": reportData["שם החווה"],
-                    "שעת התחלה": startTime.toLocaleTimeString(),
-                    "שעת סיום": endTime.toLocaleTimeString(),
-                    "משך זמן": duration.toFixed(2) + ' שעות',
-                    "הערות": reportData["הערות"],
-                    "אירוע": eventData.eventName,
-                });
-            }
+          monthlyReportData.push({
+            תאריך: `${day}/${currentMonth}/${currentYear}`, // Formatted date for each entry
+            "שם החווה": reportData["שם החווה"],
+            "שעת התחלה": startTime.toLocaleTimeString(),
+            "שעת סיום": endTime.toLocaleTimeString(),
+            "משך זמן": duration.toFixed(2) + " שעות",
+            הערות: reportData["הערות"],
+            אירוע: eventData.eventName,
+          });
         }
+      }
     }
 
     if (monthlyReportData.length > 0) {
-        const ws = XLSX.utils.json_to_sheet(monthlyReportData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Monthly Reports");
+      const ws = XLSX.utils.json_to_sheet(monthlyReportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Monthly Reports");
 
-        const wbout = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
-        const filePath = FileSystem.documentDirectory + 'MonthlyTeacherReports.xlsx';
+      const wbout = XLSX.write(wb, { type: "base64", bookType: "xlsx" });
+      const filePath =
+        FileSystem.documentDirectory + "MonthlyTeacherReports.xlsx";
 
-        await FileSystem.writeAsStringAsync(filePath, wbout, {
-            encoding: FileSystem.EncodingType.Base64,
-        });
+      await FileSystem.writeAsStringAsync(filePath, wbout, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
 
+      // Share the file
+      if (Platform.OS === "ios") {
         await Sharing.shareAsync(filePath);
-        setLoading(false);
+      } else {
+        const cUri = await FileSystem.getContentUriAsync(filePath);
+
+        IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
+          data: cUri,
+          flags: 1,
+        });
+      }
+      setLoading(false);
     } else {
-        alert('No reports available for the month.');
-        setLoading(false);
+      alert("No reports available for the month.");
+      setLoading(false);
     }
   };
 
@@ -205,11 +251,24 @@ const ViewTeacherReport = ({ navigation }) => {
         <Text style={styles.reportName}>{item.id}</Text>
         {selectedReport && selectedReport.id === item.id && (
           <View style={styles.reportDetails}>
-            <Text style={styles.reportField}><Text style={styles.fieldLabel}>מורה:</Text> {item.id}</Text>
-            <Text style={styles.reportField}><Text style={styles.fieldLabel}>שעת התחלה:</Text> {new Date(item["שעת התחלה"].seconds * 1000).toLocaleTimeString()}</Text>
-            <Text style={styles.reportField}><Text style={styles.fieldLabel}>שעת סיום:</Text> {new Date(item["שעת סיום"].seconds * 1000).toLocaleTimeString()}</Text>
-            <Text style={styles.reportField}><Text style={styles.fieldLabel}>שם החווה:</Text> {item["שם החווה"]}</Text>
-            <Text style={styles.reportField}><Text style={styles.fieldLabel}>הערות:</Text> {item["הערות"]}</Text>
+            <Text style={styles.reportField}>
+              <Text style={styles.fieldLabel}>מורה:</Text> {item.id}
+            </Text>
+            <Text style={styles.reportField}>
+              <Text style={styles.fieldLabel}>שעת התחלה:</Text>{" "}
+              {new Date(item["שעת התחלה"].seconds * 1000).toLocaleTimeString()}
+            </Text>
+            <Text style={styles.reportField}>
+              <Text style={styles.fieldLabel}>שעת סיום:</Text>{" "}
+              {new Date(item["שעת סיום"].seconds * 1000).toLocaleTimeString()}
+            </Text>
+            <Text style={styles.reportField}>
+              <Text style={styles.fieldLabel}>שם החווה:</Text>{" "}
+              {item["שם החווה"]}
+            </Text>
+            <Text style={styles.reportField}>
+              <Text style={styles.fieldLabel}>הערות:</Text> {item["הערות"]}
+            </Text>
           </View>
         )}
       </View>
@@ -221,7 +280,14 @@ const ViewTeacherReport = ({ navigation }) => {
       style={styles.groupRow}
       onPress={() => handleGroupSelect(item)}
     >
-      <Text style={[styles.groupName, selectedGroup && selectedGroup.id === item.id && styles.selectedGroupName]}>
+      <Text
+        style={[
+          styles.groupName,
+          selectedGroup &&
+            selectedGroup.id === item.id &&
+            styles.selectedGroupName,
+        ]}
+      >
         {item.eventName}
       </Text>
     </TouchableOpacity>
@@ -279,38 +345,37 @@ const ViewTeacherReport = ({ navigation }) => {
             />
           </>
         )}
-        <View style={{ marginTop: 20 }}>
+      </View>
+      <View style={{ flex: 1, justifyContent: "flex-end" }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-around" }}>
           <TouchableOpacity
             style={{
-              backgroundColor: "#5DBF72",
+              backgroundColor: "#4CAF50",
               justifyContent: "center",
               alignItems: "center",
               borderRadius: 15,
               padding: 10,
               marginBottom: "10%",
-              height: 50,
             }}
             onPress={() => exportReportsToExcel()}
           >
-            <Text>יצוא דו"ח יומי ל-Excel</Text>
+            <Text style={{ color: "#fff" }}>יצוא דו"ח יומי ל-Excel</Text>
           </TouchableOpacity>
-        </View>
-      </View>
-      <View style={{ marginTop: 20 }}>
-        <TouchableOpacity
+
+          <TouchableOpacity
             style={{
-                backgroundColor: "#4CAF50",
-                justifyContent: "center",
-                alignItems: "center",
-                borderRadius: 15,
-                padding: 10,
-                marginBottom: "10%",
-                height: 50,
+              backgroundColor: "#4CAF50",
+              justifyContent: "center",
+              alignItems: "center",
+              borderRadius: 15,
+              padding: 10,
+              marginBottom: "10%",
             }}
             onPress={exportMonthlyReportsToExcel}
-        >
+          >
             <Text style={{ color: "#fff" }}>יצוא דו"ח חודשי ל-Excel</Text>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Loading Modal */}
@@ -408,7 +473,7 @@ const styles = StyleSheet.create({
   reportName: {
     fontSize: 16,
     color: "#000",
-    textAlign: 'right',
+    textAlign: "right",
     width: "100%",
   },
   reportDetails: {
@@ -417,7 +482,7 @@ const styles = StyleSheet.create({
   reportField: {
     fontSize: 16,
     color: "#000",
-    textAlign: 'right',
+    textAlign: "right",
   },
   fieldLabel: {
     fontWeight: "bold",

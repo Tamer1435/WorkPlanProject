@@ -10,6 +10,12 @@ import {
   Button,
 } from "react-native";
 import Modal from "react-native-modal";
+import {
+  getAuth,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
+} from "firebase/auth";
 
 const OptionsModal = ({ visible, onClose, onLogout }) => {
   const [showPasswordChangeModal, setShowPasswordChangeModal] = useState(false);
@@ -20,33 +26,38 @@ const OptionsModal = ({ visible, onClose, onLogout }) => {
 
   const handleChangePassword = () => {
     if (newPassword !== confirmPassword) {
-      alert("New passwords do not match!");
+      alert("סיסמאות חדשות אינן תואמות!");
       return;
     }
 
     // Handle password change logic here
-    const user = firebase.auth().currentUser;
-    const credential = firebase.auth.EmailAuthProvider.credential(
-      user.email,
-      currentPassword
-    );
 
-    user
-      .reauthenticateWithCredential(credential)
-      .then(() => {
-        user
-          .updatePassword(newPassword)
-          .then(() => {
-            alert("סיסמה שונתה בהצלחה!");
-            setShowPasswordChangeModal(false);
-          })
-          .catch((error) => {
-            alert("שגיאה בעדכון הסיסמה: " + error.message);
-          });
-      })
-      .catch((error) => {
-        alert("Error reauthenticating: " + error.message);
-      });
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (user) {
+      const credential = EmailAuthProvider.credential(
+        user.email,
+        currentPassword
+      );
+
+      reauthenticateWithCredential(user, credential)
+        .then(() => {
+          updatePassword(user, newPassword)
+            .then(() => {
+              alert("סיסמה שונתה בהצלחה!");
+              setShowPasswordChangeModal(false);
+            })
+            .catch((error) => {
+              alert("שגיאה בעדכון הסיסמה: " + error.message);
+            });
+        })
+        .catch((error) => {
+          alert("הסיסמה הנוכחית שגויה!");
+        });
+    } else {
+      alert("אף משתמש לא מחובר.");
+    }
   };
 
   return (
@@ -121,19 +132,27 @@ const OptionsModal = ({ visible, onClose, onLogout }) => {
               placeholderTextColor={"#ccc"}
             />
 
-            <TouchableOpacity
-              style={styles.saveButton}
-              onPress={handleChangePassword}
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                margin: 10,
+              }}
             >
-              <Text style={styles.saveButtonText}>לשמור</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={handleChangePassword}
+              >
+                <Text style={styles.saveButtonText}>לשמור</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => setShowPasswordChangeModal(false)}
-              style={styles.modalCloseButton}
-            >
-              <Text style={styles.modalCloseButtonText}>סגור</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setShowPasswordChangeModal(false)}
+                style={styles.modalCloseButton}
+              >
+                <Text style={styles.modalCloseButtonText}>סגור</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -221,20 +240,20 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
   saveButton: {
-    marginTop: 20,
     padding: 10,
     backgroundColor: "blue",
     borderRadius: 5,
+    margin: 10,
   },
   saveButtonText: {
     color: "white",
     fontSize: 16,
   },
   modalCloseButton: {
-    marginTop: 10,
     padding: 10,
     backgroundColor: "#fff",
     borderRadius: 5,
+    margin: 10,
   },
   modalCloseButtonText: {
     color: "#000",
