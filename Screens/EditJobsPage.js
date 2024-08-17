@@ -24,10 +24,6 @@ import {
 } from "firebase/firestore";
 import { AuthContext } from "../AuthProvider";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import * as XLSX from "xlsx";
-import * as FileSystem from "expo-file-system";
-import * as Sharing from "expo-sharing";
-import * as IntentLauncher from "expo-intent-launcher";
 
 const EditJobsPage = ({ navigation }) => {
   const [events, setEvents] = useState([]);
@@ -120,61 +116,6 @@ const EditJobsPage = ({ navigation }) => {
     setAttendants(teachers);
 
     setLoading(false);
-  };
-
-  const exportToExcel = async () => {
-    const data = events.map((event) => {
-      const timestamp = new Timestamp(
-        event.timeOfMoving.seconds,
-        event.timeOfMoving.nanoseconds
-      );
-      const eventTime = timestamp.toDate();
-
-      return {
-        "שם אירוע": event.eventName,
-        תאריך: event.day + "/" + currentMonth,
-        "זמן תנועה":
-          eventTime.getHours() +
-          ":" +
-          (eventTime.getMinutes() < 10
-            ? "0" + eventTime.getMinutes()
-            : eventTime.getMinutes()),
-        "משך אירוע": event.duration,
-        "בעל חווה": event.farmOwner,
-        מכום: event.location,
-        "סוג חקלאות": event.job,
-        תלפון: event.ownerPhone,
-        "מקום מפגש": event.meetingPlace,
-        מלווה: event.attendant,
-        רכב: event.vehicle,
-        תלמידות: event.students.join(", "),
-      };
-    });
-
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Events");
-
-    const wbout = XLSX.write(wb, { type: "base64", bookType: "xlsx" });
-    const filePath =
-      FileSystem.documentDirectory +
-      `Events ${currentMonth}-${currentYear}.xlsx`;
-
-    await FileSystem.writeAsStringAsync(filePath, wbout, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-
-    // Share the file
-    if (Platform.OS === "ios") {
-      await Sharing.shareAsync(filePath);
-    } else {
-      const cUri = await FileSystem.getContentUriAsync(filePath);
-
-      IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
-        data: cUri,
-        flags: 1,
-      });
-    }
   };
 
   const handleTimeChange = (event, selectedTime) => {
@@ -346,22 +287,6 @@ const EditJobsPage = ({ navigation }) => {
           renderItem={renderEvent}
           keyExtractor={(item) => `${item.id}-${item.day}`}
         />
-      </View>
-      <View style={{ justifyContent: "center", alignItems: "center" }}>
-        <TouchableOpacity
-          style={{
-            backgroundColor: "#5DBF72",
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: 15,
-            padding: 10,
-            marginBottom: "10%",
-            height: 50,
-          }}
-          onPress={() => exportToExcel()}
-        >
-          <Text>יצוא את כל האירועים ל - Excel</Text>
-        </TouchableOpacity>
       </View>
       <Modal
         visible={isModalVisible}
@@ -664,7 +589,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#85E1D7",
   },
   headerContainer: {
-    paddingTop: 35,
+    paddingTop: "10%",
   },
   header: {
     fontSize: 24,
