@@ -41,7 +41,10 @@ const ReadReportTeacherPage = ({ navigation }) => {
     const dayId = selectedDate.getDate();
 
     try {
-      const eventsRef = collection(db, `calendar/${calendarId}/days/${dayId}/events`);
+      const eventsRef = collection(
+        db,
+        `calendar/${calendarId}/days/${dayId}/events`
+      );
       const eventsSnapshot = await getDocs(eventsRef);
       const eventsList = [];
 
@@ -54,13 +57,18 @@ const ReadReportTeacherPage = ({ navigation }) => {
 
       setGroups(eventsList);
     } catch (error) {
-      console.error('Error fetching events: ', error);
+      console.error("Error fetching events: ", error);
     }
   };
 
   const fetchReports = async (group) => {
-    const dateId = `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`;
-    const reportsRef = collection(db, `jobReports/${dateId}/events/${group.eventName}/jobreport`);
+    const dateId = `${selectedDate.getFullYear()}-${
+      selectedDate.getMonth() + 1
+    }-${selectedDate.getDate()}`;
+    const reportsRef = collection(
+      db,
+      `jobReports/${dateId}/events/${group.eventName}/jobreport`
+    );
     const reportsSnapshot = await getDocs(reportsRef);
 
     const studentList = [];
@@ -94,13 +102,33 @@ const ReadReportTeacherPage = ({ navigation }) => {
         <Text style={styles.studentName}>{item.id}</Text>
         {selectedStudent && selectedStudent.id === item.id && (
           <View style={styles.reportDetails}>
-            <Text style={styles.reportField}><Text style={styles.fieldLabel}>שם החווה:</Text> {item["שם החווה שבה השתתפת"]}</Text>
-            <Text style={styles.reportField}><Text style={styles.fieldLabel}>מיקום:</Text> {item["מיקום"]}</Text>
-            <Text style={styles.reportField}><Text style={styles.fieldLabel}>זמן עבודה:</Text> {item["כמה זמן עבדת"]}</Text>
-            <Text style={styles.reportField}><Text style={styles.fieldLabel}>שדה נוסף 1:</Text> {item["שדה נוסף 1"]}</Text>
-            <Text style={styles.reportField}><Text style={styles.fieldLabel}>שדה נוסף 2:</Text> {item["שדה נוסף 2"]}</Text>
-            <Text style={styles.reportField}><Text style={styles.fieldLabel}>שדה נוסף 3:</Text> {item["שדה נוסף 3"]}</Text>
-            <Text style={styles.reportField}><Text style={styles.fieldLabel}>פסקה:</Text> {item["כתבו פסקה כאן"]}</Text>
+            <Text style={styles.reportField}>
+              <Text style={styles.fieldLabel}>שם החווה:</Text>{" "}
+              {item["שם החווה שבה השתתפת"]}
+            </Text>
+            <Text style={styles.reportField}>
+              <Text style={styles.fieldLabel}>מיקום:</Text> {item["מיקום"]}
+            </Text>
+            <Text style={styles.reportField}>
+              <Text style={styles.fieldLabel}>זמן עבודה:</Text>{" "}
+              {item["כמה זמן עבדת"]}
+            </Text>
+            <Text style={styles.reportField}>
+              <Text style={styles.fieldLabel}>שדה נוסף 1:</Text>{" "}
+              {item["שדה נוסף 1"]}
+            </Text>
+            <Text style={styles.reportField}>
+              <Text style={styles.fieldLabel}>שדה נוסף 2:</Text>{" "}
+              {item["שדה נוסף 2"]}
+            </Text>
+            <Text style={styles.reportField}>
+              <Text style={styles.fieldLabel}>שדה נוסף 3:</Text>{" "}
+              {item["שדה נוסף 3"]}
+            </Text>
+            <Text style={styles.reportField}>
+              <Text style={styles.fieldLabel}>פסקה:</Text>{" "}
+              {item["כתבו פסקה כאן"]}
+            </Text>
           </View>
         )}
       </View>
@@ -112,7 +140,14 @@ const ReadReportTeacherPage = ({ navigation }) => {
       style={styles.groupRow}
       onPress={() => handleGroupSelect(item)}
     >
-      <Text style={[styles.groupName, selectedGroup && selectedGroup.id === item.id && styles.selectedGroupName]}>
+      <Text
+        style={[
+          styles.groupName,
+          selectedGroup &&
+            selectedGroup.id === item.id &&
+            styles.selectedGroupName,
+        ]}
+      >
         {item.eventName}
       </Text>
     </TouchableOpacity>
@@ -178,8 +213,8 @@ const ReadReportTeacherPage = ({ navigation }) => {
 const styles = StyleSheet.create({
   pageContainer: {
     flex: 1,
-    paddingTop: 35,
     backgroundColor: "#85E1D7",
+    paddingTop: "10%",
   },
   contentContainer: {
     padding: 20,
@@ -252,7 +287,7 @@ const styles = StyleSheet.create({
   studentName: {
     fontSize: 16,
     color: "#000",
-    textAlign: 'right',
+    textAlign: "right",
     width: "100%",
   },
   reportDetails: {
@@ -261,7 +296,7 @@ const styles = StyleSheet.create({
   reportField: {
     fontSize: 16,
     color: "#000",
-    textAlign: 'right',
+    textAlign: "right",
   },
   fieldLabel: {
     fontWeight: "bold",

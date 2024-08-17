@@ -61,7 +61,6 @@ const ExportExcelPage = ({ navigation }) => {
 
   const fetchAttendance = async () => {
     setLoading(true);
-    console.log("attendance" + " - " + modalType);
     if (modalType == "daily") {
       const datePath =
         model1Date.getFullYear() +
@@ -97,11 +96,6 @@ const ExportExcelPage = ({ navigation }) => {
 
       attendanceList.map((group) => {
         group.map((student) => {
-          console.log({
-            "שם אירוע": student.group,
-            "שם תלמידה": student.studentName,
-            נוכחת: student.isHere ? "כן" : "לא",
-          });
           toReturn.push({
             "שם אירוע": student.group,
             "שם תלמידה": student.studentName,
@@ -182,7 +176,6 @@ const ExportExcelPage = ({ navigation }) => {
 
   const fetchJobs = async () => {
     setLoading(true);
-    console.log("jobs" + " - " + modalType);
 
     if (modalType == "daily") {
       const datePath =
@@ -344,6 +337,7 @@ const ExportExcelPage = ({ navigation }) => {
       if (Platform.OS === "ios") {
         await Sharing.shareAsync(filePath);
       } else {
+        await Sharing.shareAsync(filePath);
         const cUri = await FileSystem.getContentUriAsync(filePath);
 
         IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
@@ -501,7 +495,7 @@ const ExportExcelPage = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 35,
+    paddingTop: "10%",
     backgroundColor: "#85E1D7",
   },
   backButton: {

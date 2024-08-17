@@ -1,5 +1,15 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Modal, Image, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  TextInput,
+  ScrollView,
+  Modal,
+  Image,
+  Alert,
+} from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 const MakeReportPage = ({ navigation }) => {
@@ -10,17 +20,17 @@ const MakeReportPage = ({ navigation }) => {
     "שדה נוסף 2",
     "שדה נוסף 3",
   ]);
-  const [newQuestion, setNewQuestion] = useState('');
+  const [newQuestion, setNewQuestion] = useState("");
   const [deadline, setDeadline] = useState(new Date());
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
 
   const addQuestion = () => {
-    if (newQuestion.trim() !== '') {
+    if (newQuestion.trim() !== "") {
       setQuestions([...questions, newQuestion]);
-      setNewQuestion('');
+      setNewQuestion("");
     } else {
-      Alert.alert('אנא הכנס שאלה.');
+      Alert.alert("אנא הכנס שאלה.");
     }
   };
 
@@ -39,7 +49,7 @@ const MakeReportPage = ({ navigation }) => {
   };
 
   const saveSettings = () => {
-    Alert.alert('ההגדרות נשמרו בהצלחה.');
+    Alert.alert("ההגדרות נשמרו בהצלחה.");
     navigation.goBack();
   };
 
@@ -76,13 +86,23 @@ const MakeReportPage = ({ navigation }) => {
         <TouchableOpacity style={styles.addButton} onPress={addQuestion}>
           <Text style={styles.addButtonText}>הוסף שאלה</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.dateTimeButton} onPress={() => setDatePickerVisibility(true)}>
+        <TouchableOpacity
+          style={styles.dateTimeButton}
+          onPress={() => setDatePickerVisibility(true)}
+        >
           <Text style={styles.dateTimeButtonText}>
             הגדר תאריך: {deadline.toLocaleDateString()}
           </Text>
         </TouchableOpacity>
-        <Modal transparent={true} visible={isDatePickerVisible} animationType="slide">
-          <TouchableOpacity style={styles.modalBackground} onPress={() => setDatePickerVisibility(false)}>
+        <Modal
+          transparent={true}
+          visible={isDatePickerVisible}
+          animationType="slide"
+        >
+          <TouchableOpacity
+            style={styles.modalBackground}
+            onPress={() => setDatePickerVisibility(false)}
+          >
             <View style={styles.modalContainer}>
               <DateTimePicker
                 value={deadline}
@@ -93,13 +113,28 @@ const MakeReportPage = ({ navigation }) => {
             </View>
           </TouchableOpacity>
         </Modal>
-        <TouchableOpacity style={styles.dateTimeButton} onPress={() => setTimePickerVisibility(true)}>
+        <TouchableOpacity
+          style={styles.dateTimeButton}
+          onPress={() => setTimePickerVisibility(true)}
+        >
           <Text style={styles.dateTimeButtonText}>
-            הגדר זמן: {`${deadline.getHours()}:${deadline.getMinutes() < 10 ? "0" + deadline.getMinutes() : deadline.getMinutes()}`}
+            הגדר זמן:{" "}
+            {`${deadline.getHours()}:${
+              deadline.getMinutes() < 10
+                ? "0" + deadline.getMinutes()
+                : deadline.getMinutes()
+            }`}
           </Text>
         </TouchableOpacity>
-        <Modal transparent={true} visible={isTimePickerVisible} animationType="slide">
-          <TouchableOpacity style={styles.modalBackground} onPress={() => setTimePickerVisibility(false)}>
+        <Modal
+          transparent={true}
+          visible={isTimePickerVisible}
+          animationType="slide"
+        >
+          <TouchableOpacity
+            style={styles.modalBackground}
+            onPress={() => setTimePickerVisibility(false)}
+          >
             <View style={styles.modalContainer}>
               <DateTimePicker
                 value={deadline}
@@ -121,7 +156,7 @@ const MakeReportPage = ({ navigation }) => {
 const styles = StyleSheet.create({
   pageContainer: {
     flex: 1,
-    paddingTop: 35,
+    paddingTop: "10%",
     backgroundColor: "#E3E3E3",
   },
   scrollContainer: {

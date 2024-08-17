@@ -1,20 +1,41 @@
 import React, { useState, useContext, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, Image, Alert, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, TouchableWithoutFeedback } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  TextInput,
+  Image,
+  Alert,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+  TouchableWithoutFeedback,
+} from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { AuthContext } from "../AuthProvider";
-import { collection, setDoc, getDocs, doc, query, where } from "firebase/firestore";
+import {
+  collection,
+  setDoc,
+  getDocs,
+  doc,
+  query,
+  where,
+} from "firebase/firestore";
 
 const TeacherReportPage = ({ navigation }) => {
   const [startTime, setStartTime] = useState(new Date());
   const [endTime, setEndTime] = useState(new Date());
-  const [farmName, setFarmName] = useState('');
-  const [comments, setComments] = useState('');
-  const [isStartTimePickerVisible, setStartTimePickerVisibility] = useState(false);
+  const [farmName, setFarmName] = useState("");
+  const [comments, setComments] = useState("");
+  const [isStartTimePickerVisible, setStartTimePickerVisibility] =
+    useState(false);
   const [isEndTimePickerVisible, setEndTimePickerVisibility] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showFarmSelection, setShowFarmSelection] = useState(false);
   const [farms, setFarms] = useState([]);
-  const [eventName, setEventName] = useState('');
+  const [eventName, setEventName] = useState("");
   const { userData, db } = useContext(AuthContext);
 
   useEffect(() => {
@@ -24,19 +45,33 @@ const TeacherReportPage = ({ navigation }) => {
       try {
         const farmsCollectionRef = collection(db, "farms");
         const farmsCollection = await getDocs(farmsCollectionRef);
-        setFarms(farmsCollection.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        setFarms(
+          farmsCollection.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+        );
 
         const date = new Date();
-        const dateId = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+        const dateId = `${date.getFullYear()}-${
+          date.getMonth() + 1
+        }-${date.getDate()}`;
 
-        const eventsQuery = query(collection(db, "calendar", `${date.getFullYear()}-${date.getMonth() + 1}`, "days", `${date.getDate()}`, "events"), where("attendant", "==", userData.name));
+        const eventsQuery = query(
+          collection(
+            db,
+            "calendar",
+            `${date.getFullYear()}-${date.getMonth() + 1}`,
+            "days",
+            `${date.getDate()}`,
+            "events"
+          ),
+          where("attendant", "==", userData.name)
+        );
         const eventsSnapshot = await getDocs(eventsQuery);
 
         if (!eventsSnapshot.empty) {
           const event = eventsSnapshot.docs[0].data();
           setEventName(event.eventName);
         } else {
-          setEventName('');
+          setEventName("");
         }
       } catch (error) {
         console.error("Error fetching data: ", error);
@@ -50,56 +85,62 @@ const TeacherReportPage = ({ navigation }) => {
 
   const handleFarmChange = (farm) => {
     setFarmName(`${farm.name} - ${farm.location}`);
-    setEventName(eventName);  // Update the event name with the selected farm name
+    setEventName(eventName); // Update the event name with the selected farm name
     setShowFarmSelection(false);
   };
 
   const submitReport = async () => {
     const missingFields = [];
-  
-    if (!eventName) missingFields.push('שם הקבוצה');
-    if (!farmName) missingFields.push('שם החווה');
-    if (!startTime) missingFields.push('שעת התחלה');
-    if (!endTime) missingFields.push('שעת סיום');
-  
+
+    if (!eventName) missingFields.push("שם הקבוצה");
+    if (!farmName) missingFields.push("שם החווה");
+    if (!startTime) missingFields.push("שעת התחלה");
+    if (!endTime) missingFields.push("שעת סיום");
+
     if (missingFields.length > 0) {
       Alert.alert(
         "שגיאה",
-        `אנא מלא את השדות הבאים: ${missingFields.join(', ')}`
+        `אנא מלא את השדות הבאים: ${missingFields.join(", ")}`
       );
       return;
     }
-  
+
     try {
       if (!userData || !userData.role) {
-        console.error("User data is not available or user role is missing", userData);
+        console.error(
+          "User data is not available or user role is missing",
+          userData
+        );
         Alert.alert("שגיאה", "נתוני משתמש לא זמינים");
         return;
       }
-  
+
       const date = new Date();
-      const dateId = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-      const reportRef = doc(db, `teacherReports/${dateId}/events/${eventName}/reports/${userData.name}`);
-  
+      const dateId = `${date.getFullYear()}-${
+        date.getMonth() + 1
+      }-${date.getDate()}`;
+      const reportRef = doc(
+        db,
+        `teacherReports/${dateId}/events/${eventName}/reports/${userData.name}`
+      );
+
       const reportData = {
         "שם קבוצה": eventName,
         "שעת התחלה": startTime,
         "שעת סיום": endTime,
         "שם החווה": farmName,
-        "הערות": comments || '', // Optional field, can be empty
-        "submittedAt": new Date(),
+        הערות: comments || "", // Optional field, can be empty
+        submittedAt: new Date(),
       };
-  
+
       await setDoc(reportRef, reportData);
       Alert.alert('הדו"ח הוגש בהצלחה');
       navigation.goBack();
     } catch (error) {
       console.error("Error submitting report: ", error);
-      Alert.alert("שגיאה", "לא ניתן להגיש את הדו\"ח");
+      Alert.alert("שגיאה", 'לא ניתן להגיש את הדו"ח');
     }
   };
-  
-  
 
   const handleStartTimeChange = (event, selectedDate) => {
     const currentDate = selectedDate || startTime;
@@ -116,8 +157,19 @@ const TeacherReportPage = ({ navigation }) => {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text style={styles.loadingText}>טוען...</Text>
+        <View
+          style={{
+            backgroundColor: "white",
+            padding: 20,
+            borderRadius: 10,
+            borderWidth: 0.5,
+            justifyContent: "center",
+            alignContent: "center",
+          }}
+        >
+          <ActivityIndicator size="large" color="#0000ff" />
+          <Text style={styles.loadingText}>טוען...</Text>
+        </View>
       </View>
     );
   }
@@ -142,10 +194,12 @@ const TeacherReportPage = ({ navigation }) => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 80}
     >
-      <TouchableWithoutFeedback onPress={() => {
-        setStartTimePickerVisibility(false);
-        setEndTimePickerVisibility(false);
-      }}>
+      <TouchableWithoutFeedback
+        onPress={() => {
+          setStartTimePickerVisibility(false);
+          setEndTimePickerVisibility(false);
+        }}
+      >
         <View>
           <TouchableOpacity
             style={styles.backButton}
@@ -162,7 +216,9 @@ const TeacherReportPage = ({ navigation }) => {
             <>
               <TouchableOpacity
                 style={styles.dateTimeButton}
-                onPress={() => setStartTimePickerVisibility(!isStartTimePickerVisible)}
+                onPress={() =>
+                  setStartTimePickerVisibility(!isStartTimePickerVisible)
+                }
               >
                 <Text style={styles.dateTimeButtonText}>
                   שעת התחלה: {startTime.getHours()}:{startTime.getMinutes()}
@@ -182,7 +238,9 @@ const TeacherReportPage = ({ navigation }) => {
 
               <TouchableOpacity
                 style={styles.dateTimeButton}
-                onPress={() => setEndTimePickerVisibility(!isEndTimePickerVisible)}
+                onPress={() =>
+                  setEndTimePickerVisibility(!isEndTimePickerVisible)
+                }
               >
                 <Text style={styles.dateTimeButtonText}>
                   שעת סיום: {endTime.getHours()}:{endTime.getMinutes()}
@@ -248,6 +306,7 @@ const styles = StyleSheet.create({
   pageContainer: {
     flex: 1,
     backgroundColor: "#85E1D7",
+    paddingTop: "10%",
   },
   scrollContainer: {
     padding: 20,
@@ -259,8 +318,6 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     alignSelf: "flex-end",
     justifyContent: "center",
-    marginRight: 20,
-    marginTop: 44,
   },
   backButtonText: {
     color: "#0000EE",
@@ -334,10 +391,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "#85E1D7",
   },
   loadingText: {
-    color: "#FFF",
+    color: "#000",
     fontSize: 16,
     marginTop: 10,
   },
@@ -356,8 +413,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   pickerContainer: {
-    backgroundColor: '#FFF',
-    width: '100%',
+    backgroundColor: "#FFF",
+    width: "100%",
   },
 });
 
