@@ -160,6 +160,7 @@ const ViewTeacherReport = ({ navigation }) => {
       if (Platform.OS === "ios") {
         await Sharing.shareAsync(filePath);
       } else {
+        await Sharing.shareAsync(filePath);
         const cUri = await FileSystem.getContentUriAsync(filePath);
 
         IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
@@ -168,7 +169,7 @@ const ViewTeacherReport = ({ navigation }) => {
         });
       }
     } else {
-      alert("No reports available for export.");
+      alert("אין דוחות זמינים לייצא.");
     }
   };
 
@@ -231,6 +232,7 @@ const ViewTeacherReport = ({ navigation }) => {
       if (Platform.OS === "ios") {
         await Sharing.shareAsync(filePath);
       } else {
+        await Sharing.shareAsync(filePath);
         const cUri = await FileSystem.getContentUriAsync(filePath);
 
         IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
@@ -240,7 +242,7 @@ const ViewTeacherReport = ({ navigation }) => {
       }
       setLoading(false);
     } else {
-      alert("No reports available for the month.");
+      alert("אין דוחות זמינים עבור החודש.");
       setLoading(false);
     }
   };
@@ -399,7 +401,7 @@ const ViewTeacherReport = ({ navigation }) => {
 const styles = StyleSheet.create({
   pageContainer: {
     flex: 1,
-    paddingTop: 35,
+    paddingTop: "10%",
     backgroundColor: "#85E1D7",
   },
   contentContainer: {

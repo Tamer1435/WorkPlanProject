@@ -34,7 +34,10 @@ const ViewAttendancePage = ({ navigation }) => {
     const dayId = model1Date.getDate();
 
     try {
-      const eventsRef = collection(db, `calendar/${calendarId}/days/${dayId}/events`);
+      const eventsRef = collection(
+        db,
+        `calendar/${calendarId}/days/${dayId}/events`
+      );
       const eventsSnapshot = await getDocs(eventsRef);
       const eventsList = [];
 
@@ -45,13 +48,18 @@ const ViewAttendancePage = ({ navigation }) => {
 
       setEvents(eventsList);
     } catch (error) {
-      console.error('Error fetching events: ', error);
+      console.error("Error fetching events: ", error);
     }
   };
 
   const fetchAttendance = async (eventName, date) => {
-    const dateId = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-    const attendanceRef = collection(db, `attendance/${dateId}/events/${eventName}/attendance`);
+    const dateId = `${date.getFullYear()}-${
+      date.getMonth() + 1
+    }-${date.getDate()}`;
+    const attendanceRef = collection(
+      db,
+      `attendance/${dateId}/events/${eventName}/attendance`
+    );
     const attendanceSnapshot = await getDocs(attendanceRef);
 
     const studentList = [];
@@ -94,7 +102,14 @@ const ViewAttendancePage = ({ navigation }) => {
       style={styles.groupRow}
       onPress={() => handleGroupSelect(item)}
     >
-      <Text style={[styles.groupName, selectedGroup && selectedGroup.id === item.id && styles.selectedGroupName]}>
+      <Text
+        style={[
+          styles.groupName,
+          selectedGroup &&
+            selectedGroup.id === item.id &&
+            styles.selectedGroupName,
+        ]}
+      >
         {item.eventName}
       </Text>
     </TouchableOpacity>
@@ -168,7 +183,7 @@ const ViewAttendancePage = ({ navigation }) => {
 const styles = StyleSheet.create({
   pageContainer: {
     flex: 1,
-    paddingTop: 35,
+    paddingTop: "10%",
     backgroundColor: "#85E1D7",
   },
   contentContainer: {
@@ -247,7 +262,7 @@ const styles = StyleSheet.create({
     flex: 2,
     fontSize: 16,
     color: "#000",
-    textAlign: 'right',
+    textAlign: "right",
   },
   statusCircle: {
     width: 20,

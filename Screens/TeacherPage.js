@@ -263,6 +263,25 @@ const TeacherPage = ({ navigation }) => {
             <Text style={styles.buttonText}>להגדיר זמינות</Text>
           </TouchableOpacity>
         </View>
+
+        <View style={styles.row}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate("ReadReportTeacherPage")}
+          >
+            <Image source={require("../Images/report icon.png")} />
+            <View style={styles.divider} />
+            <Text style={styles.buttonText}>הצג דוחות</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate("TeacherReportPage")}
+          >
+            <Image source={require("../Images/report icon.png")} />
+            <View style={styles.divider} />
+            <Text style={styles.buttonText}>הגשת דוח יומי</Text>
+          </TouchableOpacity>
+        </View>
         <View style={styles.row}>
           <TouchableOpacity
             onPress={() => navigation.navigate("ViewContacts")}
@@ -282,24 +301,6 @@ const TeacherPage = ({ navigation }) => {
             <Image source={require("../Images/attendance icon.png")} />
             <View style={styles.divider} />
             <Text style={styles.buttonText}>נוכחות</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.row}>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => navigation.navigate("ReadReportTeacherPage")}
-          >
-            <Image source={require("../Images/report icon.png")} />
-            <View style={styles.divider} />
-            <Text style={styles.buttonText}>הצג דוחות</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => navigation.navigate("TeacherReportPage")}
-          >
-            <Image source={require("../Images/report icon.png")} />
-            <View style={styles.divider} />
-            <Text style={styles.buttonText}>הגשת דוח יומי</Text>
           </TouchableOpacity>
         </View>
       </View>

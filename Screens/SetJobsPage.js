@@ -321,7 +321,6 @@ const SetJobsPage = ({ navigation }) => {
       }
     } else {
       alert("אנא הוסיף את כל המשתנים");
-
     }
   };
 
@@ -785,7 +784,7 @@ const SetJobsPage = ({ navigation }) => {
 const styles = {
   container: {
     flex: 1,
-    paddingTop: 35,
+    paddingTop: "10%",
     backgroundColor: "#85E1D7",
   },
   backButton: {

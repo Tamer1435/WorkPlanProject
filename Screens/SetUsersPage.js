@@ -456,7 +456,7 @@ const SetUsersPage = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 35,
+    paddingTop: "10%",
     backgroundColor: "#85E1D7",
   },
   backButton: {
@@ -497,13 +497,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   editButton: {
-    backgroundColor: "#FFC107",
+    backgroundColor: "#fff",
     padding: 7,
     borderRadius: 5,
     right: 10,
   },
   editButtonText: {
-    color: "white",
+    color: "#000",
   },
   deleteButton: {
     backgroundColor: "#F44336",
