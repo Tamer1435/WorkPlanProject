@@ -119,6 +119,9 @@ const TeacherReportPage = ({ navigation }) => {
       const dateId = `${date.getFullYear()}-${
         date.getMonth() + 1
       }-${date.getDate()}`;
+      const prePath = doc(db, `teacherReports/${dateId}/events/${eventName}`);
+      await setDoc(prePath, { initialized: true });
+
       const reportRef = doc(
         db,
         `teacherReports/${dateId}/events/${eventName}/reports/${userData.name}`

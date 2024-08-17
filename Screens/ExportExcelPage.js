@@ -26,7 +26,6 @@ import * as XLSX from "xlsx";
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import * as IntentLauncher from "expo-intent-launcher";
-import { da } from "date-fns/locale";
 
 const ExportExcelPage = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
@@ -37,6 +36,7 @@ const ExportExcelPage = ({ navigation }) => {
   const [showModel1DatePicker, setShowModel1DatePicker] = useState(false);
   const [model1Date, setModel1Date] = useState(new Date());
   const [model1Month, setModel1Month] = useState(new Date().getMonth() + 1);
+  const [showModalReports, setShowModalReports] = useState(false);
 
   const months = [
     { label: "ינואר - 1", value: 1 },
@@ -348,6 +348,162 @@ const ExportExcelPage = ({ navigation }) => {
     }
   };
 
+  // exporting the teacher reports...
+  const exportReportsToExcel = async () => {
+    setLoading(true);
+    const reportData = [];
+    const eventsList = [];
+
+    const currentMonth = model1Date.getMonth() + 1; // Adjusting month for 1-based index
+    const currentYear = model1Date.getFullYear();
+    const calendarId = `${currentYear}-${currentMonth}`;
+    const dayId = model1Date.getDate();
+
+    const dateId = `${model1Date.getFullYear()}-${
+      model1Date.getMonth() + 1
+    }-${model1Date.getDate()}`;
+
+    try {
+      const eventsRef = collection(db, `teacherReports/${dateId}/events`);
+      const eventsSnapshot = await getDocs(eventsRef);
+
+      eventsSnapshot.forEach((doc) => {
+        const eventData = doc.data();
+        eventsList.push({ id: doc.id, ...eventData });
+      });
+    } catch (error) {
+      console.error("Error fetching events: ", error);
+    }
+
+    // Loop through all groups to fetch and prepare data
+    for (let group of eventsList) {
+      const reportsRef = collection(
+        db,
+        `teacherReports/${dateId}/events/${group.id}/reports`
+      );
+
+      try {
+        const reportsSnapshot = await getDocs(reportsRef);
+        reportsSnapshot.forEach((doc) => {
+          const data = doc.data();
+          const startTime = new Date(data["שעת התחלה"].seconds * 1000);
+          const endTime = new Date(data["שעת סיום"].seconds * 1000);
+          const duration = (endTime - startTime) / 1000 / 60 / 60; // Duration in hours
+
+          reportData.push({
+            "שם החווה": data["שם החווה"],
+            "שעת התחלה": startTime.toLocaleTimeString(),
+            "שעת סיום": endTime.toLocaleTimeString(),
+            "משך זמן": duration.toFixed(2) + " שעות",
+            הערות: data["הערות"],
+            אירוע: group.id, // Include event name for clarity
+          });
+        });
+      } catch (error) {
+        console.error("Error fetching reports for group: ", group.id, error);
+      }
+    }
+
+    if (reportData.length > 0) {
+      const ws = XLSX.utils.json_to_sheet(reportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Reports");
+
+      const wbout = XLSX.write(wb, { type: "base64", bookType: "xlsx" });
+      const filePath = FileSystem.documentDirectory + "TeacherReports.xlsx";
+
+      await FileSystem.writeAsStringAsync(filePath, wbout, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Share the file
+      if (Platform.OS === "ios") {
+        await Sharing.shareAsync(filePath);
+      } else {
+        await Sharing.shareAsync(filePath);
+        const cUri = await FileSystem.getContentUriAsync(filePath);
+
+        IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
+          data: cUri,
+          flags: 1,
+        });
+      }
+    } else {
+      alert("אין דוחות זמינים לייצא.");
+    }
+    setLoading(false);
+  };
+
+  const exportMonthlyReportsToExcel = async () => {
+    setLoading(true);
+
+    const currentMonth = model1Month;
+    const currentYear = new Date().getFullYear();
+    const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+    const monthlyReportData = [];
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateId = `${currentYear}-${currentMonth}-${day}`;
+      const eventsRef = collection(db, `teacherReports/${dateId}/events`);
+      const eventsSnapshot = await getDocs(eventsRef);
+
+      for (const doc of eventsSnapshot.docs) {
+        const reportsRef = collection(
+          db,
+          `teacherReports/${dateId}/events/${doc.id}/reports`
+        );
+        const reportsSnapshot = await getDocs(reportsRef);
+
+        for (const reportDoc of reportsSnapshot.docs) {
+          const reportData = reportDoc.data();
+          const startTime = new Date(reportData["שעת התחלה"].seconds * 1000);
+          const endTime = new Date(reportData["שעת סיום"].seconds * 1000);
+          const duration = (endTime - startTime) / 3600000; // Convert ms to hours
+
+          monthlyReportData.push({
+            תאריך: `${day}/${currentMonth}/${currentYear}`, // Formatted date for each entry
+            "שם החווה": reportData["שם החווה"],
+            "שעת התחלה": startTime.toLocaleTimeString(),
+            "שעת סיום": endTime.toLocaleTimeString(),
+            "משך זמן": duration.toFixed(2) + " שעות",
+            הערות: reportData["הערות"],
+            אירוע: doc.id,
+          });
+        }
+      }
+    }
+
+    if (monthlyReportData.length > 0) {
+      const ws = XLSX.utils.json_to_sheet(monthlyReportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Monthly Reports");
+
+      const wbout = XLSX.write(wb, { type: "base64", bookType: "xlsx" });
+      const filePath =
+        FileSystem.documentDirectory + "MonthlyTeacherReports.xlsx";
+
+      await FileSystem.writeAsStringAsync(filePath, wbout, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Share the file
+      if (Platform.OS === "ios") {
+        await Sharing.shareAsync(filePath);
+      } else {
+        await Sharing.shareAsync(filePath);
+        const cUri = await FileSystem.getContentUriAsync(filePath);
+
+        IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
+          data: cUri,
+          flags: 1,
+        });
+      }
+    } else {
+      alert("אין דוחות זמינים עבור החודש.");
+    }
+    setLoading(false);
+  };
+
   return (
     <View style={styles.container}>
       <View>
@@ -406,6 +562,25 @@ const ExportExcelPage = ({ navigation }) => {
           }}
         >
           <Text style={styles.buttonText}>ייצא עבודות חודשיות</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => {
+            setShowModalReports(true);
+            setModalType("daily");
+          }}
+        >
+          <Text style={styles.buttonText}>ייצא דוחות מורים יומיות</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => {
+            setShowModalReports(true);
+            setModalType("monthly");
+          }}
+        >
+          <Text style={styles.buttonText}>ייצא דוחות מורים חודשיות</Text>
         </TouchableOpacity>
       </View>
       <Modal
@@ -466,6 +641,86 @@ const ExportExcelPage = ({ navigation }) => {
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => setShowModal(false)}
+                style={styles.modalCloseButton}
+              >
+                <Text style={styles.modalCloseButtonText}>סגור</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+        {/* Loading popup */}
+        <Modal
+          visible={loading}
+          transparent
+          animationType="fade"
+          style={styles.tofade}
+        >
+          <View style={styles.loadingContainer}>
+            <View style={styles.loadingContent}>
+              <ActivityIndicator size="large" color="#0000ff" />
+              <Text style={styles.loadingText}>טוען...</Text>
+            </View>
+          </View>
+        </Modal>
+      </Modal>
+      <Modal
+        visible={showModalReports}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowModalReports(false)}
+      >
+        <View style={styles.tofade}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>ייצא דוחות מורים</Text>
+            {modalType === "daily" ? (
+              <TouchableOpacity onPress={() => setShowModel1DatePicker(true)}>
+                <Text>Select Date: {model1Date.toDateString()}</Text>
+              </TouchableOpacity>
+            ) : (
+              <View>
+                <Text style={{ textAlign: "right" }}>בחר חודש:</Text>
+                <Picker
+                  selectedValue={model1Month}
+                  style={{ width: 200 }}
+                  onValueChange={(itemValue) => setModel1Month(itemValue)}
+                >
+                  {months.map((month) => (
+                    <Picker.Item
+                      key={month.value}
+                      label={month.label}
+                      value={month.value}
+                    />
+                  ))}
+                </Picker>
+              </View>
+            )}
+            {showModel1DatePicker && (
+              <DateTimePicker
+                value={model1Date}
+                mode="date"
+                display="default"
+                onChange={handleModel1DateChange}
+              />
+            )}
+            <View
+              style={{
+                flexDirection: "row",
+                padding: "5%",
+                justifyContent: "center",
+              }}
+            >
+              <TouchableOpacity
+                onPress={() =>
+                  modalType === "daily"
+                    ? exportReportsToExcel()
+                    : exportMonthlyReportsToExcel()
+                }
+                style={styles.exportButton}
+              >
+                <Text style={styles.modalCloseButtonText}>יצוא אקסל</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setShowModalReports(false)}
                 style={styles.modalCloseButton}
               >
                 <Text style={styles.modalCloseButtonText}>סגור</Text>
