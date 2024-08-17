@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "WorkPlan",
-    "slug": "WorkPlan",
+    "slug": "workplan",
     "description": "This is a work planning app for an agricultural school.",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -12,18 +12,34 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.anasshwi.workplan"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.anasshwi.workplan"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "24e41cf9-b983-4466-b074-ad37b1709964"
+      }
+    },
+    "owner": "anasshwi",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/24e41cf9-b983-4466-b074-ad37b1709964"
     }
   }
 }
