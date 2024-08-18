@@ -9,6 +9,7 @@ import {
   Image,
   ActivityIndicator,
   Platform,
+  Linking,
 } from "react-native";
 import { AuthContext } from "../AuthProvider";
 import { collection, getDocs, getDoc, doc } from "firebase/firestore";
@@ -144,6 +145,13 @@ const RoleCalendarPage = ({ navigation }) => {
       hours = parseInt(hours, 10) + 12;
     }
     return new Date(`2020-01-01T${hours}:${minutes}:00`);
+  };
+
+  const makePhoneCall = (phoneNumber) => {
+    let phoneNumberFormatted = `tel:${phoneNumber}`;
+    Linking.openURL(phoneNumberFormatted)
+      .then((supported) => {})
+      .catch((err) => console.error("Error occurred", err));
   };
 
   const renderDay = ({ item }) => (
@@ -306,9 +314,20 @@ const RoleCalendarPage = ({ navigation }) => {
                 <Text style={styles.modalVehicle}>
                   בעל חווה: {selectedEvent.farmOwner}
                 </Text>
-                <Text style={styles.modalVehicle}>
-                  הטלפון של הבעלים: {selectedEvent.ownerPhone}
-                </Text>
+                <View
+                  style={{
+                    flexDirection: "row-reverse",
+                  }}
+                >
+                  <Text style={styles.modalVehicle}>הטלפון של הבעלים: </Text>
+                  <TouchableOpacity
+                    onPress={() => makePhoneCall(selectedEvent.ownerPhone)}
+                  >
+                    <Text style={styles.phoneButton}>
+                      {selectedEvent.ownerPhone}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
                 <Text style={styles.modalStudentsTitle}>סטודנטים:</Text>
                 <Text style={styles.modalStudents}>
                   {selectedEvent.students.join("\n")}
@@ -487,6 +506,12 @@ const styles = StyleSheet.create({
   },
   modalVehicle: {
     textAlign: "right",
+    fontSize: 16,
+    marginBottom: 5,
+  },
+
+  phoneButton: {
+    color: "blue",
     fontSize: 16,
     marginBottom: 5,
   },
