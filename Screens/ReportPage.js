@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Modal,
 } from "react-native";
 import { AuthContext } from "../AuthProvider";
 import { collection, getDocs, doc, setDoc, getDoc } from "firebase/firestore";
@@ -46,6 +47,8 @@ const ReportPage = ({ navigation }) => {
         return;
       }
 
+      setLoading(true); // Show loading indicator
+
       const date = new Date();
       const dateId = `${date.getFullYear()}-${
         date.getMonth() + 1
@@ -72,6 +75,8 @@ const ReportPage = ({ navigation }) => {
     } catch (error) {
       console.error("Error submitting report: ", error);
       Alert.alert("שגיאה", 'לא ניתן להגיש את הדו"ח');
+    } finally {
+      setLoading(false); // Hide loading indicator
     }
   };
 
@@ -230,6 +235,19 @@ const ReportPage = ({ navigation }) => {
           <Text style={styles.noEventsText}>אין אירועים להיום</Text>
         )}
       </ScrollView>
+      <Modal
+        visible={loading}
+        transparent
+        animationType="fade"
+        style={styles.tofade}
+      >
+        <View style={styles.loadingContainer}>
+          <View style={styles.loadingContent}>
+            <ActivityIndicator size="large" color="#0000ff" />
+            <Text style={styles.loadingText}>שולח דו"ח...</Text>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 };
@@ -311,6 +329,23 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "red",
     fontWeight: "600",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.7)",
+  },
+  loadingContent: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 18,
+    color: "#000",
   },
 });
 

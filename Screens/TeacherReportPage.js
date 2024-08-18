@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Modal,
   TouchableWithoutFeedback,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -33,6 +34,7 @@ const TeacherReportPage = ({ navigation }) => {
     useState(false);
   const [isEndTimePickerVisible, setEndTimePickerVisibility] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false); // New state for submission loading
   const [showFarmSelection, setShowFarmSelection] = useState(false);
   const [farms, setFarms] = useState([]);
   const [eventName, setEventName] = useState("");
@@ -106,6 +108,8 @@ const TeacherReportPage = ({ navigation }) => {
     }
 
     try {
+      setSubmitting(true); // Show loading indicator during submission
+
       if (!userData || !userData.role) {
         console.error(
           "User data is not available or user role is missing",
@@ -142,6 +146,8 @@ const TeacherReportPage = ({ navigation }) => {
     } catch (error) {
       console.error("Error submitting report: ", error);
       Alert.alert("שגיאה", 'לא ניתן להגיש את הדו"ח');
+    } finally {
+      setSubmitting(false); // Hide loading indicator after submission
     }
   };
 
@@ -301,6 +307,22 @@ const TeacherReportPage = ({ navigation }) => {
           </ScrollView>
         </View>
       </TouchableWithoutFeedback>
+      
+      {submitting && ( // Loading modal during submission
+        <Modal
+          visible={submitting}
+          transparent
+          animationType="fade"
+          style={styles.tofade}
+        >
+          <View style={styles.loadingContainer}>
+            <View style={styles.loadingContent}>
+              <ActivityIndicator size="large" color="#0000ff" />
+              <Text style={styles.loadingText}>מגיש...</Text>
+            </View>
+          </View>
+        </Modal>
+      )}
     </KeyboardAvoidingView>
   );
 };
@@ -394,7 +416,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#85E1D7",
+    backgroundColor: "rgba(0,0,0,0.7)",
   },
   loadingText: {
     color: "#000",
@@ -418,6 +440,13 @@ const styles = StyleSheet.create({
   pickerContainer: {
     backgroundColor: "#FFF",
     width: "100%",
+  },
+  loadingContent: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    borderWidth: 0.5,
+    alignItems: "center",
   },
 });
 
