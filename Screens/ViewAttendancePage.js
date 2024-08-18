@@ -91,7 +91,7 @@ const ViewAttendancePage = ({ navigation }) => {
       <View
         style={[
           styles.statusCircle,
-          { backgroundColor: item.present ? "green" : "red" },
+          { backgroundColor: item.present ? "#00ff00" : "red" },
         ]}
       />
     </View>
@@ -167,7 +167,7 @@ const ViewAttendancePage = ({ navigation }) => {
                   <View
                     style={[
                       styles.statusCircle,
-                      { backgroundColor: student.present ? "green" : "red" },
+                      { backgroundColor: student.present ? "#00ff00" : "red" },
                     ]}
                   />
                 </View>
