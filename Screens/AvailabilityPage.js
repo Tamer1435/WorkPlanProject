@@ -7,6 +7,8 @@ import {
   Alert,
   Image,
   Dimensions,
+  Modal,
+  ActivityIndicator,
 } from "react-native";
 import { AuthContext } from "../AuthProvider";
 import { collection, getDoc, doc, setDoc } from "firebase/firestore";
@@ -20,6 +22,7 @@ const AvailabilityPage = ({ navigation }) => {
   const [savedAvailability, setSavedAvailability] = useState({});
   const [currentWeekOffset, setCurrentWeekOffset] = useState(1); // Start with next week
   const [isPastDeadline, setIsPastDeadline] = useState(false);
+  const [loading, setLoading] = useState(false); // Loading state
   const { userData, db } = useContext(AuthContext);
 
   useEffect(() => {
@@ -75,6 +78,7 @@ const AvailabilityPage = ({ navigation }) => {
   useEffect(() => {
     const fetchSavedAvailability = async () => {
       try {
+        setLoading(true); // Show loading spinner
         const availabilityRef = doc(
           db,
           `availability/${weekDates[0]?.toLocaleDateString(
@@ -91,6 +95,8 @@ const AvailabilityPage = ({ navigation }) => {
         }
       } catch (error) {
         Alert.alert("שגיאה", "לא ניתן לטעון את הזמינות שנשמרה");
+      } finally {
+        setLoading(false); // Hide loading spinner
       }
     };
 
@@ -139,24 +145,33 @@ const AvailabilityPage = ({ navigation }) => {
   const saveAvailability = async () => {
     if (!isPastDeadline || currentWeekOffset !== 0) {
       try {
-        const availabilityRef = doc(
-          db,
-          `availability/${weekDates[0]?.toLocaleDateString(
-            "he-IL"
-          )}-${weekDates[5]?.toLocaleDateString("he-IL")}/staff`,
-          userData.name
-        );
+        setLoading(true); // Show loading spinner
+        const weekRange = `${weekDates[0]?.toLocaleDateString("he-IL")}-${weekDates[5]?.toLocaleDateString("he-IL")}`;
+        const availabilityRef = doc(db, `availability/${weekRange}/staff`, userData.name);
+        
+        const currentAvailabilitySnap = await getDoc(availabilityRef);
+        let currentAvailability = {};
+        if (currentAvailabilitySnap.exists()) {
+          currentAvailability = currentAvailabilitySnap.data().dayJob;
+        }
+  
+        const updatedAvailability = { ...currentAvailability, ...availability };
+  
         await setDoc(availabilityRef, {
           id: userData.name,
-          dayJob: availability,
-        });
-        setSavedAvailability(availability);
-        Alert.alert("שמר הזמינות לשבוע");
+          dayJob: updatedAvailability,
+        }, { merge: true });  
+        
+        setSavedAvailability(updatedAvailability);
+        Alert.alert("שמר הזמינות לשבוע", "השינויים נשמרו בהצלחה");
       } catch (error) {
-        Alert.alert("שגיאה", "לא שמר הזמינות");
+        Alert.alert("שגיאה", "לא ניתן לשמור את הזמינות המעודכנת");
+      } finally {
+        setLoading(false); // Hide loading spinner
       }
     }
   };
+  
 
   const isPastWeek = new Date(weekDates[0]) < new Date();
 
@@ -238,6 +253,22 @@ const AvailabilityPage = ({ navigation }) => {
             <Text style={styles.saveButtonText}>שמור</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Loading popup */}
+        <Modal
+          visible={loading}
+          transparent
+          animationType="fade"
+          style={styles.tofade}
+        >
+          <View style={styles.loadingContainer}>
+            <View style={styles.loadingContent}>
+              <ActivityIndicator size="large" color="#0000ff" />
+              <Text style={styles.loadingText}>טוען...</Text>
+            </View>
+          </View>
+        </Modal>
+        
       </View>
     </PanGestureHandler>
   );
@@ -367,6 +398,32 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "600",
+  },
+  // Loading modal styles
+  tofade: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#5C4DFF",
+    shadowRadius: 20,
+    shadowOpacity: 0.25,
+    backgroundColor: "rgba(0,0,0,0.7)",
+  },
+  loadingContent: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    borderWidth: 0.5,
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 10,
   },
 });
 

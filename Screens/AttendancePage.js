@@ -8,9 +8,10 @@ import {
   Alert,
   Image,
   ActivityIndicator,
+  Modal,
 } from "react-native";
 import { AuthContext } from "../AuthProvider";
-import { collection, getDocs, doc, getDoc, setDoc } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc } from "firebase/firestore";
 
 const AttendancePage = ({ navigation }) => {
   const [selectedClass, setSelectedClass] = useState("");
@@ -20,6 +21,7 @@ const AttendancePage = ({ navigation }) => {
   const [events, setEvents] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const { userData, db } = useContext(AuthContext);
 
   const hebrewDays = [
@@ -105,7 +107,6 @@ const AttendancePage = ({ navigation }) => {
       });
 
       setSavedAttendance(fetchedData);
-      console.log("Fetched saved attendance:", fetchedData); // Debugging log
       setAttendance((prev) => {
         const updated = { ...prev };
         Object.keys(fetchedData).forEach((student) => {
@@ -148,6 +149,7 @@ const AttendancePage = ({ navigation }) => {
   const saveAttendance = async () => {
     if (!isBeforeMidnight) return;
 
+    setSaving(true);
     try {
       const date = selectedDate.getDate();
       const month = selectedDate.getMonth() + 1;
@@ -181,9 +183,7 @@ const AttendancePage = ({ navigation }) => {
         }
 
         Alert.alert("הצלחה", "הנוכחות נשמרה בהצלחה.");
-        // Refresh saved attendance after saving
         fetchSavedAttendance(selectedClass);
-        // Reset local attendance state to reflect saved state
         setAttendance({});
       } else {
         throw new Error("Unauthorized");
@@ -192,6 +192,7 @@ const AttendancePage = ({ navigation }) => {
       console.error("Error saving attendance:", error);
       Alert.alert("שגיאה", "הנוכחות לא נשמרה.");
     }
+    setSaving(false);
   };
 
   const renderStudentRow = ({ item }) => (
@@ -269,6 +270,21 @@ const AttendancePage = ({ navigation }) => {
           <Text style={styles.saveButtonText}>שמור</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Saving Loading Modal */}
+      <Modal
+        visible={saving}
+        transparent
+        animationType="fade"
+        style={styles.tofade}
+      >
+        <View style={styles.loadingContainer}>
+          <View style={styles.loadingContent}>
+            <ActivityIndicator size="large" color="#0000ff" />
+            <Text style={styles.loadingText}>שומר...</Text>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -398,6 +414,31 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "600",
+  },
+  tofade: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#5C4DFF",
+    shadowRadius: 20,
+    shadowOpacity: 0.25,
+    backgroundColor: "rgba(0,0,0,0.7)",
+  },
+  loadingContent: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    borderWidth: 0.5,
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 10,
   },
 });
 
