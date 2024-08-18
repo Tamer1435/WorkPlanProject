@@ -458,7 +458,10 @@ const ExportExcelPage = ({ navigation }) => {
           const reportData = reportDoc.data();
           const startTime = new Date(reportData["שעת התחלה"].seconds * 1000);
           const endTime = new Date(reportData["שעת סיום"].seconds * 1000);
-          const duration = (endTime - startTime) / 3600000; // Convert ms to hours
+          const duration =
+            (endTime - startTime) / 3600000 >= 0
+              ? (endTime - startTime) / 3600000
+              : (endTime - startTime) / 3600000 + 24; // Convert ms to hours
 
           monthlyReportData.push({
             תאריך: `${day}/${currentMonth}/${currentYear}`, // Formatted date for each entry

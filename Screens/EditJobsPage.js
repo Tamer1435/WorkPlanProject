@@ -120,7 +120,7 @@ const EditJobsPage = ({ navigation }) => {
 
   const handleTimeChange = (event, selectedTime) => {
     const currentTime = selectedTime || time;
-    setShowTimePicker(false);
+    //setShowTimePicker(false);
     setTime(currentTime);
     const firestoreTime = Timestamp.fromDate(currentTime);
 
@@ -307,7 +307,11 @@ const EditJobsPage = ({ navigation }) => {
                   <View style={styles.row}>
                     <TouchableOpacity
                       style={styles.selectButton}
-                      onPress={() => setShowTimePicker(true)}
+                      onPress={() =>
+                        showTimePicker == true
+                          ? setShowTimePicker(false)
+                          : setShowTimePicker(true)
+                      }
                     >
                       <Text style={{ fontSize: 18 }}>{"  ▼ "}</Text>
                       <Text style={styles.label}>

@@ -154,13 +154,13 @@ const TeacherReportPage = ({ navigation }) => {
   const handleStartTimeChange = (event, selectedDate) => {
     const currentDate = selectedDate || startTime;
     setStartTime(currentDate);
-    setStartTimePickerVisibility(false);
+    //setStartTimePickerVisibility(false);
   };
 
   const handleEndTimeChange = (event, selectedDate) => {
     const currentDate = selectedDate || endTime;
     setEndTime(currentDate);
-    setEndTimePickerVisibility(false);
+    //setEndTimePickerVisibility(false);
   };
 
   if (isLoading) {
@@ -307,7 +307,7 @@ const TeacherReportPage = ({ navigation }) => {
           </ScrollView>
         </View>
       </TouchableWithoutFeedback>
-      
+
       {submitting && ( // Loading modal during submission
         <Modal
           visible={submitting}
