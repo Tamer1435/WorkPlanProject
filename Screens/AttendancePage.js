@@ -252,13 +252,23 @@ const AttendancePage = ({ navigation }) => {
           </View>
         </View>
       </View>
-      <View style={{ padding: 20 }}>
+      <View style={{ flex: 4, padding: 20 }}>
         <Text style={styles.subTitle}>התלמידים:</Text>
         {loading ? (
           <ActivityIndicator size="large" color="#0000ff" />
         ) : (
           renderEventStudents()
         )}
+      </View>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "flex-end",
+          alignSelf: "center",
+          width: "80%",
+          padding: "5%",
+        }}
+      >
         <TouchableOpacity
           style={[
             styles.saveButton,
@@ -405,7 +415,6 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     alignItems: "center",
-    marginVertical: 20,
   },
   disabledButton: {
     backgroundColor: "#A9A9A9",

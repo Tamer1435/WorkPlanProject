@@ -491,158 +491,163 @@ const SetJobsPage = ({ navigation }) => {
         animationType="slide"
         onRequestClose={() => setIsModalVisible(false)}
       >
-        <View style={styles.secondButtonModal}>
-          <ScrollView>
-            <View style={styles.jobContainer}>
-              <Text style={styles.headerText}>לקבוע עבודה</Text>
-              <View style={styles.row}>
-                <TouchableOpacity
-                  style={styles.selectButton}
-                  onPress={() => setShowDatePicker(true)}
-                >
-                  <Text style={{ fontSize: 18 }}>{"  ▼ "}</Text>
-                  <Text style={styles.label}>
-                    בחר תאריך: {date.toDateString()}
-                  </Text>
-                </TouchableOpacity>
-                {showDatePicker && (
-                  <DateTimePicker
-                    value={date}
-                    mode="date"
-                    display="default"
-                    onChange={handleDateChange}
-                  />
-                )}
-              </View>
-              <View style={styles.row}>
-                <TouchableOpacity
-                  style={styles.selectButton}
-                  onPress={() => {
-                    showTimePicker == true
-                      ? setShowTimePicker(false)
-                      : setShowTimePicker(true);
-                  }}
-                >
-                  <Text style={{ fontSize: 18 }}>{"  ▼ "}</Text>
-                  <Text style={styles.label}>
-                    בחר זמן תנועה: {time.getHours()}:
-                    {time.getMinutes() < 10
-                      ? "0" + time.getMinutes()
-                      : time.getMinutes()}
-                  </Text>
-                </TouchableOpacity>
-                {showTimePicker && (
-                  <DateTimePicker
-                    value={time}
-                    mode="time"
-                    display="default"
-                    onChange={handleTimeChange}
-                  />
-                )}
-              </View>
-              <View style={styles.row}>
-                <TouchableOpacity
-                  style={styles.selectButton}
-                  onPress={() => setShowFarmModal(true)}
-                >
-                  <Text style={{ fontSize: 18 }}>{"  ▼ "}</Text>
-                  <Text style={styles.label}>בחר חווה: {selectedFarm}</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.row}>
-                <TouchableOpacity
-                  style={styles.selectButton}
-                  onPress={() => setShowVehicleModal(true)}
-                >
-                  <Text style={{ fontSize: 18 }}>{"  ▼ "}</Text>
-                  <Text style={styles.label}>בחר רכב: {selectedVehicle}</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.row}>
-                <TouchableOpacity
-                  style={styles.selectButton}
-                  onPress={() => setShowAttendantModal(true)}
-                >
-                  <Text style={{ fontSize: 18 }}>{"  ▼ "}</Text>
-                  <Text style={styles.label}>
-                    בחר מורה: {selectedAttendant}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.row}>
-                <TouchableOpacity
-                  style={styles.selectButton}
-                  onPress={() => setShowStudentModal(true)}
-                >
-                  <Text style={{ fontSize: 18 }}>{"  ▼ "}</Text>
-                  <Text style={styles.label}>
-                    בחר תלמידים: {selectedStudents.join(", ")}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.row}>
-                <TextInput
-                  style={styles.input}
-                  value={eventName}
-                  placeholder="שם העבודה"
-                  onChangeText={(text) => setEventName(text)}
-                  placeholderTextColor={"#808080"}
-                />
-              </View>
-              <View style={styles.row}>
-                <TextInput
-                  style={styles.input}
-                  value={duration}
-                  inputMode="numeric"
-                  placeholder="משך האירוע (בשעות)"
-                  onChangeText={(text) => setDuration(text)}
-                  placeholderTextColor={"#808080"}
-                />
-              </View>
-              <View style={styles.row}>
-                <TextInput
-                  style={styles.input}
-                  value={meetingPlace}
-                  placeholder="מקום התכנסות"
-                  onChangeText={(text) => setMeetingPlace(text)}
-                  placeholderTextColor={"#808080"}
-                />
-              </View>
-
-              <View style={styles.row}>
-                <Text>להוסיף לעבודות שמורות?</Text>
-                <View style={styles.checkbox}>
-                  <Checkbox
-                    status={saveToFav ? "checked" : "unchecked"}
-                    onPress={() => setSaveToFav(!saveToFav)}
-                  />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.container}
+        >
+          <View style={styles.secondButtonModal}>
+            <ScrollView>
+              <View style={styles.jobContainer}>
+                <Text style={styles.headerText}>לקבוע עבודה</Text>
+                <View style={styles.row}>
+                  <TouchableOpacity
+                    style={styles.selectButton}
+                    onPress={() => setShowDatePicker(true)}
+                  >
+                    <Text style={{ fontSize: 18 }}>{"  ▼ "}</Text>
+                    <Text style={styles.label}>
+                      בחר תאריך: {date.toDateString()}
+                    </Text>
+                  </TouchableOpacity>
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={date}
+                      mode="date"
+                      display="default"
+                      onChange={handleDateChange}
+                    />
+                  )}
                 </View>
-              </View>
-              {saveToFav ? (
+                <View style={styles.row}>
+                  <TouchableOpacity
+                    style={styles.selectButton}
+                    onPress={() => {
+                      showTimePicker == true
+                        ? setShowTimePicker(false)
+                        : setShowTimePicker(true);
+                    }}
+                  >
+                    <Text style={{ fontSize: 18 }}>{"  ▼ "}</Text>
+                    <Text style={styles.label}>
+                      בחר זמן תנועה: {time.getHours()}:
+                      {time.getMinutes() < 10
+                        ? "0" + time.getMinutes()
+                        : time.getMinutes()}
+                    </Text>
+                  </TouchableOpacity>
+                  {showTimePicker && (
+                    <DateTimePicker
+                      value={time}
+                      mode="time"
+                      display="default"
+                      onChange={handleTimeChange}
+                    />
+                  )}
+                </View>
+                <View style={styles.row}>
+                  <TouchableOpacity
+                    style={styles.selectButton}
+                    onPress={() => setShowFarmModal(true)}
+                  >
+                    <Text style={{ fontSize: 18 }}>{"  ▼ "}</Text>
+                    <Text style={styles.label}>בחר חווה: {selectedFarm}</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.row}>
+                  <TouchableOpacity
+                    style={styles.selectButton}
+                    onPress={() => setShowVehicleModal(true)}
+                  >
+                    <Text style={{ fontSize: 18 }}>{"  ▼ "}</Text>
+                    <Text style={styles.label}>בחר רכב: {selectedVehicle}</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.row}>
+                  <TouchableOpacity
+                    style={styles.selectButton}
+                    onPress={() => setShowAttendantModal(true)}
+                  >
+                    <Text style={{ fontSize: 18 }}>{"  ▼ "}</Text>
+                    <Text style={styles.label}>
+                      בחר מורה: {selectedAttendant}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.row}>
+                  <TouchableOpacity
+                    style={styles.selectButton}
+                    onPress={() => setShowStudentModal(true)}
+                  >
+                    <Text style={{ fontSize: 18 }}>{"  ▼ "}</Text>
+                    <Text style={styles.label}>
+                      בחר תלמידים: {selectedStudents.join(", ")}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
                 <View style={styles.row}>
                   <TextInput
                     style={styles.input}
-                    value={shortcut}
-                    placeholder="לשמור שם לקבוצה"
-                    onChangeText={(text) => setShortcut(text)}
+                    value={eventName}
+                    placeholder="שם העבודה"
+                    onChangeText={(text) => setEventName(text)}
                     placeholderTextColor={"#808080"}
                   />
                 </View>
-              ) : (
-                <View></View>
-              )}
-            </View>
-          </ScrollView>
-          <TouchableOpacity style={styles.saveButton} onPress={saveChanges}>
-            <Text style={styles.saveButtonText}>הוסף עבודה</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => setIsModalVisible(false)}
-          >
-            <Text style={styles.saveButtonText}>סגור</Text>
-          </TouchableOpacity>
-        </View>
+                <View style={styles.row}>
+                  <TextInput
+                    style={styles.input}
+                    value={duration}
+                    inputMode="numeric"
+                    placeholder="משך האירוע (בשעות)"
+                    onChangeText={(text) => setDuration(text)}
+                    placeholderTextColor={"#808080"}
+                  />
+                </View>
+                <View style={styles.row}>
+                  <TextInput
+                    style={styles.input}
+                    value={meetingPlace}
+                    placeholder="מקום התכנסות"
+                    onChangeText={(text) => setMeetingPlace(text)}
+                    placeholderTextColor={"#808080"}
+                  />
+                </View>
+
+                <View style={styles.row}>
+                  <Text>להוסיף לעבודות שמורות?</Text>
+                  <View style={styles.checkbox}>
+                    <Checkbox
+                      status={saveToFav ? "checked" : "unchecked"}
+                      onPress={() => setSaveToFav(!saveToFav)}
+                    />
+                  </View>
+                </View>
+                {saveToFav ? (
+                  <View style={styles.row}>
+                    <TextInput
+                      style={styles.input}
+                      value={shortcut}
+                      placeholder="לשמור שם לקבוצה"
+                      onChangeText={(text) => setShortcut(text)}
+                      placeholderTextColor={"#808080"}
+                    />
+                  </View>
+                ) : (
+                  <View></View>
+                )}
+              </View>
+            </ScrollView>
+            <TouchableOpacity style={styles.saveButton} onPress={saveChanges}>
+              <Text style={styles.saveButtonText}>הוסף עבודה</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setIsModalVisible(false)}
+            >
+              <Text style={styles.saveButtonText}>סגור</Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
 
         {/* Modals for selecting farm, vehicle, attendant, and students */}
         <Modal
