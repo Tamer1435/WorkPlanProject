@@ -121,7 +121,9 @@ const SetJobsPage = ({ navigation }) => {
 
   const handleTimeChange = (event, selectedTime) => {
     const currentTime = selectedTime || time;
-    //setShowTimePicker(false);
+    if (Platform.OS == "android") {
+      setShowTimePicker(false);
+    }
     setTime(currentTime);
   };
 

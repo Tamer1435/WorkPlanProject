@@ -152,21 +152,25 @@ const SetUsersPage = ({ navigation }) => {
   };
 
   const handleDeleteUser = async (userId) => {
-    try {
-      // Get the user document from Firestore
-      const userRef = doc(db, "users", userId);
-      const userDoc = await getDoc(userRef);
+    if (userId == user.uid) {
+      Alert.alert("שגיאה", "לא יכול למחוק המשתמש שלך!");
+    } else {
+      try {
+        // Get the user document from Firestore
+        const userRef = doc(db, "users", userId);
+        const userDoc = await getDoc(userRef);
 
-      if (userDoc.exists()) {
-        // Delete the user document from Firestore
-        await deleteDoc(userRef);
+        if (userDoc.exists()) {
+          // Delete the user document from Firestore
+          await deleteDoc(userRef);
+        }
+
+        fetchUsers(); // Refresh the user list
+        alert("משתמש נמחק בהצלחה");
+      } catch (error) {
+        console.error("Error deleting user: ", error);
+        Alert.alert("שגיאה", "משתמש לא נמחק");
       }
-
-      fetchUsers(); // Refresh the user list
-      alert("משתמש נמחק בהצלחה");
-    } catch (error) {
-      console.error("Error deleting user: ", error);
-      Alert.alert("שגיאה", "משתמש לא נמחק");
     }
   };
 
