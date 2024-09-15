@@ -29,6 +29,8 @@ const SetUsersPage = ({ navigation }) => {
   const [preSignedUsers, setPreSignedUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+  const [fakeModalVisible, setFakeModalVisible] = useState(false);
+
   const [editMode, setEditMode] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [userName, setUserName] = useState("");
@@ -96,6 +98,38 @@ const SetUsersPage = ({ navigation }) => {
       setUserRole("");
       setRoleLabel("");
       setModalVisible(false);
+      fetchUsers();
+      alert("משתמש נוסף בהצלחה");
+    } catch (error) {
+      console.error("Error adding user: ", error);
+      Alert.alert("שגיאה", "משתמש לא נוסף");
+    }
+  };
+
+  const handleAddFakeUser = async () => {
+    try {
+      if (userRole == "student") {
+        const newUser = {
+          name: userName,
+          email: userEmail,
+          role: userRole,
+          class: selectedClass,
+        };
+        await addDoc(collection(db, "users"), newUser);
+      } else {
+        const newUser = {
+          name: userName,
+          email: userEmail,
+          role: userRole,
+        };
+        await addDoc(collection(db, "users"), newUser);
+      }
+
+      setUserName("");
+      setUserEmail("");
+      setUserRole("");
+      setRoleLabel("");
+      setFakeModalVisible(false);
       fetchUsers();
       alert("משתמש נוסף בהצלחה");
     } catch (error) {
@@ -199,6 +233,14 @@ const SetUsersPage = ({ navigation }) => {
     setModalVisible(true);
   };
 
+  const openFakeAddModal = () => {
+    setUserName("");
+    setUserRole("");
+    setRoleLabel("");
+    setEditMode(false);
+    setFakeModalVisible(true);
+  };
+
   const handleUserChange = (item) => {
     setSelectedUser(item);
     setUserName(item.name);
@@ -233,6 +275,9 @@ const SetUsersPage = ({ navigation }) => {
         <Text style={styles.title}>להגדיר/לערוך משתמשים</Text>
         <TouchableOpacity style={styles.addButton} onPress={openAddModal}>
           <Text style={styles.addButtonText}>הוסף משתמש</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.addButton} onPress={openFakeAddModal}>
+          <Text style={styles.addButtonText}>הוסף משתמש לא אמיתי</Text>
         </TouchableOpacity>
         {loading ? (
           <Text style={{ textAlign: "right" }}>טוען...</Text>
@@ -379,6 +424,144 @@ const SetUsersPage = ({ navigation }) => {
             </View>
           </View>
         </Modal>
+
+        <Modal
+          visible={showRoleModal}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowRoleModal(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>בחר תפקיד</Text>
+              <TouchableOpacity
+                style={styles.modalOption}
+                onPress={() =>
+                  handleRoleChange({ label: "מורה", value: "teacher" })
+                }
+              >
+                <Text style={styles.modalOptionText}>מורה</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalOption}
+                onPress={() =>
+                  handleRoleChange({ label: "מנהל", value: "manager" })
+                }
+              >
+                <Text style={styles.modalOptionText}>מנהל</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalOption}
+                onPress={() =>
+                  handleRoleChange({ label: "סטודנט", value: "student" })
+                }
+              >
+                <Text style={styles.modalOptionText}>סטודנט</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setShowRoleModal(false)}
+                style={styles.modalCloseButton}
+              >
+                <Text style={styles.closeButtonText}>סגור</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        <Modal
+          visible={showClassModal}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowClassModal(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>בחר כיתה</Text>
+              <ScrollView>
+                {classes.map((item) => (
+                  <TouchableOpacity
+                    key={item}
+                    style={styles.modalOption}
+                    onPress={() => handleClassChange(item)}
+                  >
+                    <Text style={styles.modalOptionText}>{item}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              <TouchableOpacity
+                onPress={() => setShowClassModal(false)}
+                style={styles.modalCloseButton}
+              >
+                <Text style={styles.closeButtonText}>סגור</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </Modal>
+
+      <Modal
+        visible={fakeModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setFakeModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>הוסף משתמש</Text>
+
+            <View style={styles.row}>
+              <TouchableOpacity
+                style={styles.selectButton}
+                onPress={() => setShowRoleModal(true)}
+              >
+                <Text style={{ fontSize: 18 }}>{"  ▼ "}</Text>
+                <Text style={styles.label}>בחר תפקיד: {roleLabel}</Text>
+              </TouchableOpacity>
+            </View>
+            {userRole == "student" ? (
+              <View style={styles.row}>
+                <TouchableOpacity
+                  style={styles.selectButton}
+                  onPress={() => setShowClassModal(true)}
+                >
+                  <Text style={{ fontSize: 18 }}>{"  ▼ "}</Text>
+                  <Text style={styles.label}>בחר כיתה: {selectedClass}</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View></View>
+            )}
+            <TextInput
+              style={styles.input}
+              placeholder="שם מלא"
+              value={userName}
+              onChangeText={setUserName}
+              placeholderTextColor={"#ccc"}
+            />
+
+            <TextInput
+              style={styles.input}
+              placeholder="אימייל"
+              value={userEmail}
+              onChangeText={setUserEmail}
+              placeholderTextColor={"#ccc"}
+            />
+
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={handleAddFakeUser}
+            >
+              <Text style={styles.saveButtonText}>הוסף משתמש</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setFakeModalVisible(false)}
+            >
+              <Text style={styles.closeButtonText}>לבטל</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        {/* Modals for selecting Users, Role, and Classes */}
 
         <Modal
           visible={showRoleModal}
