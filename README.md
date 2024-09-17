@@ -13,6 +13,10 @@ it also allows them to export said data in the form of an Excel file to help the
 
 ## Pages Overview
 
+**Page Name: app.js**
+
+Description: Works as the app's index page, contains the page navigating for the app.
+
 **Page Name: screens/ManagerPage**
 
 Description: Manager dashboard for overseeing operations like calendar management, users, vehicles, farms, and job assignments. Includes modals for logout and uses React context for managing user data. Features image icons for quick navigation and alerts for important actions.
