@@ -61,115 +61,147 @@ The app integrates with Firebase Firestore as the primary database to store and 
 
 **Page Name: screens/ManagerPage**
 
-    Description: Manager dashboard for overseeing operations like calendar management, users, vehicles, farms, and job assignments. Includes modals for logout and uses React context for managing user data. Features image icons for quick navigation and alerts for important actions.
+    Description: Manager dashboard for overseeing operations like calendar management, users, vehicles, farms, 
+    and job assignments. Includes modals for logout and uses React context for managing user data. 
+    Features image icons for quick navigation and alerts for important actions.
 
 **Page Name: screens/TeacherPage**
 
-    Description: Teacher dashboard displaying daily activities and schedules. Offers access to a full calendar, availability settings, and report management. Includes quick navigation to contacts and a secure logout feature.
+    Description: Teacher dashboard displaying daily activities and schedules. 
+    Offers access to a full calendar, availability settings, and report management. 
+    Includes quick navigation to contacts and a secure logout feature.
 
 **Page Name: screens/StudentPage**
 
-    Description: Student dashboard with a personalized greeting and current date in both Gregorian and Hebrew formats. Displays daily activities like schedules and event timings, with quick access to calendar and reports. Includes refresh functionality and options for logging out.
+    Description: Student dashboard with a personalized greeting and current date in both Gregorian and Hebrew formats. 
+    Displays daily activities like schedules and event timings, with quick access to calendar and reports. 
+    Includes refresh functionality and options for logging out.
 
 **Page Name: screens/AttendancePage**
 
-    Description: Allows teachers to track and update student attendance for events. Features include dynamic attendance status updates and confirmation modals for submission.
+    Description: Allows teachers to track and update student attendance for events. 
+    Features include dynamic attendance status updates and confirmation modals for submission.
 
 **Page Name: screens/AvailabilityPage**
 
-    Description: Staff can set and update their availability for upcoming weeks. Includes weekly navigation and a save function with a submission deadline.
+    Description: Staff can set and update their availability for upcoming weeks. 
+    Includes weekly navigation and a save function with a submission deadline.
 
 **Page Name: screens/CalendarPage**
 
-    Description: Displays a monthly calendar with events. Users can view details for each day, including event info such as time, location, and contacts.
+    Description: Displays a monthly calendar with events. 
+    Users can view details for each day, including event info such as time, location, and contacts.
 
 **Page Name: screens/RoleCalendarPage**
 
-    Description: Displays role-based events in a personalized calendar. Users can view and tap events for detailed information and direct actions like making calls.
+    Description: Displays role-based events in a personalized calendar. 
+    Users can view and tap events for detailed information and direct actions like making calls.
 
 **Page Name: screens/EditJobsPage**
 
-    Description: Enables event management by allowing users to edit, delete, or update event details like time, location, vehicle, and participants.
+    Description: Enables event management by allowing users to edit, delete, 
+    or update event details like time, location, vehicle, and participants.
 
 **Page Name: screens/ExportExcelPage**
 
-    Description: Facilitates the export of attendance, job records, and reports to Excel. Includes date selection and modal confirmations for exporting.
+    Description: Facilitates the export of attendance, job records, and reports to Excel. 
+    Includes date selection and modal confirmations for exporting.
 
 **Page Name: screens/FeedbackPage**
 
-    Description: Displays daily assignments and activities, including deadlines and locations, with navigation for detailed reports on group tasks.
+    Description: Displays daily assignments and activities, including deadlines 
+    and locations, with navigation for detailed reports on group tasks.
 
 **Page Name: screens/LoginPage**
 
-    Description: Provides a secure login interface with options for password visibility, forgotten password recovery, and new user registration.
+    Description: Provides a secure login interface with options for password visibility, 
+    forgotten password recovery, and new user registration.
 
 **Page Name: screens/ManageFarmsPage**
 
-    Description: Manages farm entries, allowing users to view, add, and delete farms. Features include a modal form for farm details and deletion confirmations.
+    Description: Manages farm entries, allowing users to view, add, and delete farms. 
+    Features include a modal form for farm details and deletion confirmations.
 
 **Page Name: screens/ManageVehiclesPage**
 
-    Description: Administers vehicle records, allowing users to view, add, and delete vehicles. Includes modals for data entry and confirmation alerts.
+    Description: Administers vehicle records, allowing users to view, add, and delete vehicles. 
+    Includes modals for data entry and confirmation alerts.
 
 **Page Name: screens/ManageUsersPage**
 
-    Description: Manages user accounts, offering options for viewing, editing, and exporting data. Provides navigation to student reports, attendance, and other user-related tasks.
+    Description: Manages user accounts, offering options for viewing, editing, and exporting data. 
+    Provides navigation to student reports, attendance, and other user-related tasks.
 
 **Page Name: screens/OptionsModal**
 
-    Description: Central point for user-specific actions like password change, viewing credits, and logout. Includes feedback mechanisms like alerts and confirmations.
+    Description: Central point for user-specific actions like password change, viewing credits, and logout. 
+    Includes feedback mechanisms like alerts and confirmations.
 
 **Page Name: screens/ReadReportPage**
 
-    Description: Allows viewing of student work reports by date and group, with options to select and view detailed reports. Features a date picker and dynamic data fetching.
+    Description: Allows viewing of student work reports by date and group, 
+    with options to select and view detailed reports. Features a date picker and dynamic data fetching.
 
 **Page Name: screens/ReadReportTeacherPage**
 
-    Description: Teachers can view student reports based on selected dates and groups. Displays key info like farm name, location, and work duration.
+    Description: Teachers can view student reports based on selected dates and groups. 
+    Displays key info like farm name, location, and work duration.
 
 **Page Name: screens/ReportPage**
 
-    Description: Enables students to submit daily work reports, including farm name, location, and observations. Submission deadline and error handling are built-in.
+    Description: Enables students to submit daily work reports, 
+    including farm name, location, and observations. Submission deadline and error handling are built-in.
 
 **Page Name: screens/TeacherReportPage**
 
-    Description: Teachers can submit daily reports, including start and end times, farm name, and comments. Features autofill for event names, DateTime pickers, and confirmation alerts.
+    Description: Teachers can submit daily reports, including start and end times, farm name, and comments. 
+    Features autofill for event names, DateTime pickers, and confirmation alerts.
 
 **Page Name: screens/SetAvailabilityPage**
 
-    Description: Allows users to set weekly availability. Features day selection and a 'Publish' button to save changes, with user feedback on successful submission.
+    Description: Allows users to set weekly availability. 
+    Features day selection and a 'Publish' button to save changes, with user feedback on successful submission.
 
 **Page Name: screens/SetContactsPage**
 
-    Description: Manages contact details with options to view, add, or delete contacts. Includes modals for form input and feedback alerts for actions.
+    Description: Manages contact details with options to view, add, or delete contacts. 
+    Includes modals for form input and feedback alerts for actions.
 
 **Page Name: screens/SetJobsPage**
 
-    Description: Facilitates job assignments for staff and students. Users can select date, time, location, participants, and save favorite job templates for quick scheduling.
+    Description: Facilitates job assignments for staff and students. 
+    Users can select date, time, location, participants, and save favorite job templates for quick scheduling.
 
 **Page Name: screens/SetUsersPage**
 
-    Description: Manages user roles, allowing for adding, editing, and deleting users. Includes modals for detailed interactions like role assignment and user details.
+    Description: Manages user roles, allowing for adding, editing, and deleting users. 
+    Includes modals for detailed interactions like role assignment and user details.
 
 **Page Name: screens/SignupPage**
 
-    Description: Provides a user registration form, with options for entering name, email, and password. Features error handling and prompts for admin contact after registration.
+    Description: Provides a user registration form, with options for entering name, email, and password. 
+    Features error handling and prompts for admin contact after registration.
 
 **Page Name: screens/ViewAttendancePage**
 
-    Description: Allows users to view attendance for selected dates and events. Lists students with attendance status and updates in real-time based on selected event and date.
+    Description: Allows users to view attendance for selected dates and events. 
+    Lists students with attendance status and updates in real-time based on selected event and date.
 
 **Page Name: screens/ViewAvailabilityPage**
 
-    Description: Displays staff availability for different days, with weekly navigation and real-time updates from a database. Features gesture-based navigation for easy week switching.
+    Description: Displays staff availability for different days, 
+    with weekly navigation and real-time updates from a database. 
+    Features gesture-based navigation for easy week switching.
 
 **Page Name: screens/ViewContactsPage**
 
-    Description: A centralized hub for managing and viewing contacts. Users can initiate phone calls directly from the list and receive feedback while data is being loaded.
+    Description: A centralized hub for managing and viewing contacts. 
+    Users can initiate phone calls directly from the list and receive feedback while data is being loaded.
 
 **Page Name: screens/ViewTeacherReportPage**
 
-    Description: Facilitates viewing teacher reports by selecting a date and event. Displays detailed report information, including start time, location, and comments.
+    Description: Facilitates viewing teacher reports by selecting a date and event. 
+    Displays detailed report information, including start time, location, and comments.
 
 ## Getting Started
 
