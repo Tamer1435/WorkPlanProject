@@ -53,6 +53,137 @@ The app integrates with Firebase Firestore as the primary database to store and 
 
    - Security Rules: Firestore security rules are set up to control who can read or write specific data, ensuring sensitive information is protected.
 
+## How to Connect a New Firebase Firestore Database
+
+If you're setting up a new Firebase Firestore database and want to connect it to the existing app, follow these steps:
+
+1.  ### Create a Firebase Project
+
+    Go to the Firebase Console.
+    Create a new Firebase project or select an existing project.
+    Enable Firestore in the Firebase console under the "Build" section by clicking on Firestore Database and setting it up in your preferred mode (Test or Production).
+
+2.  ### Add Your App to Firebase
+
+    In the Firebase console, add your app by selecting Web as the platform.
+    Firebase will provide a unique configuration snippet. This includes information like the API key, project ID, and database URL.
+
+3.  ### Create Firebase Configuration File
+
+    In your project folder, create a file (if it doesn’t already exist) named firebase-config.js.
+    This file will store your Firebase credentials. The structure should include the following keys:
+    API Key
+    Auth Domain
+    Project ID
+    Storage Bucket
+    Messaging Sender ID
+    App ID
+
+    sample code:
+
+        // firebaseConfig.js
+
+        const firebaseConfig = {
+        apiKey: "AIzaSyD-ExampleApiKey-12345",
+        authDomain: "your-app-name.firebaseapp.com",
+        projectId: "your-app-id",
+        storageBucket: "your-app-name.appspot.com",
+        messagingSenderId: "123456789012",
+        appId: "1:123456789012:web:example12345abcde",
+        measurementId: "G-EXAMPL1234"
+        };
+
+        export default firebaseConfig;
+
+4.  ### Initialize Firebase in the App
+
+    In your main app file (e.g., App.js or index.js), import the Firebase configuration from firebaseConfig.js.
+    Initialize Firebase using the Firebase SDK and the configuration object exported from firebaseConfig.js.
+    Make sure to initialize Firestore within the Firebase setup.
+
+5.  ### Update Firebase SDK Dependencies
+
+    Ensure that your app has the necessary Firebase SDK dependencies in your package.json. The required Firebase SDK modules may include:
+    firebase/app
+    firebase/firestore
+    firebase/auth
+    You can install them by running:
+
+        npm install firebase
+
+6.  ### Connect Firestore to Your Pages
+
+    In each of the relevant pages that interact with the database (such as AttendancePage.js, SetJobsPage.js, etc.), ensure that Firestore functions for reading and writing data are properly connected to your Firestore instance.
+
+    When fetching data or saving data, ensure that Firestore references match your new database's collections and document structure. For instance, if your Firestore structure has collections like users, jobs, or attendance, ensure these are correctly referenced.
+
+7.  ### Setup Firebase Security Rules
+    In the Firebase Console, navigate to Firestore Database and click on Rules.
+    Set up security rules to control access to your data. Ensure only authenticated users with appropriate roles (e.g., students, teachers, admins) can access or modify specific data.
+8.  ### Test the Connection
+    After connecting the new Firestore database, run the app and check if data is being fetched and stored properly.
+    Verify that Firestore is receiving and updating data as expected by viewing collections in the Firestore console.
+
+## Firebase Authentication Setup: AuthProvider
+
+To handle authentication in the app, we use Firebase Authentication, which allows us to manage user logins, signups, and sessions. The AuthProvider.js file plays a crucial role in this process, acting as a central context provider for user authentication.
+
+1.  ### Location of the AuthProvider.js File
+
+    The AuthProvider.js file is typically located in the app directory. This file is responsible for providing the authentication state and functions to the entire app using React's Context API.
+
+2.  ### Role of AuthProvider.js
+
+    This file manages the current user's authentication state across the app, including:
+    **Login**: Handles user sign-in with email and password or other methods (like Google).
+    **Signup**: Manages new user registration.
+    **Logout**: Allows users to securely log out.
+    **Session Management**: Keeps track of the authenticated user session using Firebase's onAuthStateChanged listener.
+
+    The AuthProvider component wraps the app and provides authentication data (e.g., user info) and methods (e.g., sign in, sign out) to child components.
+
+3.  ### Steps to Use a New Firebase Authentication Setup
+
+    If you're connecting a new Firebase Authentication setup, here's what you need to do:
+
+    **Update Firebase Configuration in firebaseConfig.js**
+
+    Make sure the Firebase project you're connecting to has Authentication enabled.
+    Add the Firebase Auth configuration (it’s usually included when you initialize Firebase in firebaseConfig.js).
+
+    **Modify AuthProvider.js to Use New Firebase Project**
+
+    In AuthProvider.js, ensure that the Firebase instance being used for authentication matches the new Firebase project.
+    The relevant Firebase methods, like signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, etc., should work with the Firebase configuration from firebaseConfig.js.
+
+    **Ensure Firebase Auth SDK is Installed**
+
+    If it’s not already installed, make sure you have the Firebase Auth module by running:
+
+         npm install firebase
+
+    **Review Auth-Related Pages**
+
+    Check that the authentication logic is correctly implemented in pages like:
+    LoginPage.js
+    SignupPage.js
+    ProfilePage.js
+
+    These pages will interact with the authentication context provided by AuthProvider.js.
+
+4.  ### Key Methods in AuthProvider.js
+
+    Sign Up: Allows users to create a new account using Firebase Authentication.
+    Sign In: Authenticates users using Firebase’s authentication methods (email/password, Google, etc.).
+    Sign Out: Logs the user out and clears session data.
+    Get Current User: Returns the currently signed-in user or null if no user is logged in.
+    Session Persistence: Uses Firebase's onAuthStateChanged listener to maintain user login status across sessions.
+
+5.  ### Connecting Auth to Firestore
+
+    The authenticated user information (such as user ID) can be linked to the Firestore database to store user-specific data (like profiles, preferences, or activity history).
+    Use Firebase Auth's user.uid in Firestore to create or fetch user-specific documents (e.g., users/{userID}).
+
 ## Pages Overview
 
 **Page Name: app.js**
@@ -61,146 +192,146 @@ The app integrates with Firebase Firestore as the primary database to store and 
 
 **Page Name: screens/ManagerPage**
 
-    Description: Manager dashboard for overseeing operations like calendar management, users, vehicles, farms, 
-    and job assignments. Includes modals for logout and uses React context for managing user data. 
+    Description: Manager dashboard for overseeing operations like calendar management, users, vehicles, farms,
+    and job assignments. Includes modals for logout and uses React context for managing user data.
     Features image icons for quick navigation and alerts for important actions.
 
 **Page Name: screens/TeacherPage**
 
-    Description: Teacher dashboard displaying daily activities and schedules. 
-    Offers access to a full calendar, availability settings, and report management. 
+    Description: Teacher dashboard displaying daily activities and schedules.
+    Offers access to a full calendar, availability settings, and report management.
     Includes quick navigation to contacts and a secure logout feature.
 
 **Page Name: screens/StudentPage**
 
-    Description: Student dashboard with a personalized greeting and current date in both Gregorian and Hebrew formats. 
-    Displays daily activities like schedules and event timings, with quick access to calendar and reports. 
+    Description: Student dashboard with a personalized greeting and current date in both Gregorian and Hebrew formats.
+    Displays daily activities like schedules and event timings, with quick access to calendar and reports.
     Includes refresh functionality and options for logging out.
 
 **Page Name: screens/AttendancePage**
 
-    Description: Allows teachers to track and update student attendance for events. 
+    Description: Allows teachers to track and update student attendance for events.
     Features include dynamic attendance status updates and confirmation modals for submission.
 
 **Page Name: screens/AvailabilityPage**
 
-    Description: Staff can set and update their availability for upcoming weeks. 
+    Description: Staff can set and update their availability for upcoming weeks.
     Includes weekly navigation and a save function with a submission deadline.
 
 **Page Name: screens/CalendarPage**
 
-    Description: Displays a monthly calendar with events. 
+    Description: Displays a monthly calendar with events.
     Users can view details for each day, including event info such as time, location, and contacts.
 
 **Page Name: screens/RoleCalendarPage**
 
-    Description: Displays role-based events in a personalized calendar. 
+    Description: Displays role-based events in a personalized calendar.
     Users can view and tap events for detailed information and direct actions like making calls.
 
 **Page Name: screens/EditJobsPage**
 
-    Description: Enables event management by allowing users to edit, delete, 
+    Description: Enables event management by allowing users to edit, delete,
     or update event details like time, location, vehicle, and participants.
 
 **Page Name: screens/ExportExcelPage**
 
-    Description: Facilitates the export of attendance, job records, and reports to Excel. 
+    Description: Facilitates the export of attendance, job records, and reports to Excel.
     Includes date selection and modal confirmations for exporting.
 
 **Page Name: screens/FeedbackPage**
 
-    Description: Displays daily assignments and activities, including deadlines 
+    Description: Displays daily assignments and activities, including deadlines
     and locations, with navigation for detailed reports on group tasks.
 
 **Page Name: screens/LoginPage**
 
-    Description: Provides a secure login interface with options for password visibility, 
+    Description: Provides a secure login interface with options for password visibility,
     forgotten password recovery, and new user registration.
 
 **Page Name: screens/ManageFarmsPage**
 
-    Description: Manages farm entries, allowing users to view, add, and delete farms. 
+    Description: Manages farm entries, allowing users to view, add, and delete farms.
     Features include a modal form for farm details and deletion confirmations.
 
 **Page Name: screens/ManageVehiclesPage**
 
-    Description: Administers vehicle records, allowing users to view, add, and delete vehicles. 
+    Description: Administers vehicle records, allowing users to view, add, and delete vehicles.
     Includes modals for data entry and confirmation alerts.
 
 **Page Name: screens/ManageUsersPage**
 
-    Description: Manages user accounts, offering options for viewing, editing, and exporting data. 
+    Description: Manages user accounts, offering options for viewing, editing, and exporting data.
     Provides navigation to student reports, attendance, and other user-related tasks.
 
 **Page Name: screens/OptionsModal**
 
-    Description: Central point for user-specific actions like password change, viewing credits, and logout. 
+    Description: Central point for user-specific actions like password change, viewing credits, and logout.
     Includes feedback mechanisms like alerts and confirmations.
 
 **Page Name: screens/ReadReportPage**
 
-    Description: Allows viewing of student work reports by date and group, 
+    Description: Allows viewing of student work reports by date and group,
     with options to select and view detailed reports. Features a date picker and dynamic data fetching.
 
 **Page Name: screens/ReadReportTeacherPage**
 
-    Description: Teachers can view student reports based on selected dates and groups. 
+    Description: Teachers can view student reports based on selected dates and groups.
     Displays key info like farm name, location, and work duration.
 
 **Page Name: screens/ReportPage**
 
-    Description: Enables students to submit daily work reports, 
+    Description: Enables students to submit daily work reports,
     including farm name, location, and observations. Submission deadline and error handling are built-in.
 
 **Page Name: screens/TeacherReportPage**
 
-    Description: Teachers can submit daily reports, including start and end times, farm name, and comments. 
+    Description: Teachers can submit daily reports, including start and end times, farm name, and comments.
     Features autofill for event names, DateTime pickers, and confirmation alerts.
 
 **Page Name: screens/SetAvailabilityPage**
 
-    Description: Allows users to set weekly availability. 
+    Description: Allows users to set weekly availability.
     Features day selection and a 'Publish' button to save changes, with user feedback on successful submission.
 
 **Page Name: screens/SetContactsPage**
 
-    Description: Manages contact details with options to view, add, or delete contacts. 
+    Description: Manages contact details with options to view, add, or delete contacts.
     Includes modals for form input and feedback alerts for actions.
 
 **Page Name: screens/SetJobsPage**
 
-    Description: Facilitates job assignments for staff and students. 
+    Description: Facilitates job assignments for staff and students.
     Users can select date, time, location, participants, and save favorite job templates for quick scheduling.
 
 **Page Name: screens/SetUsersPage**
 
-    Description: Manages user roles, allowing for adding, editing, and deleting users. 
+    Description: Manages user roles, allowing for adding, editing, and deleting users.
     Includes modals for detailed interactions like role assignment and user details.
 
 **Page Name: screens/SignupPage**
 
-    Description: Provides a user registration form, with options for entering name, email, and password. 
+    Description: Provides a user registration form, with options for entering name, email, and password.
     Features error handling and prompts for admin contact after registration.
 
 **Page Name: screens/ViewAttendancePage**
 
-    Description: Allows users to view attendance for selected dates and events. 
+    Description: Allows users to view attendance for selected dates and events.
     Lists students with attendance status and updates in real-time based on selected event and date.
 
 **Page Name: screens/ViewAvailabilityPage**
 
-    Description: Displays staff availability for different days, 
-    with weekly navigation and real-time updates from a database. 
+    Description: Displays staff availability for different days,
+    with weekly navigation and real-time updates from a database.
     Features gesture-based navigation for easy week switching.
 
 **Page Name: screens/ViewContactsPage**
 
-    Description: A centralized hub for managing and viewing contacts. 
+    Description: A centralized hub for managing and viewing contacts.
     Users can initiate phone calls directly from the list and receive feedback while data is being loaded.
 
 **Page Name: screens/ViewTeacherReportPage**
 
-    Description: Facilitates viewing teacher reports by selecting a date and event. 
+    Description: Facilitates viewing teacher reports by selecting a date and event.
     Displays detailed report information, including start time, location, and comments.
 
 ## Getting Started

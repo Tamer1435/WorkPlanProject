@@ -89,9 +89,9 @@ const SetJobsPage = ({ navigation }) => {
         usersCollection.docs.forEach((doc) => {
           const userData = doc.data();
           if (userData.role === "student") {
-            students.push({ ...doc.data() });
+            students.push({ uid: doc.id, ...doc.data() });
           } else if (userData.role === "teacher") {
-            teachers.push({ ...doc.data() });
+            teachers.push({ uid: doc.id, ...doc.data() });
           }
         });
         setStudents(students);
@@ -729,7 +729,7 @@ const SetJobsPage = ({ navigation }) => {
               <ScrollView>
                 {attendants.map((attendant) => (
                   <TouchableOpacity
-                    key={attendant.email}
+                    key={attendant.uid}
                     style={styles.modalOption}
                     onPress={() => handleAttendantChange(attendant)}
                   >
@@ -758,7 +758,7 @@ const SetJobsPage = ({ navigation }) => {
               <Text style={styles.modalTitle}>בחר סטודנטים</Text>
               <FlatList
                 data={allStudents}
-                keyExtractor={(item) => item.email}
+                keyExtractor={(item) => item.uid}
                 renderItem={({ item: student }) => (
                   <TouchableOpacity
                     style={[
