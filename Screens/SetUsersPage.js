@@ -44,7 +44,7 @@ const SetUsersPage = ({ navigation }) => {
   const [roleLabel, setRoleLabel] = useState(null);
   const { user, userData, db, auth } = useContext(AuthContext);
 
-  const classes = ["כיתה ט", "כיתה י", "כיתה יא"];
+  const classes = ["כיתה ט", "כיתה י", "כיתה יא", "כיתה יב"];
 
   useEffect(() => {
     fetchUsers();
@@ -54,10 +54,12 @@ const SetUsersPage = ({ navigation }) => {
     setLoading(true);
     const userCollectionRef = collection(db, "users");
     const userDocs = await getDocs(userCollectionRef);
-    const usersList = userDocs.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const usersList = userDocs.docs
+      .map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }))
+      .sort((a, b) => a.role.localeCompare(b.role));
     setUsers(usersList);
 
     const preUsersCollectionRef = collection(db, "preSignedUsers");
@@ -188,6 +190,8 @@ const SetUsersPage = ({ navigation }) => {
   const handleDeleteUser = async (userId) => {
     if (userId == user.uid) {
       Alert.alert("שגיאה", "לא יכול למחוק המשתמש שלך!");
+    } else if (userId == "Qx2muo4dlzXkWDm2xSWy2NLShH32") {
+      Alert.alert("שגיאה", "לא יכול למחוק משתמש המנהל!");
     } else {
       try {
         // Get the user document from Firestore
@@ -654,6 +658,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   insiderContainer: {
+    flex: 1,
     padding: 20,
   },
   title: {
